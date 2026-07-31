@@ -1,0 +1,97 @@
+# =============================================================================
+# KSA Mobile Apps – monorepo gitignore
+# Covers admin_app, sales_app, monitor_app, order_app, salesperson_app, packages/
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# macOS / OS junk
+# -----------------------------------------------------------------------------
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# -----------------------------------------------------------------------------
+# Local release APK output (see README / scripts/build_release_apk.sh)
+# Do not commit binaries — publish via GitHub Releases or CI artifacts instead.
+# -----------------------------------------------------------------------------
+app-builts/
+*.apk
+*.aab
+*.ipa
+*.app
+*.dSYM
+*.dSYM.zip
+
+# -----------------------------------------------------------------------------
+# Signing secrets (keep *.example templates in git)
+# -----------------------------------------------------------------------------
+**/android/key.properties
+**/android/secrets.properties
+**/ios/Flutter/Secrets.xcconfig
+**/*.jks
+**/*.keystore
+
+# -----------------------------------------------------------------------------
+# Flutter / Dart (all apps + shared packages)
+# -----------------------------------------------------------------------------
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.pub/
+**/build/
+**/coverage/
+**/.packages
+**/doc/api/
+
+# Symbolication / obfuscation maps
+app.*.symbols
+app.*.map.json
+
+# -----------------------------------------------------------------------------
+# Android
+# -----------------------------------------------------------------------------
+**/.gradle/
+**/local.properties
+**/.cxx/
+**/captures/
+**/.kotlin/
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+**/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+
+# -----------------------------------------------------------------------------
+# iOS / macOS (CocoaPods + ephemeral Flutter outputs)
+# -----------------------------------------------------------------------------
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+**/macos/Flutter/ephemeral/
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+
+# -----------------------------------------------------------------------------
+# Linux / Windows desktop (generated on flutter pub get)
+# -----------------------------------------------------------------------------
+**/linux/flutter/ephemeral/
+**/linux/flutter/generated_plugin_registrant.*
+**/linux/flutter/generated_plugins.cmake
+**/windows/flutter/ephemeral/
+**/windows/flutter/generated_plugin_registrant.*
+**/windows/flutter/generated_plugins.cmake
+
+# -----------------------------------------------------------------------------
+# IDE (optional — uncomment if you do not want editor settings in git)
+# -----------------------------------------------------------------------------
+# **/.idea/
+# **/*.iml
+# **/.vscode/

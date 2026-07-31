@@ -1,0 +1,30 @@
+name: media
+description: Media compression, upload, and playback for KSA Biz mobile apps.
+version: 0.0.1
+publish_to: none
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  core:
+    path: ../core
+  flutter_image_compress: ^2.4.0
+  video_compress: ^3.1.4
+  path_provider: ^2.1.5
+  path: ^1.9.1
+  uuid: ^4.5.1
+  cached_network_image: ^3.4.1
+  just_audio: ^0.9.46
+  video_player: ^2.9.5
+  chewie: ^1.11.3
+  flutter_uploader: ^3.0.0-beta.4
+  workmanager: ^0.5.2
+  http: ^1.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

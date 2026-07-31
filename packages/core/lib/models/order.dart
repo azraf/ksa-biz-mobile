@@ -1,0 +1,124 @@
+import 'package:equatable/equatable.dart';
+
+import 'discount_approval_request.dart';
+import 'order_item.dart';
+import 'payment.dart';
+import 'sales_person.dart';
+
+class OrderModel extends Equatable {
+  const OrderModel({
+    required this.id,
+    required this.customerTypeId,
+    this.salesPersonId,
+    this.customerShopId,
+    this.customerVanId,
+    this.customerImporterId,
+    this.manualOrderRequestId,
+    this.subtotal = 0,
+    this.vatTotal = 0,
+    this.totalBill = 0,
+    this.grandDiscount = 0,
+    this.promotionDiscount = 0,
+    this.amountPaid = 0,
+    this.amountDue = 0,
+    this.paymentStatus = 'pending',
+    this.status = 'confirmed',
+    this.dueDate,
+    this.isOverdue = false,
+    this.daysOverdue = 0,
+    this.isWalkInCustomer = false,
+    this.cancellationReason,
+    this.cancelledAt,
+    this.items = const [],
+    this.payments = const [],
+    this.discountRequests = const [],
+    this.salesPerson,
+    this.customerShopName,
+    this.createdAt,
+  });
+
+  final int id;
+  final int? salesPersonId;
+  final int customerTypeId;
+  final int? customerVanId;
+  final int? customerImporterId;
+  final int? customerShopId;
+  final int? manualOrderRequestId;
+  final double subtotal;
+  final double vatTotal;
+  final double totalBill;
+  final double grandDiscount;
+  final double promotionDiscount;
+  final double amountPaid;
+  final double amountDue;
+  final String paymentStatus;
+  final String status;
+  final String? dueDate;
+  final bool isOverdue;
+  final int daysOverdue;
+  final bool isWalkInCustomer;
+  final String? cancellationReason;
+  final String? cancelledAt;
+  final List<OrderItemModel> items;
+  final List<PaymentModel> payments;
+  final List<DiscountApprovalRequestModel> discountRequests;
+  final SalesPersonModel? salesPerson;
+  final String? customerShopName;
+  final String? createdAt;
+
+  bool get isCancelled => status == 'cancelled';
+  bool get isEditable => !isCancelled;
+  bool get hasPendingDiscount => discountRequests.any((r) => r.status == 'pending');
+
+  factory OrderModel.fromJson(Map<String, dynamic> json) {
+    return OrderModel(
+      id: json['id'] as int,
+      salesPersonId: json['sales_person_id'] as int?,
+      customerTypeId: json['customer_type_id'] as int,
+      customerVanId: json['customer_van_id'] as int?,
+      customerImporterId: json['customer_importer_id'] as int?,
+      customerShopId: json['customer_shop_id'] as int?,
+      manualOrderRequestId: json['manual_order_request_id'] as int?,
+      subtotal: _toDouble(json['subtotal']),
+      vatTotal: _toDouble(json['vat_total']),
+      totalBill: _toDouble(json['total_bill']),
+      grandDiscount: _toDouble(json['grand_discount']),
+      promotionDiscount: _toDouble(json['promotion_discount']),
+      amountPaid: _toDouble(json['amount_paid']),
+      amountDue: _toDouble(json['amount_due']),
+      paymentStatus: json['payment_status'] as String? ?? 'pending',
+      status: json['status'] as String? ?? 'confirmed',
+      dueDate: json['due_date'] as String?,
+      isOverdue: json['is_overdue'] as bool? ?? false,
+      daysOverdue: json['days_overdue'] as int? ?? 0,
+      isWalkInCustomer: json['is_walk_in_customer'] as bool? ?? false,
+      cancellationReason: json['cancellation_reason'] as String?,
+      cancelledAt: json['cancelled_at']?.toString(),
+      items: (json['items'] as List<dynamic>? ?? [])
+          .map((e) => OrderItemModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      payments: (json['payments'] as List<dynamic>? ?? [])
+          .map((e) => PaymentModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      discountRequests: (json['discount_approval_requests'] as List<dynamic>? ?? [])
+          .map((e) => DiscountApprovalRequestModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      salesPerson: json['sales_person'] is Map
+          ? SalesPersonModel.fromJson(json['sales_person'] as Map<String, dynamic>)
+          : null,
+      customerShopName: json['customer_shop'] is Map
+          ? (json['customer_shop'] as Map)['name'] as String?
+          : null,
+      createdAt: json['created_at']?.toString(),
+    );
+  }
+
+  static double _toDouble(dynamic value) {
+    if (value == null) return 0;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString()) ?? 0;
+  }
+
+  @override
+  List<Object?> get props => [id, status, paymentStatus, totalBill, amountPaid, amountDue];
+}

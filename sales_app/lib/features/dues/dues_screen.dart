@@ -1,0 +1,102 @@
+import 'package:core/core.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+
+import '../../providers/auth_provider.dart';
+import '../../providers/repositories.dart';
+import '../orders/collect_payment_screen.dart';
+
+class DuesScreen extends ConsumerStatefulWidget {
+  const DuesScreen({super.key});
+
+  @override
+  ConsumerState<DuesScreen> createState() => _DuesScreenState();
+}
+
+class _DuesScreenState extends ConsumerState<DuesScreen> {
+  SalesPersonDueReport? _report;
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final salesPersonId = requireSalesPersonId(ref.read(authProvider));
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final report = await ref.read(reportRepositoryProvider).salesPersonDue(salesPersonId!);
+      setState(() {
+        _report = report.data;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _collectPayment(OrderModel order) async {
+    final due = order.amountDue > 0 ? order.amountDue : order.totalBill - order.amountPaid;
+    final ok = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CollectPaymentScreen(orderId: order.id, amountDue: due),
+      ),
+    );
+    if (ok == true) await _load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currency = NumberFormat.currency(symbol: 'SAR ');
+
+    if (_loading) return const LoadingView();
+    if (_error != null) return ErrorView(message: _error!, onRetry: _load);
+
+    final report = _report!;
+    return RefreshIndicator(
+      onRefresh: _load,
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            child: ListTile(
+              title: const Text('Total due'),
+              trailing: Text(currency.format(report.totalDue), style: Theme.of(context).textTheme.titleLarge),
+            ),
+          ),
+          if (report.orders.isEmpty) const EmptyView(message: 'No outstanding dues'),
+          for (final raw in report.orders)
+            Builder(
+              builder: (_) {
+                final order = OrderModel.fromJson(raw);
+                final due = order.amountDue > 0 ? order.amountDue : order.totalBill - order.amountPaid;
+                return Card(
+                  child: ListTile(
+                    title: Text('Order #${order.id}'),
+                    subtitle: Text('${order.paymentStatus} · Due ${currency.format(due)}'),
+                    trailing: Text(currency.format(order.totalBill)),
+                    onTap: () => context.push('/orders/${order.id}'),
+                    onLongPress: () => _collectPayment(order),
+                  ),
+                );
+              },
+            ),
+          const SizedBox(height: 8),
+          const Text('Long press an order to collect payment'),
+        ],
+      ),
+    );
+  }
+}

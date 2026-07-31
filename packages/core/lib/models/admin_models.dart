@@ -1,0 +1,308 @@
+import 'package:equatable/equatable.dart';
+
+import 'customer.dart';
+import 'customer_assignment_models.dart';
+import 'customer_metrics.dart';
+import 'order.dart';
+import 'product.dart';
+
+class InvoiceModel extends Equatable {
+  const InvoiceModel({
+    required this.id,
+    this.orderId,
+    this.shopId,
+    this.shopContactId,
+    this.order,
+    this.shop,
+    this.shopContact,
+  });
+
+  final int id;
+  final int? orderId;
+  final int? shopId;
+  final int? shopContactId;
+  final OrderModel? order;
+  final CustomerShopModel? shop;
+  final CustomerShopContactModel? shopContact;
+
+  factory InvoiceModel.fromJson(Map<String, dynamic> json) => InvoiceModel(
+        id: json['id'] as int,
+        orderId: json['order_id'] as int?,
+        shopId: json['shop_id'] as int?,
+        shopContactId: json['shop_contact_id'] as int?,
+        order: json['order'] is Map
+            ? OrderModel.fromJson(json['order'] as Map<String, dynamic>)
+            : null,
+        shop: json['shop'] is Map
+            ? CustomerShopModel.fromJson(json['shop'] as Map<String, dynamic>)
+            : null,
+        shopContact: json['shop_contact'] is Map
+            ? CustomerShopContactModel.fromJson(
+                json['shop_contact'] as Map<String, dynamic>,
+              )
+            : null,
+      );
+
+  Map<String, dynamic> toJson() => {
+        if (orderId != null) 'order_id': orderId,
+        if (shopId != null) 'shop_id': shopId,
+        if (shopContactId != null) 'shop_contact_id': shopContactId,
+      };
+
+  @override
+  List<Object?> get props => [id, orderId];
+}
+
+class CustomerShopModel extends Equatable {
+  const CustomerShopModel({
+    required this.id,
+    required this.name,
+    this.gps,
+    this.isSystem = false,
+    this.contactsCount,
+    this.contacts = const [],
+    this.areaId,
+    this.areaName,
+    this.primaryContact,
+    this.lastOrderAt,
+    this.isInactive = false,
+    this.distanceKm,
+    this.metrics = const CustomerMetricsFields(),
+  });
+
+  final int id;
+  final String name;
+  final String? gps;
+  final bool isSystem;
+  final int? contactsCount;
+  final List<CustomerShopContactModel> contacts;
+  final int? areaId;
+  final String? areaName;
+  final PrimaryContactModel? primaryContact;
+  final String? lastOrderAt;
+  final bool isInactive;
+  final double? distanceKm;
+  final CustomerMetricsFields metrics;
+
+  factory CustomerShopModel.fromJson(Map<String, dynamic> json) =>
+      CustomerShopModel(
+        id: json['id'] as int,
+        name: json['name'] as String? ?? '',
+        gps: json['gps'] as String?,
+        isSystem: json['is_system'] as bool? ?? false,
+        contactsCount: json['contacts_count'] as int?,
+        contacts: (json['contacts'] as List<dynamic>? ?? [])
+            .map((e) => CustomerShopContactModel.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        areaId: json['area_id'] as int?,
+        areaName: json['area_name'] as String? ??
+            (json['area'] is Map ? (json['area'] as Map)['name'] as String? : null),
+        primaryContact: json['primary_contact'] is Map
+            ? PrimaryContactModel.fromJson(json['primary_contact'] as Map<String, dynamic>)
+            : null,
+        lastOrderAt: json['last_order_at']?.toString(),
+        isInactive: json['is_inactive'] as bool? ?? false,
+        distanceKm: (json['distance_km'] as num?)?.toDouble(),
+        metrics: CustomerMetricsFields.fromJson(json),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        if (gps != null) 'gps': gps,
+        if (isSystem) 'is_system': isSystem,
+      };
+
+  @override
+  List<Object?> get props => [id, name, isSystem];
+}
+
+class CustomerShopContactModel extends Equatable {
+  const CustomerShopContactModel({
+    required this.id,
+    required this.customerShopId,
+    required this.contactName,
+    this.contactMobile,
+    this.contactEmail,
+    this.note,
+    this.active = true,
+  });
+
+  final int id;
+  final int customerShopId;
+  final String contactName;
+  final String? contactMobile;
+  final String? contactEmail;
+  final String? note;
+  final bool active;
+
+  factory CustomerShopContactModel.fromJson(Map<String, dynamic> json) =>
+      CustomerShopContactModel(
+        id: json['id'] as int,
+        customerShopId: json['customer_shop_id'] as int,
+        contactName: json['contact_name'] as String? ?? '',
+        contactMobile: json['contact_mobile'] as String?,
+        contactEmail: json['contact_email'] as String?,
+        note: json['note'] as String?,
+        active: json['active'] as bool? ?? true,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'customer_shop_id': customerShopId,
+        'contact_name': contactName,
+        if (contactMobile != null) 'contact_mobile': contactMobile,
+        if (contactEmail != null) 'contact_email': contactEmail,
+        if (note != null) 'note': note,
+        'active': active,
+      };
+
+  @override
+  List<Object?> get props => [id, contactName];
+}
+
+class PromotionProductModel extends Equatable {
+  const PromotionProductModel({
+    required this.id,
+    required this.productId,
+    this.percentDiscount,
+    this.flatDiscount,
+    this.product,
+  });
+
+  final int id;
+  final int productId;
+  final double? percentDiscount;
+  final double? flatDiscount;
+  final ProductModel? product;
+
+  factory PromotionProductModel.fromJson(Map<String, dynamic> json) =>
+      PromotionProductModel(
+        id: json['id'] as int,
+        productId: json['product_id'] as int,
+        percentDiscount: _toDouble(json['percent_discount']),
+        flatDiscount: _toDouble(json['flat_discount']),
+        product: json['product'] is Map
+            ? ProductModel.fromJson(json['product'] as Map<String, dynamic>)
+            : null,
+      );
+
+  static double? _toDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
+  }
+
+  Map<String, dynamic> toJson() => {
+        'product_id': productId,
+        if (percentDiscount != null) 'percent_discount': percentDiscount,
+        if (flatDiscount != null) 'flat_discount': flatDiscount,
+      };
+
+  @override
+  List<Object?> get props => [id, productId];
+}
+
+class PromotionModel extends Equatable {
+  const PromotionModel({
+    required this.id,
+    required this.name,
+    this.description,
+    this.customerTypeId,
+    this.startDate,
+    this.endDate,
+    this.percentDiscount,
+    this.flatDiscount,
+    this.active = true,
+    this.isExpired = false,
+    this.customerType,
+    this.promotionProducts = const [],
+  });
+
+  final int id;
+  final String name;
+  final String? description;
+  final int? customerTypeId;
+  final String? startDate;
+  final String? endDate;
+  final double? percentDiscount;
+  final double? flatDiscount;
+  final bool active;
+  final bool isExpired;
+  final CustomerTypeModel? customerType;
+  final List<PromotionProductModel> promotionProducts;
+
+  factory PromotionModel.fromJson(Map<String, dynamic> json) => PromotionModel(
+        id: json['id'] as int,
+        name: json['name'] as String? ?? '',
+        description: json['description'] as String?,
+        customerTypeId: json['customer_type_id'] as int?,
+        startDate: json['start_date']?.toString(),
+        endDate: json['end_date']?.toString(),
+        percentDiscount: _toDouble(json['percent_discount']),
+        flatDiscount: _toDouble(json['flat_discount']),
+        active: json['active'] as bool? ?? true,
+        isExpired: json['is_expired'] as bool? ?? false,
+        customerType: json['customer_type'] is Map
+            ? CustomerTypeModel.fromJson(json['customer_type'] as Map<String, dynamic>)
+            : null,
+        promotionProducts: (json['promotion_products'] as List<dynamic>? ?? [])
+            .map((e) => PromotionProductModel.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+
+  static double? _toDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
+  }
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        if (description != null) 'description': description,
+        if (customerTypeId != null) 'customer_type_id': customerTypeId,
+        if (startDate != null) 'start_date': startDate,
+        if (endDate != null) 'end_date': endDate,
+        if (percentDiscount != null) 'percent_discount': percentDiscount,
+        if (flatDiscount != null) 'flat_discount': flatDiscount,
+        'active': active,
+        'is_expired': isExpired,
+      };
+
+  @override
+  List<Object?> get props => [id, name, startDate, endDate];
+}
+
+class AdminUserModel extends Equatable {
+  const AdminUserModel({
+    required this.id,
+    required this.name,
+    this.email,
+    this.language,
+    this.roles = const [],
+    this.avatarUrl,
+  });
+
+  final int id;
+  final String name;
+  final String? email;
+  final String? language;
+  final List<String> roles;
+  final String? avatarUrl;
+
+  factory AdminUserModel.fromJson(Map<String, dynamic> json) => AdminUserModel(
+        id: json['id'] as int,
+        name: json['name'] as String? ?? '',
+        email: json['email'] as String?,
+        language: json['language'] as String?,
+        roles: (json['roles'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
+        avatarUrl: json['avatar_url'] as String?,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        if (email != null) 'email': email,
+        if (language != null) 'language': language,
+      };
+
+  @override
+  List<Object?> get props => [id, name, email];
+}
