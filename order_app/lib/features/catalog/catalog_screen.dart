@@ -2,6 +2,7 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/customer_context_provider.dart';
 import '../../providers/repositories.dart';
@@ -41,9 +42,11 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
   Future<void> _load() async {
     final customer = ref.read(customerContextProvider).profile;
     if (customer == null) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       setState(() {
         _loading = false;
-        _error = 'Customer profile not loaded yet.';
+        _error = l10n.orderCustomerProfileNotLoaded;
       });
       return;
     }
@@ -84,6 +87,7 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final customerState = ref.watch(customerContextProvider);
     final currency = NumberFormat.currency(symbol: 'SAR ');
 
@@ -101,9 +105,9 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
               Expanded(
                 child: TextField(
                   controller: _searchController,
-                  decoration: const InputDecoration(
-                    labelText: 'Search products',
-                    prefixIcon: Icon(Icons.search),
+                  decoration: InputDecoration(
+                    labelText: l10n.commonSearchProducts,
+                    prefixIcon: const Icon(Icons.search),
                   ),
                   onSubmitted: (_) => _load(),
                 ),
@@ -118,7 +122,7 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
               : _error != null
                   ? ErrorView(message: _error!, onRetry: _load)
                   : _products.isEmpty
-                      ? const EmptyView(message: 'No products found')
+                      ? EmptyView(message: l10n.commonNoProductsFound)
                       : RefreshIndicator(
                           onRefresh: _load,
                           child: ListView.builder(
@@ -133,7 +137,7 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                                   subtitle: Text(
                                     item.product.description?.isNotEmpty == true
                                         ? item.product.description!
-                                        : 'SKU ${item.product.id}',
+                                        : l10n.commonProductFallback(item.product.id),
                                   ),
                                   trailing: Text(
                                     currency.format(item.unitPrice),

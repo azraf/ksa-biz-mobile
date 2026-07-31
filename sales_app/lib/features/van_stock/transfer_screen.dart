@@ -2,6 +2,7 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/repositories.dart';
@@ -52,6 +53,7 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context);
     final fromId = requireSalesPersonId(ref.read(authProvider));
     if (fromId == null || _selectedProduct == null || _selectedTarget == null) return;
     setState(() => _submitting = true);
@@ -63,7 +65,7 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
             toSalesPersonId: _selectedTarget!.id,
           );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Transfer completed')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.salesVanTransferCompleted)));
         context.pop();
       }
     } catch (e) {
@@ -74,7 +76,9 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const LoadingView();
+    final l10n = AppLocalizations.of(context);
+
+    if (_loading) return LoadingView(message: l10n.commonLoading);
     return Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -82,7 +86,7 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
                   DropdownButtonFormField<InventoryStockModel>(
                     key: ValueKey(_selectedProduct?.productId),
                     initialValue: _selectedProduct,
-                    decoration: const InputDecoration(labelText: 'Your van product'),
+                    decoration: InputDecoration(labelText: l10n.salesVanTransferProduct),
                     items: _vanStock
                         .map((s) => DropdownMenuItem(
                               value: s,
@@ -95,7 +99,7 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
                   DropdownButtonFormField<SalesPersonModel>(
                     key: ValueKey(_selectedTarget?.id),
                     initialValue: _selectedTarget,
-                    decoration: const InputDecoration(labelText: 'Transfer to'),
+                    decoration: InputDecoration(labelText: l10n.salesVanTransferTo),
                     items: _salesPersons
                         .map((p) => DropdownMenuItem(value: p, child: Text(p.name)))
                         .toList(),
@@ -104,13 +108,13 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: _qtyController,
-                    decoration: const InputDecoration(labelText: 'Quantity'),
+                    decoration: InputDecoration(labelText: l10n.commonQuantity),
                     keyboardType: TextInputType.number,
                   ),
                   const Spacer(),
                   FilledButton(
                     onPressed: _submitting ? null : _submit,
-                    child: _submitting ? const CircularProgressIndicator() : const Text('Transfer'),
+                    child: _submitting ? const CircularProgressIndicator() : Text(l10n.salesVanTransfer),
                   ),
                 ],
               ),

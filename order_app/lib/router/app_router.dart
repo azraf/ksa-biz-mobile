@@ -2,6 +2,7 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:l10n/l10n.dart';
 
 import '../providers/auth_provider.dart';
 import '../providers/customer_context_provider.dart';
@@ -106,25 +107,27 @@ class HomeShell extends ConsumerWidget {
 
   final StatefulNavigationShell navigationShell;
 
-  String _titleForLocation(String location) {
-    if (location.contains('/orders/create')) return 'Create order';
-    if (RegExp(r'/orders/\d+').hasMatch(location)) return 'Order detail';
-    if (location.contains('/manual-orders/create')) return 'New request';
-    if (RegExp(r'/manual-orders/\d+').hasMatch(location)) return 'Request detail';
+  String _titleForLocation(BuildContext context, String location) {
+    final l10n = AppLocalizations.of(context);
+    if (location.contains('/orders/create')) return l10n.orderTitleCreateOrder;
+    if (RegExp(r'/orders/\d+').hasMatch(location)) return l10n.orderTitleOrderDetail;
+    if (location.contains('/manual-orders/create')) return l10n.orderTitleNewRequest;
+    if (RegExp(r'/manual-orders/\d+').hasMatch(location)) return l10n.orderTitleRequestDetail;
 
     return switch (navigationShell.currentIndex) {
-      0 => 'Catalog',
-      1 => 'Orders',
-      2 => 'Manual Orders',
-      3 => 'Profile',
-      _ => 'ARM Orders',
+      0 => l10n.orderTitleCatalog,
+      1 => l10n.orderNavOrders,
+      2 => l10n.orderTitleManualOrders,
+      3 => l10n.orderNavProfile,
+      _ => l10n.orderAppName,
     };
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final location = GoRouterState.of(context).matchedLocation;
-    final title = _titleForLocation(location);
+    final title = _titleForLocation(context, location);
     final showBack = Navigator.of(context).canPop();
 
     return Scaffold(
@@ -141,26 +144,26 @@ class HomeShell extends ConsumerWidget {
             initialLocation: index == navigationShell.currentIndex,
           );
         },
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.storefront_outlined),
-            selectedIcon: Icon(Icons.storefront),
-            label: 'Catalog',
+            icon: const Icon(Icons.storefront_outlined),
+            selectedIcon: const Icon(Icons.storefront),
+            label: l10n.orderNavCatalog,
           ),
           NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long),
-            label: 'Orders',
+            icon: const Icon(Icons.receipt_long_outlined),
+            selectedIcon: const Icon(Icons.receipt_long),
+            label: l10n.orderNavOrders,
           ),
           NavigationDestination(
-            icon: Icon(Icons.phone_in_talk_outlined),
-            selectedIcon: Icon(Icons.phone_in_talk),
-            label: 'Manual',
+            icon: const Icon(Icons.phone_in_talk_outlined),
+            selectedIcon: const Icon(Icons.phone_in_talk),
+            label: l10n.orderNavManual,
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profile',
+            icon: const Icon(Icons.person_outline),
+            selectedIcon: const Icon(Icons.person),
+            label: l10n.orderNavProfile,
           ),
         ],
       ),

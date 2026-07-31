@@ -1,0 +1,578 @@
+{
+  "@@locale": "ar",
+  "commonRetry": "إعادة المحاولة",
+  "commonCancel": "إلغاء",
+  "commonSave": "حفظ",
+  "commonDelete": "حذف",
+  "commonBack": "رجوع",
+  "commonSubmit": "إرسال",
+  "commonSkip": "تخطي",
+  "commonAdd": "إضافة",
+  "commonPhoto": "صورة",
+  "commonVoice": "صوت",
+  "commonStop": "إيقاف",
+  "commonLoading": "جارٍ التحميل...",
+  "commonSignIn": "تسجيل الدخول",
+  "commonSignOut": "تسجيل الخروج",
+  "commonEmail": "البريد الإلكتروني",
+  "commonPassword": "كلمة المرور",
+  "commonApiBaseUrl": "رابط واجهة API",
+  "commonApiUrl": "رابط API",
+  "commonRoles": "الأدوار",
+  "commonActingAs": "يعمل باسم",
+  "commonUser": "مستخدم",
+  "commonPhone": "الهاتف",
+  "commonMobile": "الجوال",
+  "commonNameRequired": "الاسم *",
+  "commonAddress": "العنوان",
+  "commonCity": "المدينة",
+  "commonReason": "السبب",
+  "commonQuantity": "الكمية",
+  "commonNotes": "ملاحظات",
+  "commonNotesOptional": "ملاحظات (اختياري)",
+  "commonItems": "العناصر",
+  "commonNoItemsYet": "لا توجد عناصر بعد",
+  "commonTotal": "الإجمالي: {amount}",
+  "@commonTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "commonUnit": "الوحدة",
+  "commonUnitCarton": "كرتون (CTN)",
+  "commonUnitPiece": "قطعة (pcs) · {piecesPerCarton} لكل كرتون",
+  "@commonUnitPiece": {
+    "placeholders": {
+      "piecesPerCarton": {
+        "type": "int"
+      }
+    }
+  },
+  "commonPrice": "السعر",
+  "commonDiscount": "الخصم",
+  "commonVat": "ضريبة القيمة المضافة",
+  "commonSearchProducts": "البحث عن المنتجات",
+  "commonProductPriceCtn": "ر.س {price} / كرتون · {pieces} قطعة",
+  "@commonProductPriceCtn": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      },
+      "pieces": {
+        "type": "String"
+      }
+    }
+  },
+  "commonProductPrice": "ر.س {price}",
+  "@commonProductPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "commonQtyLine": "الكمية {quantity}",
+  "@commonQtyLine": {
+    "placeholders": {
+      "quantity": {
+        "type": "String"
+      }
+    }
+  },
+  "commonQtyAtPrice": "الكمية {quantity} @ {price}",
+  "@commonQtyAtPrice": {
+    "placeholders": {
+      "quantity": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "commonProductFallback": "منتج #{id}",
+  "@commonProductFallback": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "commonShopFallback": "متجر #{id}",
+  "@commonShopFallback": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "commonOrderNumber": "طلب #{id}",
+  "@commonOrderNumber": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "commonRequestNumber": "طلب #{id}",
+  "@commonRequestNumber": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "commonRecording": "تسجيل",
+  "commonRecordings": "التسجيلات",
+  "commonAddRecording": "إضافة تسجيل",
+  "commonRecordAudio": "تسجيل صوت",
+  "commonRecordVideo": "تسجيل فيديو",
+  "commonStopAndUpload": "إيقاف ورفع",
+  "commonRecordingUploaded": "تم رفع التسجيل",
+  "commonCall": "اتصال",
+  "commonWhatsapp": "واتساب",
+  "commonCouldNotOpen": "تعذر فتح {action}",
+  "@commonCouldNotOpen": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "commonPhoneDialer": "مُطبّق الاتصال",
+  "commonDiary": "اليوميات",
+  "commonDiaryTitle": "اليوميات — {customerName}",
+  "@commonDiaryTitle": {
+    "placeholders": {
+      "customerName": {
+        "type": "String"
+      }
+    }
+  },
+  "commonDiaryNote": "ملاحظة يومية",
+  "commonDiaryEmpty": "لا توجد ملاحظات يومية بعد.",
+  "commonDiaryText": "نص",
+  "commonDiaryLoadMore": "تحميل المزيد",
+  "commonDiaryPlayVoice": "تشغيل الملاحظة الصوتية",
+  "commonAddNote": "إضافة ملاحظة",
+  "commonTextNote": "ملاحظة نصية",
+  "commonRecordingTitle": "جارٍ التسجيل...",
+  "commonStopAndSave": "إيقاف وحفظ",
+  "commonAddVisitNoteTitle": "إضافة ملاحظة زيارة؟",
+  "commonAddVisitNoteBody": "إضافة ملاحظة يومية لـ {customerName}؟",
+  "@commonAddVisitNoteBody": {
+    "placeholders": {
+      "customerName": {
+        "type": "String"
+      }
+    }
+  },
+  "commonGpsNotCaptured": "لم يُلتقط",
+  "commonGpsCapturing": "جارٍ الالتقاط...",
+  "commonGpsRefresh": "تحديث",
+  "commonGpsCapture": "التقاط GPS",
+  "commonGpsLocationRequired": "إذن الموقع مطلوب لـ GPS المتجر.",
+  "commonCameraPermission": "إذن الكاميرا مطلوب.",
+  "commonMicrophonePermission": "إذن الميكروفون مطلوب.",
+  "commonRecordingPermission": "الإذن مطلوب لاختيار التسجيلات.",
+  "commonAll": "الكل",
+  "commonCash": "نقدي",
+  "commonBankTransfer": "تحويل بنكي",
+  "commonCheque": "شيك",
+  "commonOther": "أخرى",
+  "commonNoProductsFound": "لم يُعثر على منتجات",
+  "commonNoProductsCached": "لا توجد منتجات مخزنة. اتصل بالإنترنت لتحميل البيانات.",
+  "commonNameIsRequired": "الاسم مطلوب",
+  "commonAddAtLeastOneProduct": "أضف منتجاً واحداً على الأقل",
+  "commonPlaceOrder": "تأكيد الطلب",
+  "commonSourceLabel": "المصدر: {source}",
+  "@commonSourceLabel": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "commonReference": "المرجع",
+  "commonCallReference": "مرجع المكالمة",
+  "commonManualOrderRequest": "طلب يدوي",
+  "commonOrderNotes": "ملاحظات الطلب",
+  "commonOrderNotesHint": "صف المنتجات والكميات أو التعليمات الخاصة",
+  "commonSubmitRequest": "إرسال الطلب",
+  "commonNewOrder": "طلب جديد",
+  "commonNoOrdersYet": "لا توجد طلبات بعد",
+  "commonCreateOrder": "إنشاء طلب",
+  "commonOrderDetail": "تفاصيل الطلب",
+  "commonEditOrder": "تعديل الطلب",
+  "commonCustomer": "العميل",
+  "commonPaid": "مدفوع",
+  "commonDue": "مستحق",
+  "commonTotalLabel": "الإجمالي",
+  "commonGrandDiscount": "خصم إجمالي",
+  "commonDueDate": "تاريخ الاستحقاق",
+  "commonOverdue": "متأخر",
+  "commonOverdueDays": "{days} يوم",
+  "@commonOverdueDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "commonPayments": "المدفوعات",
+  "commonLanguage": "اللغة",
+  "commonLanguageEnglish": "English",
+  "commonLanguageArabic": "العربية",
+  "commonLanguageBangla": "বাংলা",
+  "commonConvert": "تحويل",
+  "commonPickVideo": "اختيار فيديو",
+  "salesAppName": "ARM Sales(M)",
+  "salesSignInSubtitle": "سجّل الدخول بحساب مندوب المبيعات",
+  "salesNavHome": "الرئيسية",
+  "salesNavManual": "يدوي",
+  "salesNavOrders": "الطلبات",
+  "salesNavVan": "الشاحنة",
+  "salesNavDues": "المستحقات",
+  "salesTitleDashboard": "لوحة التحكم",
+  "salesTitleManualOrders": "الطلبات اليدوية",
+  "salesTitleOrders": "الطلبات",
+  "salesTitleVanStock": "مخزون الشاحنة",
+  "salesTitleDues": "المستحقات",
+  "salesTitleCreateOrder": "إنشاء طلب",
+  "salesTitleEditOrder": "تعديل الطلب",
+  "salesTitleOrderDetail": "تفاصيل الطلب",
+  "salesTitleConvertOrder": "تحويل إلى طلب",
+  "salesTitleManualOrder": "طلب يدوي",
+  "salesTitleLoadVan": "تحميل الشاحنة",
+  "salesTitleTransferStock": "نقل المخزون",
+  "salesTitleDamageReplacement": "استبدال تالف",
+  "salesTitleProductExchange": "تبديل منتج",
+  "salesSelectSalesperson": "اختر مندوب المبيعات",
+  "salesSearchSalesperson": "البحث بالاسم أو البريد",
+  "salesNoSalespeople": "لم يُعثر على مندوبي مبيعات",
+  "salesProfile": "الملف الشخصي",
+  "salesSalespersonProfile": "ملف مندوب المبيعات",
+  "salesNoSalespersonSelected": "لم يُختر مندوب مبيعات",
+  "salesChooseSalespersonHint": "اختر مندوب مبيعات لأداء مهام المبيعات.",
+  "salesSelectSalespersonBtn": "اختر مندوب المبيعات",
+  "salesChangeSalespersonBtn": "تغيير مندوب المبيعات",
+  "salesSelectSalespersonFirst": "اختر مندوب مبيعات أولاً.",
+  "salesDashboardLoading": "جارٍ تحميل لوحة التحكم...",
+  "salesDashboardSelectSp": "اختر مندوب مبيعات لعرض لوحة التحكم.",
+  "salesDashboardNoProfile": "حسابك غير مرتبط بملف مندوب مبيعات.",
+  "salesHello": "مرحباً، {name}",
+  "@salesHello": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "salesDefaultSalesperson": "مندوب مبيعات",
+  "salesActingAsName": "يعمل باسم: {name}",
+  "@salesActingAsName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "salesCardOutstandingDues": "المستحقات المعلقة",
+  "salesCardUnpaidOrders": "{count} طلبات غير مدفوعة",
+  "@salesCardUnpaidOrders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "salesCardManualOrders": "الطلبات اليدوية",
+  "salesCardManualSubtitle": "مفتوح / معيّن / قيد المراجعة",
+  "salesCardVanStock": "مخزون الشاحنة",
+  "salesCardVanProducts": "{count} منتجات",
+  "@salesCardVanProducts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "salesCardLowStockAlerts": "{count} تنبيهات مخزون منخفض",
+  "@salesCardLowStockAlerts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "salesCardTapManageStock": "اضغط لإدارة المخزون",
+  "salesCardMyOrders": "طلباتي",
+  "salesCardViewAll": "عرض الكل",
+  "salesCardOrdersSubtitle": "إنشاء وتعديل الطلبات",
+  "salesCardWatchlist": "قائمة المراقبة",
+  "salesCardWatchlistValue": "حفظ العملاء المحتملين",
+  "salesCardWatchlistSubtitle": "مواقع GPS للزيارات المستقبلية",
+  "salesQuickSaveLocation": "حفظ الموقع الحالي سريعاً",
+  "salesLocationSaved": "تم حفظ الموقع في قائمة المراقبة",
+  "salesAddNotesAction": "إضافة ملاحظات",
+  "salesNearbyShop": "متجر قريب: {name} ({distance}م)",
+  "@salesNearbyShop": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "salesDuplicateWatchlist": "تكرار في قائمة المراقبة ضمن {distance}م",
+  "@salesDuplicateWatchlist": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "salesDuesTotalDue": "إجمالي المستحق",
+  "salesDuesNone": "لا توجد مستحقات معلقة",
+  "salesDuesLongPressHint": "اضغط مطولاً على طلب لتحصيل الدفع",
+  "salesNotifications": "الإشعارات",
+  "salesNotificationsEmpty": "لا توجد إشعارات",
+  "salesOfflineMode": "وضع عدم الاتصال",
+  "salesOfflineSync": "مزامنة",
+  "salesOfflineSyncing": "جارٍ مزامنة {count, plural, =1{تغيير واحد معلق...} other{{count} تغييرات معلقة...}}",
+  "@salesOfflineSyncing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "salesOfflineSaved": "غير متصل — {count, plural, =1{تغيير واحد محفوظ محلياً} other{{count} تغييرات محفوظة محلياً}}",
+  "@salesOfflineSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "salesManualTabOpenPool": "المجموعة المفتوحة",
+  "salesManualTabAssigned": "معيّن",
+  "salesManualTabInReview": "قيد المراجعة",
+  "salesManualTabConverted": "تم التحويل",
+  "salesManualEmpty": "لا توجد طلبات يدوية",
+  "salesManualClaimed": "تم المطالبة بالطلب",
+  "salesManualClaimRequest": "المطالبة بالطلب",
+  "salesManualConvertOrder": "تحويل إلى طلب",
+  "salesManualViewConverted": "عرض الطلب المحوّل",
+  "salesManualTakeShopPhoto": "التقاط صورة المتجر",
+  "salesManualShopPhotoUploaded": "تم رفع صورة المتجر",
+  "salesManualGpsCleared": "تم مسح GPS المتجر",
+  "salesManualGpsUpdated": "تم تحديث GPS: {gps}",
+  "@salesManualGpsUpdated": {
+    "placeholders": {
+      "gps": {
+        "type": "String"
+      }
+    }
+  },
+  "salesConvertShopOrder": "طلب متجر",
+  "salesConvertOrderItems": "عناصر الطلب",
+  "salesConvertAddProduct": "إضافة منتج",
+  "salesConvertOrderCreated": "تم إنشاء الطلب",
+  "salesOrderWalkInQuick": "طلب سريع بدون موعد",
+  "salesOrderWalkInShop": "متجر بدون موعد",
+  "salesOrderWalkInSubtitle": "بيع سريع مجهول",
+  "salesOrderWalkInNote": "ملاحظة (اختياري)",
+  "salesOrderWalkInNoteHint": "ملاحظة أمين الصندوق",
+  "salesOrderCustomerType": "نوع العميل",
+  "salesOrderSelectCustomer": "اختر العميل",
+  "salesOrderSelected": "محدد",
+  "salesOrderAddCustomer": "إضافة عميل",
+  "salesOrderSelectCustomerItems": "اختر العميل وأضف العناصر",
+  "salesOrderSavedLocally": "تم حفظ الطلب محلياً — ستتم المزامنة عند الاتصال",
+  "salesOrderWalkInUnavailable": "متجر بدون موعد غير متاح. اتصل بالإنترنت للمزامنة.",
+  "salesOrderGoOnlineCatalog": "اتصل بالإنترنت أولاً لتحميل بيانات العملاء والمنتجات.",
+  "salesOrderNoCustomerTypes": "لا تتوفر أنواع عملاء. اتصل بالإنترنت للتحديث.",
+  "salesOrderCannotEdit": "لا يمكن تعديل هذا الطلب.",
+  "salesOrderAddProduct": "إضافة منتج",
+  "salesOrderChangeQty": "تغيير الكمية",
+  "salesOrderSalesReturn": "مرتجع مبيعات",
+  "salesOrderReturn": "إرجاع",
+  "salesOrderRemoveItem": "إزالة عنصر",
+  "salesOrderUpdateQty": "تحديث الكمية",
+  "salesOrderCollectPayment": "تحصيل الدفع",
+  "salesOrderCollectPaymentTitle": "تحصيل الدفع #{orderId}",
+  "@salesOrderCollectPaymentTitle": {
+    "placeholders": {
+      "orderId": {
+        "type": "int"
+      }
+    }
+  },
+  "salesOrderAmountDue": "المبلغ المستحق",
+  "salesOrderAmountCollected": "المبلغ المحصّل",
+  "salesOrderPaymentMethod": "طريقة الدفع",
+  "salesOrderRecordPayment": "تسجيل الدفع",
+  "salesOrderEnterValidAmount": "أدخل مبلغاً صالحاً",
+  "salesOrderRequestDiscount": "طلب خصم",
+  "salesOrderRequestGrandDiscount": "طلب خصم إجمالي",
+  "salesOrderDiscountAmount": "مبلغ الخصم (ر.س)",
+  "salesOrderDiscountSubmitted": "تم إرسال طلب الخصم",
+  "salesOrderCancelOrder": "إلغاء الطلب",
+  "salesOrderCancelled": "تم إلغاء الطلب",
+  "salesOrderEditTooltip": "تعديل الطلب",
+  "salesPickerSelectShop": "اختر متجراً",
+  "salesPickerSelectVan": "اختر شاحنة",
+  "salesPickerSelectImporter": "اختر مستورداً",
+  "salesPickerSearchHint": "البحث بالاسم أو الهاتف أو جهة الاتصال",
+  "salesPickerNoCustomers": "لم يُعثر على عملاء",
+  "salesQuickNewShop": "متجر جديد",
+  "salesQuickShopName": "اسم المتجر *",
+  "salesQuickSaveShop": "حفظ المتجر",
+  "salesQuickNewVan": "عميل شاحنة جديد",
+  "salesQuickIqama": "الإقامة",
+  "salesQuickSaveVan": "حفظ الشاحنة",
+  "salesQuickNewImporter": "مستورد جديد",
+  "salesQuickSaveImporter": "حفظ المستورد",
+  "salesVanEmpty": "الشاحنة فارغة",
+  "salesVanLowStock": "مخزون منخفض",
+  "salesVanExchange": "تبديل",
+  "salesVanDamage": "تالف",
+  "salesVanTransfer": "نقل",
+  "salesVanLoad": "تحميل الشاحنة",
+  "salesVanUnloadMessage": "إرجاع المخزون من الشاحنة إلى المستودع.",
+  "salesVanUnloadQty": "الكمية (كراتين)",
+  "salesVanUnloadBtn": "تفريغ",
+  "salesVanLoadSelectAll": "تحديد الكل",
+  "salesVanLoadNoStock": "لا يوجد مخزون في المستودع",
+  "salesVanLoadAvailable": "متاح: {balance}",
+  "@salesVanLoadAvailable": {
+    "placeholders": {
+      "balance": {
+        "type": "String"
+      }
+    }
+  },
+  "salesVanLoadSelectOne": "اختر منتجاً واحداً على الأقل",
+  "salesVanLoadSuccess": "تم تحميل {count} منتج(ات) إلى الشاحنة",
+  "@salesVanLoadSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "salesVanLoadAll": "تحميل كل المتاح",
+  "salesVanLoadSelected": "تحميل المحدد",
+  "salesVanTransferProduct": "منتج شاحنتك",
+  "salesVanTransferTo": "نقل إلى",
+  "salesVanTransferCompleted": "اكتمل النقل",
+  "salesVanDamageSelect": "اختر المنتج",
+  "salesVanDamageRecord": "تسجيل الاستبدال",
+  "salesVanExchangeReturns": "مرتجعات العميل",
+  "salesVanExchangeSelectReturn": "اختر منتج الإرجاع",
+  "salesVanExchangeReturnQty": "كمية الإرجاع",
+  "salesVanExchangeSettlement": "التسوية",
+  "salesVanExchangeGiveProduct": "إعطاء منتج آخر",
+  "salesVanExchangeCashRefund": "استرداد نقدي",
+  "salesVanExchangeGiveTo": "إعطاء للعميل",
+  "salesVanExchangeSelectOut": "اختر منتج الإخراج",
+  "salesVanExchangeOutQty": "كمية الإخراج",
+  "salesVanExchangeCashAmount": "المبلغ النقدي (ر.س)",
+  "salesVanExchangeRecord": "تسجيل التبديل",
+  "salesWatchlist": "قائمة المراقبة",
+  "salesWatchlistMap": "خريطة قائمة المراقبة",
+  "salesWatchlistViewMap": "عرض على الخريطة",
+  "salesWatchlistSortDistance": "ترتيب حسب المسافة",
+  "salesWatchlistActive": "نشط",
+  "salesWatchlistArchived": "مؤرشف",
+  "salesWatchlistAddLocation": "إضافة موقع",
+  "salesWatchlistLoading": "جارٍ تحميل قائمة المراقبة...",
+  "salesWatchlistEmpty": "لا توجد عناصر في قائمة المراقبة بعد.",
+  "salesWatchlistSaveTitle": "حفظ في قائمة المراقبة",
+  "salesWatchlistPlaceName": "اسم المكان",
+  "salesWatchlistNoteOptional": "ملاحظة (اختياري)",
+  "salesWatchlistSaveLocation": "حفظ الموقع",
+  "salesWatchlistVoicePending": "يُحفظ الصوت بعد إنشاء الإدخال (الرفع من التفاصيل).",
+  "salesWatchlistPhotosAfterSave": "أضف الصور بعد الحفظ من شاشة التفاصيل.",
+  "salesWatchlistDeleteTitle": "حذف إدخال قائمة المراقبة؟",
+  "salesWatchlistSyncBeforeConvert": "زامن هذا العنصر عبر الإنترنت قبل التحويل.",
+  "salesWatchlistConvertTitle": "تحويل إلى متجر",
+  "salesWatchlistShopName": "اسم المتجر *",
+  "salesWatchlistPriorityRating": "تقييم الأولوية",
+  "salesWatchlistShopCreated": "تم إنشاء المتجر",
+  "salesWatchlistSyncBeforeUpload": "زامن هذا العنصر قبل رفع المرفقات.",
+  "salesWatchlistRecordingHint": "جارٍ التسجيل… اضغط صوت مرة أخرى للإيقاف (3 دقائق كحد أقصى)",
+  "salesWatchlistMarkVisited": "تحديد كمُزار",
+  "salesWatchlistDismiss": "رفض",
+  "salesWatchlistVoiceNotes": "ملاحظات صوتية",
+  "salesWatchlistPhotos": "الصور",
+  "salesWatchlistConvertBtn": "تحويل إلى متجر",
+  "salesWatchlistPendingSync": "في انتظار المزامنة",
+  "orderAppName": "ARM Orders",
+  "orderSignInSubtitle": "سجّل الدخول بحساب متجرك أو شاحنتك أو الاستيراد",
+  "orderNavCatalog": "الكتالوج",
+  "orderNavOrders": "الطلبات",
+  "orderNavManual": "يدوي",
+  "orderNavProfile": "الملف الشخصي",
+  "orderTitleCatalog": "الكتالوج",
+  "orderTitleCreateOrder": "إنشاء طلب",
+  "orderTitleOrderDetail": "تفاصيل الطلب",
+  "orderTitleNewRequest": "طلب جديد",
+  "orderTitleRequestDetail": "تفاصيل الطلب",
+  "orderTitleManualOrders": "الطلبات اليدوية",
+  "orderProfileCustomer": "ملف العميل",
+  "orderProfileShopContacts": "جهات اتصال المتجر",
+  "orderManualShopOnly": "طلبات الطلب اليدوي متاحة لحسابات المتاجر فقط.",
+  "orderManualNewRequest": "طلب جديد",
+  "orderManualEmpty": "لا توجد طلبات يدوية بعد",
+  "orderManualShopOnlyCreate": "يمكن لحسابات المتاجر فقط إنشاء طلبات يدوية",
+  "orderManualNotesRequired": "يرجى إدخال ملاحظات الطلب",
+  "orderCustomerProfileNotLoaded": "لم يُحمّل ملف العميل",
+  "statusConfirmed": "مؤكد",
+  "statusModified": "معدّل",
+  "statusCancelled": "ملغى",
+  "statusPending": "معلق",
+  "statusPartial": "جزئي",
+  "statusPaid": "مدفوع",
+  "statusAssigned": "معيّن",
+  "statusInReview": "قيد المراجعة",
+  "statusConverted": "تم التحويل",
+  "statusActive": "نشط",
+  "statusArchived": "مؤرشف",
+  "statusPendingSync": "في انتظار المزامنة",
+  "statusDiscountPendingApproval": "خصم في انتظار الموافقة",
+  "statusAddItem": "إضافة عنصر",
+  "statusUpdateItem": "تحديث عنصر",
+  "statusRemoveItem": "إزالة عنصر",
+  "statusReturn": "إرجاع",
+  "statusFrequent": "متكرر",
+  "statusRegular": "منتظم",
+  "statusOccasional": "عرضي",
+  "statusDormant": "خامل",
+  "statusNever": "أبداً",
+  "statusGoodPayer": "دافع جيد",
+  "statusFair": "مقبول",
+  "statusPoor": "ضعيف",
+  "salesPickerFiltersOffline": "بعض الفلاتر تتطلب الإنترنت. عرض العملاء المخزنين فقط.",
+  "salesPickerPhoneSearch": "البحث عن جميع العملاء بالهاتف",
+  "salesPickerOrderPlaced": "تم الطلب",
+  "commonArea": "المنطقة",
+  "commonAllAreas": "كل المناطق",
+  "commonSortAz": "أ–ي",
+  "commonSortNearest": "الأقرب",
+  "salesPickerInactive60d": "غير نشط 60+ يوم",
+  "commonPageOf": "صفحة {page} من {lastPage}",
+  "salesPickerFiltersNeedInternet": "فلاتر النشاط والمنطقة تتطلب الإنترنت.",
+  "salesPickerActivity1Day": "يوم واحد",
+  "salesPickerActivity1Week": "أسبوع",
+  "salesPickerActivity15Days": "15 يوماً",
+  "salesPickerActivity30Days": "30 يوماً",
+  "salesPickerActivity60Days": "60 يوماً",
+  "salesPickerActivity90Days": "90 يوماً",
+  "commonAvgOrderInterval": "~كل {days} يوم"
+}

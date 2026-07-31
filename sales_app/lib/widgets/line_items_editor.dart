@@ -1,6 +1,7 @@
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:l10n/l10n.dart';
 
 import '../providers/connectivity_provider.dart';
 import '../providers/repositories.dart';
@@ -15,7 +16,7 @@ Future<ProductModel?> pickProduct(BuildContext context, WidgetRef ref) async {
     if (!hasProducts) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No products cached. Go online to download product data.')),
+          SnackBar(content: Text(AppLocalizations.of(context).commonNoProductsCached)),
         );
       }
       return null;
@@ -69,6 +70,8 @@ class _ProductPickerSheetState extends State<_ProductPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SizedBox(
@@ -82,7 +85,7 @@ class _ProductPickerSheetState extends State<_ProductPickerSheet> {
                   Expanded(
                     child: TextField(
                       controller: _searchController,
-                      decoration: const InputDecoration(labelText: 'Search products'),
+                      decoration: InputDecoration(labelText: l10n.commonSearchProducts),
                       onSubmitted: (_) => _search(),
                     ),
                   ),
@@ -96,20 +99,22 @@ class _ProductPickerSheetState extends State<_ProductPickerSheet> {
                 child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
               ),
             Expanded(
-              child: ListView.builder(
-                itemCount: _products.length,
-                itemBuilder: (_, i) {
-                  final p = _products[i];
-                  final subtitle = p.allowBreakPack
-                      ? 'SAR ${p.price} / CTN · ${p.piecesPerCarton} pcs'
-                      : 'SAR ${p.price}';
-                  return ListTile(
-                    title: Text(p.name),
-                    subtitle: Text(subtitle),
-                    onTap: () => Navigator.pop(context, p),
-                  );
-                },
-              ),
+              child: _products.isEmpty
+                  ? Center(child: Text(l10n.commonNoProductsFound))
+                  : ListView.builder(
+                      itemCount: _products.length,
+                      itemBuilder: (_, i) {
+                        final p = _products[i];
+                        final subtitle = p.allowBreakPack
+                            ? l10n.commonProductPriceCtn('${p.price}', '${p.piecesPerCarton}')
+                            : l10n.commonProductPrice('${p.price}');
+                        return ListTile(
+                          title: Text(p.name),
+                          subtitle: Text(subtitle),
+                          onTap: () => Navigator.pop(context, p),
+                        );
+                      },
+                    ),
             ),
           ],
         ),

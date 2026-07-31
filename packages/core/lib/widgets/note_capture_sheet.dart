@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:l10n/l10n.dart';
 
 class NoteCaptureSheet extends StatefulWidget {
   const NoteCaptureSheet({
@@ -43,6 +44,7 @@ class _NoteCaptureSheetState extends State<NoteCaptureSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: EdgeInsets.only(
         left: 16,
@@ -54,14 +56,14 @@ class _NoteCaptureSheetState extends State<NoteCaptureSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Add note', style: Theme.of(context).textTheme.titleLarge),
+          Text(l10n.commonAddNote, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
           TextField(
             controller: _controller,
             maxLines: 4,
-            decoration: const InputDecoration(
-              labelText: 'Text note',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l10n.commonTextNote,
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 12),
@@ -81,14 +83,14 @@ class _NoteCaptureSheetState extends State<NoteCaptureSheet> {
                           }
                         },
                   icon: const Icon(Icons.mic),
-                  label: const Text('Voice'),
+                  label: Text(l10n.commonVoice),
                 ),
               if (widget.showImages && widget.onPickImage != null) ...[
                 const SizedBox(width: 8),
                 OutlinedButton.icon(
                   onPressed: _saving ? null : widget.onPickImage,
                   icon: const Icon(Icons.photo_camera),
-                  label: const Text('Photo'),
+                  label: Text(l10n.commonPhoto),
                 ),
               ],
               const Spacer(),
@@ -96,7 +98,7 @@ class _NoteCaptureSheetState extends State<NoteCaptureSheet> {
                 onPressed: _saving || widget.onSaveText == null ? null : _save,
                 child: _saving
                     ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text('Save'),
+                    : Text(l10n.commonSave),
               ),
             ],
           ),

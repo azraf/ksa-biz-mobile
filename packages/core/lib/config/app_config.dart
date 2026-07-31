@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 class AppConfig {
+  static const appLocaleKey = 'app_locale';
+  static const supportedLocales = [Locale('en'), Locale('ar'), Locale('bn')];
   static const defaultApiBaseUrl = 'https://ksabiz.makewebsmart.com/api/v1';
   static const apiBaseUrlKey = 'api_base_url';
   static const authTokenKey = 'auth_token';

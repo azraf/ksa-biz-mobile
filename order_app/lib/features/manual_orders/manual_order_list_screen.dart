@@ -2,6 +2,7 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/customer_context_provider.dart';
 import '../../providers/repositories.dart';
@@ -28,9 +29,11 @@ class _ManualOrderListScreenState extends ConsumerState<ManualOrderListScreen> {
   Future<void> _load() async {
     final profile = ref.read(customerContextProvider).profile;
     if (profile == null) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       setState(() {
         _loading = false;
-        _error = 'Customer profile not loaded.';
+        _error = l10n.orderCustomerProfileNotLoaded;
       });
       return;
     }
@@ -65,11 +68,12 @@ class _ManualOrderListScreenState extends ConsumerState<ManualOrderListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final profile = ref.watch(customerContextProvider).profile;
 
     if (profile != null && !profile.isShop) {
-      return const EmptyView(
-        message: 'Manual order requests are available for shop accounts only.',
+      return EmptyView(
+        message: l10n.orderManualShopOnly,
         icon: Icons.info_outline,
       );
     }
@@ -79,7 +83,7 @@ class _ManualOrderListScreenState extends ConsumerState<ManualOrderListScreen> {
           ? FloatingActionButton.extended(
               onPressed: () => context.push('/manual-orders/create'),
               icon: const Icon(Icons.add),
-              label: const Text('New request'),
+              label: Text(l10n.orderManualNewRequest),
             )
           : null,
       body: _loading
@@ -87,7 +91,7 @@ class _ManualOrderListScreenState extends ConsumerState<ManualOrderListScreen> {
           : _error != null
               ? ErrorView(message: _error!, onRetry: _load)
               : _requests.isEmpty
-                  ? const EmptyView(message: 'No manual order requests yet')
+                  ? EmptyView(message: l10n.orderManualEmpty)
                   : RefreshIndicator(
                       onRefresh: _load,
                       child: ListView.builder(
@@ -95,11 +99,13 @@ class _ManualOrderListScreenState extends ConsumerState<ManualOrderListScreen> {
                         itemBuilder: (_, i) {
                           final item = _requests[i];
                           return ListTile(
-                            title: Text(item.customerShop?.name ?? 'Shop #${item.customerShopId}'),
+                            title: Text(
+                              item.customerShop?.name ?? l10n.commonShopFallback(item.customerShopId),
+                            ),
                             subtitle: Text(
                               [
                                 if (item.notes != null && item.notes!.isNotEmpty) item.notes!,
-                                '${item.source} · ${item.status}',
+                                '${item.source} · ${localizedStatusLabel(context, item.status)}',
                               ].join('\n'),
                             ),
                             trailing: StatusChip(label: item.status),

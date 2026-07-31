@@ -1,0 +1,595 @@
+{
+  "@@locale": "en",
+  "commonRetry": "Retry",
+  "commonCancel": "Cancel",
+  "commonSave": "Save",
+  "commonDelete": "Delete",
+  "commonBack": "Back",
+  "commonSubmit": "Submit",
+  "commonSkip": "Skip",
+  "commonAdd": "Add",
+  "commonPhoto": "Photo",
+  "commonVoice": "Voice",
+  "commonStop": "Stop",
+  "commonLoading": "Loading...",
+  "commonSignIn": "Sign in",
+  "commonSignOut": "Sign out",
+  "commonEmail": "Email",
+  "commonPassword": "Password",
+  "commonApiBaseUrl": "API base URL",
+  "commonApiUrl": "API URL",
+  "commonRoles": "Roles",
+  "commonActingAs": "Acting as",
+  "commonUser": "User",
+  "commonPhone": "Phone",
+  "commonMobile": "Mobile",
+  "commonNameRequired": "Name *",
+  "commonAddress": "Address",
+  "commonCity": "City",
+  "commonReason": "Reason",
+  "commonQuantity": "Quantity",
+  "commonNotes": "Notes",
+  "commonNotesOptional": "Notes (optional)",
+  "commonItems": "Items",
+  "commonNoItemsYet": "No items yet",
+  "commonTotal": "Total: {amount}",
+  "@commonTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "commonUnit": "Unit",
+  "commonUnitCarton": "Carton (CTN)",
+  "commonUnitPiece": "Piece (pcs) · {piecesPerCarton} per CTN",
+  "@commonUnitPiece": {
+    "placeholders": {
+      "piecesPerCarton": {
+        "type": "int"
+      }
+    }
+  },
+  "commonPrice": "Price",
+  "commonDiscount": "Discount",
+  "commonVat": "VAT",
+  "commonSearchProducts": "Search products",
+  "commonProductPriceCtn": "SAR {price} / CTN · {pieces} pcs",
+  "@commonProductPriceCtn": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      },
+      "pieces": {
+        "type": "String"
+      }
+    }
+  },
+  "commonProductPrice": "SAR {price}",
+  "@commonProductPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "commonQtyLine": "Qty {quantity}",
+  "@commonQtyLine": {
+    "placeholders": {
+      "quantity": {
+        "type": "String"
+      }
+    }
+  },
+  "commonQtyAtPrice": "Qty {quantity} @ {price}",
+  "@commonQtyAtPrice": {
+    "placeholders": {
+      "quantity": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "commonProductFallback": "Product #{id}",
+  "@commonProductFallback": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "commonShopFallback": "Shop #{id}",
+  "@commonShopFallback": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "commonOrderNumber": "Order #{id}",
+  "@commonOrderNumber": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "commonRequestNumber": "Request #{id}",
+  "@commonRequestNumber": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "commonRecording": "Recording",
+  "commonRecordings": "Recordings",
+  "commonAddRecording": "Add recording",
+  "commonRecordAudio": "Record audio",
+  "commonRecordVideo": "Record video",
+  "commonStopAndUpload": "Stop & upload",
+  "commonRecordingUploaded": "Recording uploaded",
+  "commonCall": "Call",
+  "commonWhatsapp": "WhatsApp",
+  "commonCouldNotOpen": "Could not open {action}",
+  "@commonCouldNotOpen": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "commonPhoneDialer": "phone dialer",
+  "commonDiary": "Diary",
+  "commonDiaryTitle": "Diary — {customerName}",
+  "@commonDiaryTitle": {
+    "placeholders": {
+      "customerName": {
+        "type": "String"
+      }
+    }
+  },
+  "commonDiaryNote": "Diary note",
+  "commonDiaryEmpty": "No diary entries yet.",
+  "commonDiaryText": "Text",
+  "commonDiaryLoadMore": "Load more",
+  "commonDiaryPlayVoice": "Play voice note",
+  "commonAddNote": "Add note",
+  "commonTextNote": "Text note",
+  "commonRecordingTitle": "Recording...",
+  "commonStopAndSave": "Stop & save",
+  "commonAddVisitNoteTitle": "Add visit note?",
+  "commonAddVisitNoteBody": "Add a diary note for {customerName}?",
+  "@commonAddVisitNoteBody": {
+    "placeholders": {
+      "customerName": {
+        "type": "String"
+      }
+    }
+  },
+  "commonGpsNotCaptured": "Not captured",
+  "commonGpsCapturing": "Capturing...",
+  "commonGpsRefresh": "Refresh",
+  "commonGpsCapture": "Capture GPS",
+  "commonGpsLocationRequired": "Location permission is required for shop GPS.",
+  "commonCameraPermission": "Camera permission is required.",
+  "commonMicrophonePermission": "Microphone permission is required.",
+  "commonRecordingPermission": "Permission required to pick recordings.",
+  "commonAll": "All",
+  "commonCash": "Cash",
+  "commonBankTransfer": "Bank transfer",
+  "commonCheque": "Cheque",
+  "commonOther": "Other",
+  "commonNoProductsFound": "No products found",
+  "commonNoProductsCached": "No products cached. Go online to download product data.",
+  "commonNameIsRequired": "Name is required",
+  "commonAddAtLeastOneProduct": "Add at least one product",
+  "commonPlaceOrder": "Place order",
+  "commonSourceLabel": "Source: {source}",
+  "@commonSourceLabel": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "commonReference": "Reference",
+  "commonCallReference": "Call reference",
+  "commonManualOrderRequest": "Manual order request",
+  "commonOrderNotes": "Order notes",
+  "commonOrderNotesHint": "Describe products, quantities, or special instructions",
+  "commonSubmitRequest": "Submit request",
+  "commonNewOrder": "New order",
+  "commonNoOrdersYet": "No orders yet",
+  "commonCreateOrder": "Create order",
+  "commonOrderDetail": "Order detail",
+  "commonEditOrder": "Edit order",
+  "commonCustomer": "Customer",
+  "commonPaid": "Paid",
+  "commonDue": "Due",
+  "commonTotalLabel": "Total",
+  "commonGrandDiscount": "Grand discount",
+  "commonDueDate": "Due date",
+  "commonOverdue": "Overdue",
+  "commonOverdueDays": "{days} days",
+  "@commonOverdueDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "commonPayments": "Payments",
+  "commonLanguage": "Language",
+  "commonLanguageEnglish": "English",
+  "commonLanguageArabic": "العربية",
+  "commonLanguageBangla": "বাংলা",
+  "commonConvert": "Convert",
+  "commonPickVideo": "Pick video",
+  "salesAppName": "ARM Sales(M)",
+  "salesSignInSubtitle": "Sign in with your salesperson account",
+  "salesNavHome": "Home",
+  "salesNavManual": "Manual",
+  "salesNavOrders": "Orders",
+  "salesNavVan": "Van",
+  "salesNavDues": "Dues",
+  "salesTitleDashboard": "Dashboard",
+  "salesTitleManualOrders": "Manual Orders",
+  "salesTitleOrders": "Orders",
+  "salesTitleVanStock": "Van Stock",
+  "salesTitleDues": "Dues",
+  "salesTitleCreateOrder": "Create order",
+  "salesTitleEditOrder": "Edit order",
+  "salesTitleOrderDetail": "Order detail",
+  "salesTitleConvertOrder": "Convert to order",
+  "salesTitleManualOrder": "Manual order",
+  "salesTitleLoadVan": "Load van",
+  "salesTitleTransferStock": "Transfer stock",
+  "salesTitleDamageReplacement": "Damage replacement",
+  "salesTitleProductExchange": "Product exchange",
+  "salesSelectSalesperson": "Select salesperson",
+  "salesSearchSalesperson": "Search by name or email",
+  "salesNoSalespeople": "No salespeople found",
+  "salesProfile": "Profile",
+  "salesSalespersonProfile": "Salesperson profile",
+  "salesNoSalespersonSelected": "No salesperson selected",
+  "salesChooseSalespersonHint": "Choose a salesperson to perform sales tasks.",
+  "salesSelectSalespersonBtn": "Select salesperson",
+  "salesChangeSalespersonBtn": "Change salesperson",
+  "salesSelectSalespersonFirst": "Select a salesperson first.",
+  "salesDashboardLoading": "Loading dashboard...",
+  "salesDashboardSelectSp": "Select a salesperson to view the dashboard.",
+  "salesDashboardNoProfile": "Your account is not linked to a salesperson profile.",
+  "salesHello": "Hello, {name}",
+  "@salesHello": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "salesDefaultSalesperson": "Salesperson",
+  "salesActingAsName": "Acting as: {name}",
+  "@salesActingAsName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "salesCardOutstandingDues": "Outstanding dues",
+  "salesCardUnpaidOrders": "{count} unpaid orders",
+  "@salesCardUnpaidOrders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "salesCardManualOrders": "Manual orders",
+  "salesCardManualSubtitle": "Open / assigned / in review",
+  "salesCardVanStock": "Van stock",
+  "salesCardVanProducts": "{count} products",
+  "@salesCardVanProducts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "salesCardLowStockAlerts": "{count} low stock alerts",
+  "@salesCardLowStockAlerts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "salesCardTapManageStock": "Tap to manage stock",
+  "salesCardMyOrders": "My orders",
+  "salesCardViewAll": "View all",
+  "salesCardOrdersSubtitle": "Create and edit orders",
+  "salesCardWatchlist": "Watch-list",
+  "salesCardWatchlistValue": "Save leads",
+  "salesCardWatchlistSubtitle": "GPS locations for future visits",
+  "salesQuickSaveLocation": "Quick-save current location",
+  "salesLocationSaved": "Location saved to watch-list",
+  "salesAddNotesAction": "Add notes",
+  "salesNearbyShop": "Nearby shop: {name} ({distance}m)",
+  "@salesNearbyShop": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "salesDuplicateWatchlist": "Duplicate watch-list within {distance}m",
+  "@salesDuplicateWatchlist": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "salesDuesTotalDue": "Total due",
+  "salesDuesNone": "No outstanding dues",
+  "salesDuesLongPressHint": "Long press an order to collect payment",
+  "salesNotifications": "Notifications",
+  "salesNotificationsEmpty": "No notifications",
+  "salesOfflineMode": "Offline mode",
+  "salesOfflineSync": "SYNC",
+  "salesOfflineSyncing": "Syncing {count, plural, =1{1 pending change...} other{{count} pending changes...}}",
+  "@salesOfflineSyncing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "salesOfflineSaved": "Offline — {count, plural, =1{1 change saved locally} other{{count} changes saved locally}}",
+  "@salesOfflineSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "salesManualTabOpenPool": "Open pool",
+  "salesManualTabAssigned": "Assigned",
+  "salesManualTabInReview": "In review",
+  "salesManualTabConverted": "Converted",
+  "salesManualEmpty": "No manual orders",
+  "salesManualClaimed": "Request claimed",
+  "salesManualClaimRequest": "Claim request",
+  "salesManualConvertOrder": "Convert to order",
+  "salesManualViewConverted": "View converted order",
+  "salesManualTakeShopPhoto": "Take shop photo",
+  "salesManualShopPhotoUploaded": "Shop photo uploaded",
+  "salesManualGpsCleared": "Shop GPS cleared",
+  "salesManualGpsUpdated": "GPS updated: {gps}",
+  "@salesManualGpsUpdated": {
+    "placeholders": {
+      "gps": {
+        "type": "String"
+      }
+    }
+  },
+  "salesConvertShopOrder": "Shop order",
+  "salesConvertOrderItems": "Order items",
+  "salesConvertAddProduct": "Add product",
+  "salesConvertOrderCreated": "Order created",
+  "salesOrderWalkInQuick": "Walk-in quick order",
+  "salesOrderWalkInShop": "Walk-in Shop",
+  "salesOrderWalkInSubtitle": "Anonymous quick sale",
+  "salesOrderWalkInNote": "Note (optional)",
+  "salesOrderWalkInNoteHint": "Cashier note",
+  "salesOrderCustomerType": "Customer type",
+  "salesOrderSelectCustomer": "Select customer",
+  "salesOrderSelected": "Selected",
+  "salesOrderAddCustomer": "Add customer",
+  "salesOrderSelectCustomerItems": "Select customer and add items",
+  "salesOrderSavedLocally": "Order saved locally — will sync when online",
+  "salesOrderWalkInUnavailable": "Walk-in shop not available. Go online to sync.",
+  "salesOrderGoOnlineCatalog": "Go online first to download customer and product data.",
+  "salesOrderNoCustomerTypes": "No customer types available. Go online to refresh data.",
+  "salesOrderCannotEdit": "This order cannot be edited.",
+  "salesOrderAddProduct": "Add product",
+  "salesOrderChangeQty": "Change quantity",
+  "salesOrderSalesReturn": "Sales return",
+  "salesOrderReturn": "Return",
+  "salesOrderRemoveItem": "Remove item",
+  "salesOrderUpdateQty": "Update quantity",
+  "salesOrderCollectPayment": "Collect payment",
+  "salesOrderCollectPaymentTitle": "Collect payment #{orderId}",
+  "@salesOrderCollectPaymentTitle": {
+    "placeholders": {
+      "orderId": {
+        "type": "int"
+      }
+    }
+  },
+  "salesOrderAmountDue": "Amount due",
+  "salesOrderAmountCollected": "Amount collected",
+  "salesOrderPaymentMethod": "Payment method",
+  "salesOrderRecordPayment": "Record payment",
+  "salesOrderEnterValidAmount": "Enter a valid amount",
+  "salesOrderRequestDiscount": "Request discount",
+  "salesOrderRequestGrandDiscount": "Request grand discount",
+  "salesOrderDiscountAmount": "Discount amount (SAR)",
+  "salesOrderDiscountSubmitted": "Discount request submitted",
+  "salesOrderCancelOrder": "Cancel order",
+  "salesOrderCancelled": "Order cancelled",
+  "salesOrderEditTooltip": "Edit order",
+  "salesPickerSelectShop": "Select shop",
+  "salesPickerSelectVan": "Select van",
+  "salesPickerSelectImporter": "Select importer",
+  "salesPickerSearchHint": "Search name, phone, contact",
+  "salesPickerNoCustomers": "No customers found",
+  "salesQuickNewShop": "New shop",
+  "salesQuickShopName": "Shop name *",
+  "salesQuickSaveShop": "Save shop",
+  "salesQuickNewVan": "New van customer",
+  "salesQuickIqama": "Iqama",
+  "salesQuickSaveVan": "Save van",
+  "salesQuickNewImporter": "New importer",
+  "salesQuickSaveImporter": "Save importer",
+  "salesVanEmpty": "Van is empty",
+  "salesVanLowStock": "Low stock",
+  "salesVanExchange": "Exchange",
+  "salesVanDamage": "Damage",
+  "salesVanTransfer": "Transfer",
+  "salesVanLoad": "Load van",
+  "salesVanUnloadMessage": "Return stock from van to warehouse.",
+  "salesVanUnloadQty": "Quantity (cartons)",
+  "salesVanUnloadBtn": "Unload",
+  "salesVanLoadSelectAll": "Select all",
+  "salesVanLoadNoStock": "No warehouse stock available",
+  "salesVanLoadAvailable": "Available: {balance}",
+  "@salesVanLoadAvailable": {
+    "placeholders": {
+      "balance": {
+        "type": "String"
+      }
+    }
+  },
+  "salesVanLoadSelectOne": "Select at least one product",
+  "salesVanLoadSuccess": "Loaded {count} product(s) to van",
+  "@salesVanLoadSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "salesVanLoadAll": "Load all available",
+  "salesVanLoadSelected": "Load selected",
+  "salesVanTransferProduct": "Your van product",
+  "salesVanTransferTo": "Transfer to",
+  "salesVanTransferCompleted": "Transfer completed",
+  "salesVanDamageSelect": "Select product",
+  "salesVanDamageRecord": "Record replacement",
+  "salesVanExchangeReturns": "Customer returns",
+  "salesVanExchangeSelectReturn": "Select return product",
+  "salesVanExchangeReturnQty": "Return quantity",
+  "salesVanExchangeSettlement": "Settlement",
+  "salesVanExchangeGiveProduct": "Give another product",
+  "salesVanExchangeCashRefund": "Cash refund",
+  "salesVanExchangeGiveTo": "Give to customer",
+  "salesVanExchangeSelectOut": "Select out product",
+  "salesVanExchangeOutQty": "Out quantity",
+  "salesVanExchangeCashAmount": "Cash amount (SAR)",
+  "salesVanExchangeRecord": "Record exchange",
+  "salesWatchlist": "Watch-list",
+  "salesWatchlistMap": "Watch-list map",
+  "salesWatchlistViewMap": "View on map",
+  "salesWatchlistSortDistance": "Sort by distance",
+  "salesWatchlistActive": "Active",
+  "salesWatchlistArchived": "Archived",
+  "salesWatchlistAddLocation": "Add location",
+  "salesWatchlistLoading": "Loading watch-list...",
+  "salesWatchlistEmpty": "No watch-list items yet.",
+  "salesWatchlistSaveTitle": "Save to watch-list",
+  "salesWatchlistPlaceName": "Place name",
+  "salesWatchlistNoteOptional": "Note (optional)",
+  "salesWatchlistSaveLocation": "Save location",
+  "salesWatchlistVoicePending": "Voice saved after you create the entry (upload on detail).",
+  "salesWatchlistPhotosAfterSave": "Add photos after saving from detail screen.",
+  "salesWatchlistDeleteTitle": "Delete watch-list entry?",
+  "salesWatchlistSyncBeforeConvert": "Sync this item online before converting.",
+  "salesWatchlistConvertTitle": "Convert to shop",
+  "salesWatchlistShopName": "Shop name *",
+  "salesWatchlistPriorityRating": "Priority rating",
+  "salesWatchlistShopCreated": "Shop created",
+  "salesWatchlistSyncBeforeUpload": "Sync this item before uploading attachments.",
+  "salesWatchlistRecordingHint": "Recording… tap Voice again to stop (max 3 min)",
+  "salesWatchlistMarkVisited": "Mark visited",
+  "salesWatchlistDismiss": "Dismiss",
+  "salesWatchlistVoiceNotes": "Voice notes",
+  "salesWatchlistPhotos": "Photos",
+  "salesWatchlistConvertBtn": "Convert to shop",
+  "salesWatchlistPendingSync": "Pending sync",
+  "orderAppName": "ARM Orders",
+  "orderSignInSubtitle": "Sign in with your shop, van, or importer account",
+  "orderNavCatalog": "Catalog",
+  "orderNavOrders": "Orders",
+  "orderNavManual": "Manual",
+  "orderNavProfile": "Profile",
+  "orderTitleCatalog": "Catalog",
+  "orderTitleCreateOrder": "Create order",
+  "orderTitleOrderDetail": "Order detail",
+  "orderTitleNewRequest": "New request",
+  "orderTitleRequestDetail": "Request detail",
+  "orderTitleManualOrders": "Manual Orders",
+  "orderProfileCustomer": "Customer profile",
+  "orderProfileShopContacts": "Shop contacts",
+  "orderManualShopOnly": "Manual order requests are available for shop accounts only.",
+  "orderManualNewRequest": "New request",
+  "orderManualEmpty": "No manual order requests yet",
+  "orderManualShopOnlyCreate": "Only shop accounts can create manual requests",
+  "orderManualNotesRequired": "Please enter order notes",
+  "orderCustomerProfileNotLoaded": "Customer profile not loaded",
+  "statusConfirmed": "Confirmed",
+  "statusModified": "Modified",
+  "statusCancelled": "Cancelled",
+  "statusPending": "Pending",
+  "statusPartial": "Partial",
+  "statusPaid": "Paid",
+  "statusAssigned": "Assigned",
+  "statusInReview": "In review",
+  "statusConverted": "Converted",
+  "statusActive": "Active",
+  "statusArchived": "Archived",
+  "statusPendingSync": "Pending sync",
+  "statusDiscountPendingApproval": "Discount pending approval",
+  "statusAddItem": "Add item",
+  "statusUpdateItem": "Update item",
+  "statusRemoveItem": "Remove item",
+  "statusReturn": "Return",
+  "statusFrequent": "Frequent",
+  "statusRegular": "Regular",
+  "statusOccasional": "Occasional",
+  "statusDormant": "Dormant",
+  "statusNever": "Never",
+  "statusGoodPayer": "Good payer",
+  "statusFair": "Fair",
+  "statusPoor": "Poor",
+  "salesPickerFiltersOffline": "Some filters require internet. Showing cached customers only.",
+  "salesPickerPhoneSearch": "Searching all customers by phone",
+  "salesPickerOrderPlaced": "Order placed",
+  "commonArea": "Area",
+  "commonAllAreas": "All areas",
+  "commonSortAz": "A–Z",
+  "commonSortNearest": "Nearest",
+  "salesPickerInactive60d": "Inactive 60d+",
+  "commonPageOf": "Page {page} of {lastPage}",
+  "@commonPageOf": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "lastPage": {
+        "type": "int"
+      }
+    }
+  },
+  "salesPickerFiltersNeedInternet": "Activity and area filters require internet.",
+  "salesPickerActivity1Day": "1 day",
+  "salesPickerActivity1Week": "1 week",
+  "salesPickerActivity15Days": "15 days",
+  "salesPickerActivity30Days": "30 days",
+  "salesPickerActivity60Days": "60 days",
+  "salesPickerActivity90Days": "90 days",
+  "commonAvgOrderInterval": "~every {days} days",
+  "@commonAvgOrderInterval": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  }
+}

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:l10n/l10n.dart';
 
 import '../models/customer_diary_note.dart';
 import '../utils/contact_launcher.dart';
@@ -24,6 +25,7 @@ class CustomerDiaryPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -32,30 +34,30 @@ class CustomerDiaryPanel extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text('Diary', style: Theme.of(context).textTheme.titleMedium),
+                Text(l10n.commonDiary, style: Theme.of(context).textTheme.titleMedium),
                 const Spacer(),
                 TextButton.icon(
                   onPressed: onAddText,
                   icon: const Icon(Icons.note_add_outlined, size: 18),
-                  label: const Text('Text'),
+                  label: Text(l10n.commonDiaryText),
                 ),
                 if (onAddVoice != null)
                   TextButton.icon(
                     onPressed: onAddVoice,
                     icon: const Icon(Icons.mic_none, size: 18),
-                    label: const Text('Voice'),
+                    label: Text(l10n.commonVoice),
                   ),
               ],
             ),
             if (loading) const LinearProgressIndicator(),
             if (!loading && notes.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12),
-                child: Text('No diary entries yet.'),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Text(l10n.commonDiaryEmpty),
               ),
             ...notes.map((n) => _DiaryTile(note: n)),
             if (hasMore && onLoadMore != null)
-              TextButton(onPressed: onLoadMore, child: const Text('Load more')),
+              TextButton(onPressed: onLoadMore, child: Text(l10n.commonDiaryLoadMore)),
           ],
         ),
       ),
@@ -70,6 +72,7 @@ class _DiaryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final date = note.createdAt != null ? DateTime.tryParse(note.createdAt!) : null;
     final dateLabel = date != null ? DateFormat('d MMM y, HH:mm').format(date.toLocal()) : '';
 
@@ -82,7 +85,7 @@ class _DiaryTile extends StatelessWidget {
                   ? () => ContactLauncher.openUrl(note.recording!.url!)
                   : null,
               icon: const Icon(Icons.play_arrow),
-              label: const Text('Play voice note'),
+              label: Text(l10n.commonDiaryPlayVoice),
             )
           : Text(note.body ?? ''),
     );

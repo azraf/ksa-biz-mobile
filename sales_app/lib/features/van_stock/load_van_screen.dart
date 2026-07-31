@@ -2,6 +2,7 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/repositories.dart';
@@ -52,6 +53,7 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
     setState(() => _loading = true);
     try {
       final stock = await ref.read(inventoryRepositoryProvider).warehouseStock();
+      final l10n = AppLocalizations.of(context);
       for (final line in _lines) {
         line.controller.dispose();
       }
@@ -60,7 +62,7 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
             .map(
               (s) => _LoadLine(
                 productId: s.productId,
-                name: s.product?.name ?? 'Product #${s.productId}',
+                name: s.product?.name ?? l10n.commonProductFallback(s.productId),
                 available: s.displayBalance,
                 controller: TextEditingController(text: '${s.balance > 0 ? s.balance : 1}'),
               ),
@@ -96,13 +98,14 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
   }
 
   Future<void> _submit({bool loadAll = false}) async {
+    final l10n = AppLocalizations.of(context);
     final salesPersonId = requireSalesPersonId(ref.read(authProvider));
     if (salesPersonId == null) return;
 
     final lines = loadAll ? null : _selectedLines();
     if (!loadAll && (lines == null || lines.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Select at least one product')),
+        SnackBar(content: Text(l10n.salesVanLoadSelectOne)),
       );
       return;
     }
@@ -116,7 +119,7 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
           );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Loaded ${result.loaded.length} product(s) to van')),
+          SnackBar(content: Text(l10n.salesVanLoadSuccess(result.loaded.length))),
         );
         context.pop();
       }
@@ -128,17 +131,19 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const LoadingView();
+    final l10n = AppLocalizations.of(context);
+
+    if (_loading) return LoadingView(message: l10n.commonLoading);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Load van'),
+        title: Text(l10n.salesTitleLoadVan),
         actions: [
-          TextButton(onPressed: _lines.isEmpty ? null : _selectAll, child: const Text('Select all')),
+          TextButton(onPressed: _lines.isEmpty ? null : _selectAll, child: Text(l10n.salesVanLoadSelectAll)),
         ],
       ),
       body: _lines.isEmpty
-          ? const EmptyView(message: 'No warehouse stock available')
+          ? EmptyView(message: l10n.salesVanLoadNoStock)
           : ListView.builder(
               itemCount: _lines.length,
               itemBuilder: (_, i) {
@@ -147,7 +152,7 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
                   value: line.selected,
                   onChanged: (v) => setState(() => line.selected = v ?? false),
                   title: Text(line.name),
-                  subtitle: Text('Available: ${line.available}'),
+                  subtitle: Text(l10n.salesVanLoadAvailable(line.available)),
                   secondary: SizedBox(
                     width: 72,
                     child: TextField(
@@ -178,12 +183,12 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Load all available'),
+                    : Text(l10n.salesVanLoadAll),
               ),
               const SizedBox(height: 8),
               OutlinedButton(
                 onPressed: _submitting ? null : () => _submit(),
-                child: const Text('Load selected'),
+                child: Text(l10n.salesVanLoadSelected),
               ),
             ],
           ),

@@ -2,6 +2,7 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/repositories.dart';
@@ -65,28 +66,30 @@ class _SelectSalesPersonScreenState extends ConsumerState<SelectSalesPersonScree
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Select salesperson')),
+      appBar: AppBar(title: Text(l10n.salesSelectSalesperson)),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
             child: TextField(
               controller: _searchController,
-              decoration: const InputDecoration(
-                labelText: 'Search by name or email',
-                prefixIcon: Icon(Icons.search),
+              decoration: InputDecoration(
+                labelText: l10n.salesSearchSalesperson,
+                prefixIcon: const Icon(Icons.search),
               ),
               onChanged: (_) => setState(() {}),
             ),
           ),
           Expanded(
             child: _loading
-                ? const LoadingView()
+                ? LoadingView(message: l10n.commonLoading)
                 : _error != null
                     ? ErrorView(message: _error!, onRetry: _load)
                     : _filtered.isEmpty
-                        ? const EmptyView(message: 'No salespeople found')
+                        ? EmptyView(message: l10n.salesNoSalespeople)
                         : ListView.builder(
                             itemCount: _filtered.length,
                             itemBuilder: (_, i) {

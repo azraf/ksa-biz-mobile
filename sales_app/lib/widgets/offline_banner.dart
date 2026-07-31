@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:l10n/l10n.dart';
 
 import '../providers/connectivity_provider.dart';
 import '../providers/repositories.dart';
@@ -9,6 +10,7 @@ class OfflineBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final online = ref.watch(onlineStatusProvider);
     final pending = ref.watch(pendingSyncCountProvider);
 
@@ -25,9 +27,7 @@ class OfflineBanner extends ConsumerWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    online
-                        ? 'Syncing $count pending change${count == 1 ? '' : 's'}...'
-                        : 'Offline — $count change${count == 1 ? '' : 's'} saved locally',
+                    online ? l10n.salesOfflineSyncing(count) : l10n.salesOfflineSaved(count),
                     style: const TextStyle(fontSize: 13),
                   ),
                 ),
@@ -37,7 +37,7 @@ class OfflineBanner extends ConsumerWidget {
                       ref.read(syncServiceProvider).syncIfOnline();
                       ref.invalidate(pendingSyncCountProvider);
                     },
-                    child: const Text('SYNC'),
+                    child: Text(l10n.salesOfflineSync),
                   ),
               ],
             ),
@@ -48,13 +48,13 @@ class OfflineBanner extends ConsumerWidget {
           ? const SizedBox.shrink()
           : Material(
               color: Colors.red.shade100,
-              child: const Padding(
-                padding: EdgeInsets.all(8),
+              child: Padding(
+                padding: const EdgeInsets.all(8),
                 child: Row(
                   children: [
-                    Icon(Icons.cloud_off, size: 18),
-                    SizedBox(width: 8),
-                    Text('Offline mode', style: TextStyle(fontSize: 13)),
+                    const Icon(Icons.cloud_off, size: 18),
+                    const SizedBox(width: 8),
+                    Text(l10n.salesOfflineMode, style: const TextStyle(fontSize: 13)),
                   ],
                 ),
               ),

@@ -4,6 +4,7 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:l10n/l10n.dart';
 
 import '../providers/connectivity_provider.dart';
 import '../providers/repositories.dart';
@@ -83,11 +84,11 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
     super.dispose();
   }
 
-  String get _title => switch (widget.customerType) {
-        'customer_shop' => 'Select shop',
-        'customer_van' => 'Select van',
-        'customer_importer' => 'Select importer',
-        _ => 'Select customer',
+  String _title(AppLocalizations l10n) => switch (widget.customerType) {
+        'customer_shop' => l10n.salesPickerSelectShop,
+        'customer_van' => l10n.salesPickerSelectVan,
+        'customer_importer' => l10n.salesPickerSelectImporter,
+        _ => l10n.salesOrderSelectCustomer,
       };
 
   bool _isPhoneQuery(String q) {
@@ -133,8 +134,10 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
       }
 
       if (!online && (_activityDays != null || _areaId != null)) {
+        if (!mounted) return;
+        final msg = AppLocalizations.of(context).salesPickerFiltersNeedInternet;
         setState(() {
-          _error = 'Activity and area filters require internet.';
+          _error = msg;
           _loading = false;
         });
         return;
@@ -295,8 +298,19 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
     return null;
   }
 
+  List<(int?, String)> _activityFilterOptions(AppLocalizations l10n) => [
+        (null, l10n.commonAll),
+        (1, l10n.salesPickerActivity1Day),
+        (7, l10n.salesPickerActivity1Week),
+        (15, l10n.salesPickerActivity15Days),
+        (30, l10n.salesPickerActivity30Days),
+        (60, l10n.salesPickerActivity60Days),
+        (90, l10n.salesPickerActivity90Days),
+      ];
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final height = MediaQuery.of(context).size.height * 0.85;
     final online = ref.watch(onlineStatusProvider);
     final needsNetwork = !online && (_activityDays != null || _areaId != null || _phoneSearchMode);
@@ -307,10 +321,10 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
         child: Column(
           children: [
             ListTile(
-              title: Text(_title, style: Theme.of(context).textTheme.titleMedium),
+              title: Text(_title(l10n), style: Theme.of(context).textTheme.titleMedium),
               trailing: IconButton(
                 icon: const Icon(Icons.person_add),
-                tooltip: 'Add customer',
+                tooltip: l10n.salesOrderAddCustomer,
                 onPressed: _quickCreate,
               ),
             ),
@@ -321,9 +335,9 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
                   Expanded(
                     child: TextField(
                       controller: _searchController,
-                      decoration: const InputDecoration(
-                        labelText: 'Search name, phone, contact',
-                        prefixIcon: Icon(Icons.search),
+                      decoration: InputDecoration(
+                        labelText: l10n.salesPickerSearchHint,
+                        prefixIcon: const Icon(Icons.search),
                       ),
                       onSubmitted: (_) => _fetch(page: 1),
                     ),
@@ -334,14 +348,14 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
             ),
             if (needsNetwork)
               MaterialBanner(
-                content: const Text('Some filters require internet. Showing cached customers only.'),
+                content: Text(l10n.salesPickerFiltersOffline),
                 actions: [TextButton(onPressed: () {}, child: const SizedBox.shrink())],
               ),
             if (_phoneSearchMode)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 child: Text(
-                  'Searching all customers by phone',
+                  l10n.salesPickerPhoneSearch,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.primary,
                       ),
@@ -354,8 +368,8 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
                 children: [
                   DropdownButton<int?>(
                     value: _activityDays,
-                    hint: const Text('Order placed'),
-                    items: customerActivityFilterOptions
+                    hint: Text(l10n.salesPickerOrderPlaced),
+                    items: _activityFilterOptions(l10n)
                         .map((e) => DropdownMenuItem(value: e.$1, child: Text(e.$2)))
                         .toList(),
                     onChanged: (v) {
@@ -367,9 +381,9 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
                   if (_areas.isNotEmpty)
                     DropdownButton<int?>(
                       value: _areaId,
-                      hint: const Text('Area'),
+                      hint: Text(l10n.commonArea),
                       items: [
-                        const DropdownMenuItem(value: null, child: Text('All areas')),
+                        DropdownMenuItem(value: null, child: Text(l10n.commonAllAreas)),
                         ..._areas.map((a) => DropdownMenuItem(value: a.id, child: Text(a.name))),
                       ],
                       onChanged: (v) {
@@ -381,9 +395,9 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
                     const SizedBox(width: 8),
                     DropdownButton<String>(
                       value: _sort,
-                      items: const [
-                        DropdownMenuItem(value: 'name', child: Text('A–Z')),
-                        DropdownMenuItem(value: 'distance', child: Text('Nearest')),
+                      items: [
+                        DropdownMenuItem(value: 'name', child: Text(l10n.commonSortAz)),
+                        DropdownMenuItem(value: 'distance', child: Text(l10n.commonSortNearest)),
                       ],
                       onChanged: (v) {
                         if (v == null) return;
@@ -404,7 +418,7 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
                   : _items.isEmpty
-                      ? const Center(child: Text('No customers found'))
+                      ? Center(child: Text(l10n.salesPickerNoCustomers))
                       : ListView.separated(
                           itemCount: _items.length,
                           separatorBuilder: (_, __) => const Divider(height: 1),
@@ -428,7 +442,7 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
                                   if (_diaryTarget(item) case final target?)
                                     IconButton(
                                       icon: const Icon(Icons.notes_outlined),
-                                      tooltip: 'Diary',
+                                      tooltip: l10n.commonDiary,
                                       onPressed: () => showCustomerDiarySheet(
                                         context: context,
                                         ref: ref,
@@ -438,8 +452,8 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
                                       ),
                                     ),
                                   if (_isInactive(item))
-                                    const Chip(
-                                      label: Text('Inactive 60d+', style: TextStyle(fontSize: 10)),
+                                    Chip(
+                                      label: Text(l10n.salesPickerInactive60d, style: const TextStyle(fontSize: 10)),
                                       visualDensity: VisualDensity.compact,
                                     ),
                                 ],
@@ -459,7 +473,7 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
                       onPressed: _page > 1 ? () => _fetch(page: _page - 1) : null,
                       icon: const Icon(Icons.chevron_left),
                     ),
-                    Text('Page $_page of $_lastPage'),
+                    Text(l10n.commonPageOf(_page, _lastPage)),
                     IconButton(
                       onPressed: _page < _lastPage ? () => _fetch(page: _page + 1) : null,
                       icon: const Icon(Icons.chevron_right),

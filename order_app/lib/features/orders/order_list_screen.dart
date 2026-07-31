@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/customer_context_provider.dart';
 import '../../providers/repositories.dart';
@@ -29,9 +30,11 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
   Future<void> _load() async {
     final profile = ref.read(customerContextProvider).profile;
     if (profile == null) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       setState(() {
         _loading = false;
-        _error = 'Customer profile not loaded.';
+        _error = l10n.orderCustomerProfileNotLoaded;
       });
       return;
     }
@@ -58,6 +61,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final customerState = ref.watch(customerContextProvider);
     final currency = NumberFormat.currency(symbol: 'SAR ');
 
@@ -73,14 +77,14 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/orders/create'),
         icon: const Icon(Icons.add),
-        label: const Text('New order'),
+        label: Text(l10n.commonNewOrder),
       ),
       body: _loading
           ? const LoadingView()
           : _error != null
               ? ErrorView(message: _error!, onRetry: _load)
               : _orders.isEmpty
-                  ? const EmptyView(message: 'No orders yet')
+                  ? EmptyView(message: l10n.commonNoOrdersYet)
                   : RefreshIndicator(
                       onRefresh: _load,
                       child: ListView.builder(
@@ -88,8 +92,10 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
                         itemBuilder: (_, i) {
                           final order = _orders[i];
                           return ListTile(
-                            title: Text('Order #${order.id}'),
-                            subtitle: Text('${order.paymentStatus} · ${order.status}'),
+                            title: Text(l10n.commonOrderNumber(order.id)),
+                            subtitle: Text(
+                              '${localizedStatusLabel(context, order.paymentStatus)} · ${localizedStatusLabel(context, order.status)}',
+                            ),
                             trailing: Text(currency.format(order.totalBill)),
                             onTap: () => context.push('/orders/${order.id}'),
                           );

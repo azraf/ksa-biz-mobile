@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/customer_context_provider.dart';
 import '../../providers/repositories.dart';
@@ -18,10 +19,11 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
   bool _submitting = false;
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context);
     final profile = ref.read(customerContextProvider).profile;
     if (profile == null || _items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Add at least one product')),
+        SnackBar(content: Text(l10n.commonAddAtLeastOneProduct)),
       );
       return;
     }
@@ -47,6 +49,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final profile = ref.watch(customerContextProvider).profile;
 
     return ListView(
@@ -63,7 +66,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
         const SizedBox(height: 16),
         Row(
           children: [
-            Text('Items', style: Theme.of(context).textTheme.titleMedium),
+            Text(l10n.commonItems, style: Theme.of(context).textTheme.titleMedium),
             const Spacer(),
             TextButton.icon(
               onPressed: () async {
@@ -73,7 +76,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                 }
               },
               icon: const Icon(Icons.add),
-              label: const Text('Add'),
+              label: Text(l10n.commonAdd),
             ),
           ],
         ),
@@ -91,7 +94,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                   width: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Place order'),
+              : Text(l10n.commonPlaceOrder),
         ),
       ],
     );

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:l10n/l10n.dart';
 
 import 'package:maps_ui/maps_ui.dart';
 
@@ -54,15 +55,16 @@ class _QuickShopCreateSheetState extends ConsumerState<QuickShopCreateSheet> {
   }
 
   Future<void> _save() async {
+    final l10n = AppLocalizations.of(context);
     if (!ref.read(onlineStatusProvider)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Go online to add a new customer.')),
+        SnackBar(content: Text(l10n.salesOrderGoOnlineCatalog)),
       );
       return;
     }
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Name is required')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.commonNameIsRequired)));
       return;
     }
     setState(() => _saving = true);
@@ -90,20 +92,22 @@ class _QuickShopCreateSheetState extends ConsumerState<QuickShopCreateSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('New shop', style: Theme.of(context).textTheme.titleLarge),
+          Text(l10n.salesQuickNewShop, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
-          TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'Shop name *')),
-          TextField(controller: _phoneController, decoration: const InputDecoration(labelText: 'Phone')),
+          TextField(controller: _nameController, decoration: InputDecoration(labelText: l10n.salesQuickShopName)),
+          TextField(controller: _phoneController, decoration: InputDecoration(labelText: l10n.commonPhone)),
           GpsLocationRow(
             gps: _gps,
             title: 'GPS (optional)',
-            notCapturedLabel: 'Not captured',
+            notCapturedLabel: l10n.commonGpsNotCaptured,
             trailing: GpsCaptureActions(
               gps: _gps,
               onGpsChanged: (value) => setState(() => _gps = value),
@@ -118,7 +122,7 @@ class _QuickShopCreateSheetState extends ConsumerState<QuickShopCreateSheet> {
                     if (p != null) setState(() => _photo = p);
                   },
                   icon: const Icon(Icons.camera_alt_outlined),
-                  label: const Text('Photo'),
+                  label: Text(l10n.commonPhoto),
                 ),
               ),
             ],
@@ -131,7 +135,7 @@ class _QuickShopCreateSheetState extends ConsumerState<QuickShopCreateSheet> {
           const SizedBox(height: 16),
           FilledButton(
             onPressed: _saving ? null : _save,
-            child: _saving ? const CircularProgressIndicator() : const Text('Save shop'),
+            child: _saving ? const CircularProgressIndicator() : Text(l10n.salesQuickSaveShop),
           ),
         ],
       ),
@@ -171,15 +175,16 @@ class _QuickVanCreateSheetState extends ConsumerState<QuickVanCreateSheet> {
   }
 
   Future<void> _save() async {
+    final l10n = AppLocalizations.of(context);
     if (!ref.read(onlineStatusProvider)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Go online to add a new customer.')),
+        SnackBar(content: Text(l10n.salesOrderGoOnlineCatalog)),
       );
       return;
     }
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Name is required')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.commonNameIsRequired)));
       return;
     }
     setState(() => _saving = true);
@@ -208,32 +213,34 @@ class _QuickVanCreateSheetState extends ConsumerState<QuickVanCreateSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('New van customer', style: Theme.of(context).textTheme.titleLarge),
+          Text(l10n.salesQuickNewVan, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
-          TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'Name *')),
-          TextField(controller: _mobileController, decoration: const InputDecoration(labelText: 'Mobile')),
-          TextField(controller: _iqamaController, decoration: const InputDecoration(labelText: 'Iqama')),
-          TextField(controller: _emailController, decoration: const InputDecoration(labelText: 'Email')),
-          TextField(controller: _addressController, decoration: const InputDecoration(labelText: 'Address')),
-          TextField(controller: _cityController, decoration: const InputDecoration(labelText: 'City')),
+          TextField(controller: _nameController, decoration: InputDecoration(labelText: l10n.commonNameRequired)),
+          TextField(controller: _mobileController, decoration: InputDecoration(labelText: l10n.commonMobile)),
+          TextField(controller: _iqamaController, decoration: InputDecoration(labelText: l10n.salesQuickIqama)),
+          TextField(controller: _emailController, decoration: InputDecoration(labelText: l10n.commonEmail)),
+          TextField(controller: _addressController, decoration: InputDecoration(labelText: l10n.commonAddress)),
+          TextField(controller: _cityController, decoration: InputDecoration(labelText: l10n.commonCity)),
           OutlinedButton.icon(
             onPressed: () async {
               final p = await _picker.pickImage(source: ImageSource.camera, imageQuality: 85);
               if (p != null) setState(() => _photo = p);
             },
             icon: const Icon(Icons.camera_alt_outlined),
-            label: const Text('Van photo (optional)'),
+            label: Text(l10n.commonPhoto),
           ),
           const SizedBox(height: 16),
           FilledButton(
             onPressed: _saving ? null : _save,
-            child: _saving ? const CircularProgressIndicator() : const Text('Save van'),
+            child: _saving ? const CircularProgressIndicator() : Text(l10n.salesQuickSaveVan),
           ),
         ],
       ),
@@ -269,15 +276,16 @@ class _QuickImporterCreateSheetState extends ConsumerState<QuickImporterCreateSh
   }
 
   Future<void> _save() async {
+    final l10n = AppLocalizations.of(context);
     if (!ref.read(onlineStatusProvider)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Go online to add a new customer.')),
+        SnackBar(content: Text(l10n.salesOrderGoOnlineCatalog)),
       );
       return;
     }
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Name is required')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.commonNameIsRequired)));
       return;
     }
     setState(() => _saving = true);
@@ -300,23 +308,25 @@ class _QuickImporterCreateSheetState extends ConsumerState<QuickImporterCreateSh
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('New importer', style: Theme.of(context).textTheme.titleLarge),
+          Text(l10n.salesQuickNewImporter, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
-          TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'Name *')),
-          TextField(controller: _mobileController, decoration: const InputDecoration(labelText: 'Mobile')),
-          TextField(controller: _emailController, decoration: const InputDecoration(labelText: 'Email')),
-          TextField(controller: _addressController, decoration: const InputDecoration(labelText: 'Address')),
-          TextField(controller: _cityController, decoration: const InputDecoration(labelText: 'City')),
+          TextField(controller: _nameController, decoration: InputDecoration(labelText: l10n.commonNameRequired)),
+          TextField(controller: _mobileController, decoration: InputDecoration(labelText: l10n.commonMobile)),
+          TextField(controller: _emailController, decoration: InputDecoration(labelText: l10n.commonEmail)),
+          TextField(controller: _addressController, decoration: InputDecoration(labelText: l10n.commonAddress)),
+          TextField(controller: _cityController, decoration: InputDecoration(labelText: l10n.commonCity)),
           const SizedBox(height: 16),
           FilledButton(
             onPressed: _saving ? null : _save,
-            child: _saving ? const CircularProgressIndicator() : const Text('Save importer'),
+            child: _saving ? const CircularProgressIndicator() : Text(l10n.salesQuickSaveImporter),
           ),
         ],
       ),

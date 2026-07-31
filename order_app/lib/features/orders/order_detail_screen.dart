@@ -2,6 +2,7 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/repositories.dart';
 
@@ -46,6 +47,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final currency = NumberFormat.currency(symbol: 'SAR ');
 
     if (_loading) return const LoadingView();
@@ -56,20 +58,24 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       padding: const EdgeInsets.all(16),
       children: [
         ListTile(
-          title: Text('Order #${order.id}'),
-          subtitle: Text('${order.status} · ${order.paymentStatus}'),
+          title: Text(l10n.commonOrderNumber(order.id)),
+          subtitle: Text(
+            '${localizedStatusLabel(context, order.status)} · ${localizedStatusLabel(context, order.paymentStatus)}',
+          ),
           trailing: Text(
             currency.format(order.totalBill),
             style: Theme.of(context).textTheme.titleLarge,
           ),
         ),
         const Divider(),
-        Text('Items', style: Theme.of(context).textTheme.titleMedium),
+        Text(l10n.commonItems, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
         ...order.items.map(
           (item) => ListTile(
-            title: Text(item.product?.name ?? 'Product #${item.productId}'),
-            subtitle: Text('Qty ${item.quantity} @ ${currency.format(item.productPrice)}'),
+            title: Text(item.product?.name ?? l10n.commonProductFallback(item.productId)),
+            subtitle: Text(
+              l10n.commonQtyAtPrice('${item.quantity}', currency.format(item.productPrice)),
+            ),
             trailing: Text(currency.format(item.bill)),
           ),
         ),

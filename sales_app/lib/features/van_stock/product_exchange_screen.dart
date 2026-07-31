@@ -2,6 +2,7 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/repositories.dart';
@@ -59,49 +60,51 @@ class _ProductExchangeScreenState extends ConsumerState<ProductExchangeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text('Customer returns', style: Theme.of(context).textTheme.titleMedium),
+        Text(l10n.salesVanExchangeReturns, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
         OutlinedButton(
           onPressed: () async {
             final product = await pickProduct(context, ref);
             if (product != null) setState(() => _returnProduct = product);
           },
-          child: Text(_returnProduct?.name ?? 'Select return product'),
+          child: Text(_returnProduct?.name ?? l10n.salesVanExchangeSelectReturn),
         ),
         const SizedBox(height: 12),
         TextField(
           controller: _returnQty,
-          decoration: const InputDecoration(labelText: 'Return quantity', border: OutlineInputBorder()),
+          decoration: InputDecoration(labelText: l10n.salesVanExchangeReturnQty, border: const OutlineInputBorder()),
           keyboardType: TextInputType.number,
         ),
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
           value: _settlement,
-          decoration: const InputDecoration(labelText: 'Settlement', border: OutlineInputBorder()),
-          items: const [
-            DropdownMenuItem(value: 'product', child: Text('Give another product')),
-            DropdownMenuItem(value: 'cash', child: Text('Cash refund')),
+          decoration: InputDecoration(labelText: l10n.salesVanExchangeSettlement, border: const OutlineInputBorder()),
+          items: [
+            DropdownMenuItem(value: 'product', child: Text(l10n.salesVanExchangeGiveProduct)),
+            DropdownMenuItem(value: 'cash', child: Text(l10n.salesVanExchangeCashRefund)),
           ],
           onChanged: (v) => setState(() => _settlement = v ?? 'product'),
         ),
         if (_settlement == 'product') ...[
           const SizedBox(height: 16),
-          Text('Give to customer', style: Theme.of(context).textTheme.titleMedium),
+          Text(l10n.salesVanExchangeGiveTo, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           OutlinedButton(
             onPressed: () async {
               final product = await pickProduct(context, ref);
               if (product != null) setState(() => _outProduct = product);
             },
-            child: Text(_outProduct?.name ?? 'Select out product'),
+            child: Text(_outProduct?.name ?? l10n.salesVanExchangeSelectOut),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _outQty,
-            decoration: const InputDecoration(labelText: 'Out quantity', border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: l10n.salesVanExchangeOutQty, border: const OutlineInputBorder()),
             keyboardType: TextInputType.number,
           ),
         ],
@@ -109,14 +112,14 @@ class _ProductExchangeScreenState extends ConsumerState<ProductExchangeScreen> {
           const SizedBox(height: 12),
           TextField(
             controller: _cashAmount,
-            decoration: const InputDecoration(labelText: 'Cash amount (SAR)', border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: l10n.salesVanExchangeCashAmount, border: const OutlineInputBorder()),
             keyboardType: TextInputType.number,
           ),
         ],
         const SizedBox(height: 12),
         TextField(
           controller: _reason,
-          decoration: const InputDecoration(labelText: 'Reason', border: OutlineInputBorder()),
+          decoration: InputDecoration(labelText: l10n.commonReason, border: const OutlineInputBorder()),
           maxLines: 2,
         ),
         const SizedBox(height: 24),
@@ -124,7 +127,7 @@ class _ProductExchangeScreenState extends ConsumerState<ProductExchangeScreen> {
           onPressed: _saving ? null : _submit,
           child: _saving
               ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-              : const Text('Record exchange'),
+              : Text(l10n.salesVanExchangeRecord),
         ),
       ],
     );

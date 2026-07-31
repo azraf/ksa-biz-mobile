@@ -1,0 +1,578 @@
+{
+  "@@locale": "bn",
+  "commonRetry": "আবার চেষ্টা করুন",
+  "commonCancel": "বাতিল",
+  "commonSave": "সংরক্ষণ",
+  "commonDelete": "মুছুন",
+  "commonBack": "পিছনে",
+  "commonSubmit": "জমা দিন",
+  "commonSkip": "এড়িয়ে যান",
+  "commonAdd": "যোগ করুন",
+  "commonPhoto": "ছবি",
+  "commonVoice": "ভয়েস",
+  "commonStop": "বন্ধ",
+  "commonLoading": "লোড হচ্ছে...",
+  "commonSignIn": "সাইন ইন",
+  "commonSignOut": "সাইন আউট",
+  "commonEmail": "ইমেইল",
+  "commonPassword": "পাসওয়ার্ড",
+  "commonApiBaseUrl": "API বেস URL",
+  "commonApiUrl": "API URL",
+  "commonRoles": "ভূমিকা",
+  "commonActingAs": "হিসেবে কাজ করছেন",
+  "commonUser": "ব্যবহারকারী",
+  "commonPhone": "ফোন",
+  "commonMobile": "মোবাইল",
+  "commonNameRequired": "নাম *",
+  "commonAddress": "ঠিকানা",
+  "commonCity": "শহর",
+  "commonReason": "কারণ",
+  "commonQuantity": "পরিমাণ",
+  "commonNotes": "নোট",
+  "commonNotesOptional": "নোট (ঐচ্ছিক)",
+  "commonItems": "আইটেম",
+  "commonNoItemsYet": "এখনও কোনো আইটেম নেই",
+  "commonTotal": "মোট: {amount}",
+  "@commonTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "commonUnit": "ইউনিট",
+  "commonUnitCarton": "কার্টন (CTN)",
+  "commonUnitPiece": "পিস (pcs) · প্রতি CTN {piecesPerCarton}",
+  "@commonUnitPiece": {
+    "placeholders": {
+      "piecesPerCarton": {
+        "type": "int"
+      }
+    }
+  },
+  "commonPrice": "মূল্য",
+  "commonDiscount": "ছাড়",
+  "commonVat": "ভ্যাট",
+  "commonSearchProducts": "পণ্য খুঁজুন",
+  "commonProductPriceCtn": "SAR {price} / CTN · {pieces} পিস",
+  "@commonProductPriceCtn": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      },
+      "pieces": {
+        "type": "String"
+      }
+    }
+  },
+  "commonProductPrice": "SAR {price}",
+  "@commonProductPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "commonQtyLine": "পরিমাণ {quantity}",
+  "@commonQtyLine": {
+    "placeholders": {
+      "quantity": {
+        "type": "String"
+      }
+    }
+  },
+  "commonQtyAtPrice": "পরিমাণ {quantity} @ {price}",
+  "@commonQtyAtPrice": {
+    "placeholders": {
+      "quantity": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "commonProductFallback": "পণ্য #{id}",
+  "@commonProductFallback": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "commonShopFallback": "দোকান #{id}",
+  "@commonShopFallback": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "commonOrderNumber": "অর্ডার #{id}",
+  "@commonOrderNumber": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "commonRequestNumber": "অনুরোধ #{id}",
+  "@commonRequestNumber": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "commonRecording": "রেকর্ডিং",
+  "commonRecordings": "রেকর্ডিংসমূহ",
+  "commonAddRecording": "রেকর্ডিং যোগ করুন",
+  "commonRecordAudio": "অডিও রেকর্ড",
+  "commonRecordVideo": "ভিডিও রেকর্ড",
+  "commonStopAndUpload": "বন্ধ ও আপলোড",
+  "commonRecordingUploaded": "রেকর্ডিং আপলোড হয়েছে",
+  "commonCall": "কল",
+  "commonWhatsapp": "হোয়াটসঅ্যাপ",
+  "commonCouldNotOpen": "{action} খুলতে পারেনি",
+  "@commonCouldNotOpen": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "commonPhoneDialer": "ফোন ডায়ালার",
+  "commonDiary": "ডায়েরি",
+  "commonDiaryTitle": "ডায়েরি — {customerName}",
+  "@commonDiaryTitle": {
+    "placeholders": {
+      "customerName": {
+        "type": "String"
+      }
+    }
+  },
+  "commonDiaryNote": "ডায়েরি নোট",
+  "commonDiaryEmpty": "এখনও কোনো ডায়েরি এন্ট্রি নেই।",
+  "commonDiaryText": "টেক্সট",
+  "commonDiaryLoadMore": "আরো লোড করুন",
+  "commonDiaryPlayVoice": "ভয়েস নোট চালান",
+  "commonAddNote": "নোট যোগ করুন",
+  "commonTextNote": "টেক্সট নোট",
+  "commonRecordingTitle": "রেকর্ড হচ্ছে...",
+  "commonStopAndSave": "বন্ধ ও সংরক্ষণ",
+  "commonAddVisitNoteTitle": "ভিজিট নোট যোগ করবেন?",
+  "commonAddVisitNoteBody": "{customerName}-এর জন্য ডায়েরি নোট যোগ করবেন?",
+  "@commonAddVisitNoteBody": {
+    "placeholders": {
+      "customerName": {
+        "type": "String"
+      }
+    }
+  },
+  "commonGpsNotCaptured": "ধারণ করা হয়নি",
+  "commonGpsCapturing": "ধারণ করা হচ্ছে...",
+  "commonGpsRefresh": "রিফ্রেশ",
+  "commonGpsCapture": "GPS ধারণ",
+  "commonGpsLocationRequired": "দোকানের GPS-এর জন্য লোকেশন অনুমতি প্রয়োজন।",
+  "commonCameraPermission": "ক্যামেরা অনুমতি প্রয়োজন।",
+  "commonMicrophonePermission": "মাইক্রোফোন অনুমতি প্রয়োজন।",
+  "commonRecordingPermission": "রেকর্ডিং বাছাইয়ের জন্য অনুমতি প্রয়োজন।",
+  "commonAll": "সব",
+  "commonCash": "নগদ",
+  "commonBankTransfer": "ব্যাংক ট্রান্সফার",
+  "commonCheque": "চেক",
+  "commonOther": "অন্যান্য",
+  "commonNoProductsFound": "কোনো পণ্য পাওয়া যায়নি",
+  "commonNoProductsCached": "কোনো পণ্য ক্যাশে নেই। অনলাইনে ডেটা ডাউনলোড করুন।",
+  "commonNameIsRequired": "নাম প্রয়োজন",
+  "commonAddAtLeastOneProduct": "অন্তত একটি পণ্য যোগ করুন",
+  "commonPlaceOrder": "অর্ডার দিন",
+  "commonSourceLabel": "উৎস: {source}",
+  "@commonSourceLabel": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "commonReference": "রেফারেন্স",
+  "commonCallReference": "কল রেফারেন্স",
+  "commonManualOrderRequest": "ম্যানুয়াল অর্ডার অনুরোধ",
+  "commonOrderNotes": "অর্ডার নোট",
+  "commonOrderNotesHint": "পণ্য, পরিমাণ বা বিশেষ নির্দেশনা বর্ণনা করুন",
+  "commonSubmitRequest": "অনুরোধ জমা দিন",
+  "commonNewOrder": "নতুন অর্ডার",
+  "commonNoOrdersYet": "এখনও কোনো অর্ডার নেই",
+  "commonCreateOrder": "অর্ডার তৈরি",
+  "commonOrderDetail": "অর্ডার বিবরণ",
+  "commonEditOrder": "অর্ডার সম্পাদনা",
+  "commonCustomer": "গ্রাহক",
+  "commonPaid": "পরিশোধিত",
+  "commonDue": "বকেয়া",
+  "commonTotalLabel": "মোট",
+  "commonGrandDiscount": "মোট ছাড়",
+  "commonDueDate": "পরিশোধের তারিখ",
+  "commonOverdue": "মেয়াদোত্তীর্ণ",
+  "commonOverdueDays": "{days} দিন",
+  "@commonOverdueDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "commonPayments": "পেমেন্ট",
+  "commonLanguage": "ভাষা",
+  "commonLanguageEnglish": "English",
+  "commonLanguageArabic": "العربية",
+  "commonLanguageBangla": "বাংলা",
+  "commonConvert": "রূপান্তর",
+  "commonPickVideo": "ভিডিও বাছুন",
+  "salesAppName": "ARM Sales(M)",
+  "salesSignInSubtitle": "আপনার সেলসপারসন অ্যাকাউন্ট দিয়ে সাইন ইন করুন",
+  "salesNavHome": "হোম",
+  "salesNavManual": "ম্যানুয়াল",
+  "salesNavOrders": "অর্ডার",
+  "salesNavVan": "ভ্যান",
+  "salesNavDues": "বকেয়া",
+  "salesTitleDashboard": "ড্যাশবোর্ড",
+  "salesTitleManualOrders": "ম্যানুয়াল অর্ডার",
+  "salesTitleOrders": "অর্ডার",
+  "salesTitleVanStock": "ভ্যান স্টক",
+  "salesTitleDues": "বকেয়া",
+  "salesTitleCreateOrder": "অর্ডার তৈরি",
+  "salesTitleEditOrder": "অর্ডার সম্পাদনা",
+  "salesTitleOrderDetail": "অর্ডার বিবরণ",
+  "salesTitleConvertOrder": "অর্ডারে রূপান্তর",
+  "salesTitleManualOrder": "ম্যানুয়াল অর্ডার",
+  "salesTitleLoadVan": "ভ্যান লোড",
+  "salesTitleTransferStock": "স্টক স্থানান্তর",
+  "salesTitleDamageReplacement": "ক্ষতি প্রতিস্থাপন",
+  "salesTitleProductExchange": "পণ্য বিনিময়",
+  "salesSelectSalesperson": "সেলসপারসন নির্বাচন",
+  "salesSearchSalesperson": "নাম বা ইমেইল দিয়ে খুঁজুন",
+  "salesNoSalespeople": "কোনো সেলসপারসন পাওয়া যায়নি",
+  "salesProfile": "প্রোফাইল",
+  "salesSalespersonProfile": "সেলসপারসন প্রোফাইল",
+  "salesNoSalespersonSelected": "কোনো সেলসপারসন নির্বাচিত নয়",
+  "salesChooseSalespersonHint": "বিক্রয় কাজ করতে সেলসপারসন নির্বাচন করুন।",
+  "salesSelectSalespersonBtn": "সেলসপারসন নির্বাচন",
+  "salesChangeSalespersonBtn": "সেলসপারসন পরিবর্তন",
+  "salesSelectSalespersonFirst": "প্রথমে সেলসপারসন নির্বাচন করুন।",
+  "salesDashboardLoading": "ড্যাশবোর্ড লোড হচ্ছে...",
+  "salesDashboardSelectSp": "ড্যাশবোর্ড দেখতে সেলসপারসন নির্বাচন করুন।",
+  "salesDashboardNoProfile": "আপনার অ্যাকাউন্ট কোনো সেলসপারসন প্রোফাইলের সাথে যুক্ত নয়।",
+  "salesHello": "হ্যালো, {name}",
+  "@salesHello": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "salesDefaultSalesperson": "সেলসপারসন",
+  "salesActingAsName": "হিসেবে কাজ করছেন: {name}",
+  "@salesActingAsName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "salesCardOutstandingDues": "বকেয়া dues",
+  "salesCardUnpaidOrders": "{count} অপরিশোধিত অর্ডার",
+  "@salesCardUnpaidOrders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "salesCardManualOrders": "ম্যানুয়াল অর্ডার",
+  "salesCardManualSubtitle": "খোলা / নিয়োগ / পর্যালোচনায়",
+  "salesCardVanStock": "ভ্যান স্টক",
+  "salesCardVanProducts": "{count} পণ্য",
+  "@salesCardVanProducts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "salesCardLowStockAlerts": "{count} কম স্টক সতর্কতা",
+  "@salesCardLowStockAlerts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "salesCardTapManageStock": "স্টক পরিচালনার জন্য ট্যাপ করুন",
+  "salesCardMyOrders": "আমার অর্ডার",
+  "salesCardViewAll": "সব দেখুন",
+  "salesCardOrdersSubtitle": "অর্ডার তৈরি ও সম্পাদনা",
+  "salesCardWatchlist": "ওয়াচলিস্ট",
+  "salesCardWatchlistValue": "লিড সংরক্ষণ",
+  "salesCardWatchlistSubtitle": "ভবিষ্যত ভিজিটের GPS অবস্থান",
+  "salesQuickSaveLocation": "বর্তমান অবস্থান দ্রুত সংরক্ষণ",
+  "salesLocationSaved": "অবস্থান ওয়াচলিস্টে সংরক্ষিত",
+  "salesAddNotesAction": "নোট যোগ করুন",
+  "salesNearbyShop": "কাছের দোকান: {name} ({distance}মি)",
+  "@salesNearbyShop": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "salesDuplicateWatchlist": "ওয়াচলিস্টে {distance}মি-এর মধ্যে ডুপ্লিকেট",
+  "@salesDuplicateWatchlist": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "salesDuesTotalDue": "মোট বকেয়া",
+  "salesDuesNone": "কোনো বকেয়া নেই",
+  "salesDuesLongPressHint": "পেমেন্ট সংগ্রহের জন্য অর্ডারে দীর্ঘ চাপুন",
+  "salesNotifications": "বিজ্ঞপ্তি",
+  "salesNotificationsEmpty": "কোনো বিজ্ঞপ্তি নেই",
+  "salesOfflineMode": "অফলাইন মোড",
+  "salesOfflineSync": "সিঙ্ক",
+  "salesOfflineSyncing": "সিঙ্ক হচ্ছে {count, plural, =1{1টি মুলতুবি পরিবর্তন...} other{{count}টি মুলতুবি পরিবর্তন...}}",
+  "@salesOfflineSyncing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "salesOfflineSaved": "অফলাইন — {count, plural, =1{1টি পরিবর্তন স্থানীয়ভাবে সংরক্ষিত} other{{count}টি পরিবর্তন স্থানীয়ভাবে সংরক্ষিত}}",
+  "@salesOfflineSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "salesManualTabOpenPool": "খোলা পুল",
+  "salesManualTabAssigned": "নিয়োগ",
+  "salesManualTabInReview": "পর্যালোচনায়",
+  "salesManualTabConverted": "রূপান্তরিত",
+  "salesManualEmpty": "কোনো ম্যানুয়াল অর্ডার নেই",
+  "salesManualClaimed": "অনুরোধ দাবি করা হয়েছে",
+  "salesManualClaimRequest": "অনুরোধ দাবি",
+  "salesManualConvertOrder": "অর্ডারে রূপান্তর",
+  "salesManualViewConverted": "রূপান্তরিত অর্ডার দেখুন",
+  "salesManualTakeShopPhoto": "দোকানের ছবি তুলুন",
+  "salesManualShopPhotoUploaded": "দোকানের ছবি আপলোড হয়েছে",
+  "salesManualGpsCleared": "দোকানের GPS মুছে ফেলা হয়েছে",
+  "salesManualGpsUpdated": "GPS আপডেট: {gps}",
+  "@salesManualGpsUpdated": {
+    "placeholders": {
+      "gps": {
+        "type": "String"
+      }
+    }
+  },
+  "salesConvertShopOrder": "দোকান অর্ডার",
+  "salesConvertOrderItems": "অর্ডার আইটেম",
+  "salesConvertAddProduct": "পণ্য যোগ করুন",
+  "salesConvertOrderCreated": "অর্ডার তৈরি হয়েছে",
+  "salesOrderWalkInQuick": "ওয়াক-ইন দ্রুত অর্ডার",
+  "salesOrderWalkInShop": "ওয়াক-ইন দোকান",
+  "salesOrderWalkInSubtitle": "বেনামী দ্রুত বিক্রয়",
+  "salesOrderWalkInNote": "নোট (ঐচ্ছিক)",
+  "salesOrderWalkInNoteHint": "ক্যাশিয়ার নোট",
+  "salesOrderCustomerType": "গ্রাহকের ধরন",
+  "salesOrderSelectCustomer": "গ্রাহক নির্বাচন",
+  "salesOrderSelected": "নির্বাচিত",
+  "salesOrderAddCustomer": "গ্রাহক যোগ করুন",
+  "salesOrderSelectCustomerItems": "গ্রাহক নির্বাচন করুন এবং আইটেম যোগ করুন",
+  "salesOrderSavedLocally": "অর্ডার স্থানীয়ভাবে সংরক্ষিত — অনলাইনে সিঙ্ক হবে",
+  "salesOrderWalkInUnavailable": "ওয়াক-ইন দোকান উপলব্ধ নয়। সিঙ্কের জন্য অনলাইনে যান।",
+  "salesOrderGoOnlineCatalog": "গ্রাহক ও পণ্য ডেটা ডাউনলোডের জন্য প্রথমে অনলাইনে যান।",
+  "salesOrderNoCustomerTypes": "কোনো গ্রাহক ধরন উপলব্ধ নয়। রিফ্রেশের জন্য অনলাইনে যান।",
+  "salesOrderCannotEdit": "এই অর্ডার সম্পাদনা করা যাবে না।",
+  "salesOrderAddProduct": "পণ্য যোগ করুন",
+  "salesOrderChangeQty": "পরিমাণ পরিবর্তন",
+  "salesOrderSalesReturn": "বিক্রয় ফেরত",
+  "salesOrderReturn": "ফেরত",
+  "salesOrderRemoveItem": "আইটেম সরান",
+  "salesOrderUpdateQty": "পরিমাণ আপডেট",
+  "salesOrderCollectPayment": "পেমেন্ট সংগ্রহ",
+  "salesOrderCollectPaymentTitle": "পেমেন্ট সংগ্রহ #{orderId}",
+  "@salesOrderCollectPaymentTitle": {
+    "placeholders": {
+      "orderId": {
+        "type": "int"
+      }
+    }
+  },
+  "salesOrderAmountDue": "বকেয়া পরিমাণ",
+  "salesOrderAmountCollected": "সংগৃহীত পরিমাণ",
+  "salesOrderPaymentMethod": "পেমেন্ট পদ্ধতি",
+  "salesOrderRecordPayment": "পেমেন্ট রেকর্ড",
+  "salesOrderEnterValidAmount": "বৈধ পরিমাণ লিখুন",
+  "salesOrderRequestDiscount": "ছাড়ের অনুরোধ",
+  "salesOrderRequestGrandDiscount": "মোট ছাড়ের অনুরোধ",
+  "salesOrderDiscountAmount": "ছাড়ের পরিমাণ (SAR)",
+  "salesOrderDiscountSubmitted": "ছাড়ের অনুরোধ জমা হয়েছে",
+  "salesOrderCancelOrder": "অর্ডার বাতিল",
+  "salesOrderCancelled": "অর্ডার বাতিল হয়েছে",
+  "salesOrderEditTooltip": "অর্ডার সম্পাদনা",
+  "salesPickerSelectShop": "দোকান নির্বাচন",
+  "salesPickerSelectVan": "ভ্যান নির্বাচন",
+  "salesPickerSelectImporter": "ইমপোর্টার নির্বাচন",
+  "salesPickerSearchHint": "নাম, ফোন, যোগাযোগ দিয়ে খুঁজুন",
+  "salesPickerNoCustomers": "কোনো গ্রাহক পাওয়া যায়নি",
+  "salesQuickNewShop": "নতুন দোকান",
+  "salesQuickShopName": "দোকানের নাম *",
+  "salesQuickSaveShop": "দোকান সংরক্ষণ",
+  "salesQuickNewVan": "নতুন ভ্যান গ্রাহক",
+  "salesQuickIqama": "ইকামা",
+  "salesQuickSaveVan": "ভ্যান সংরক্ষণ",
+  "salesQuickNewImporter": "নতুন ইমপোর্টার",
+  "salesQuickSaveImporter": "ইমপোর্টার সংরক্ষণ",
+  "salesVanEmpty": "ভ্যান খালি",
+  "salesVanLowStock": "কম স্টক",
+  "salesVanExchange": "বিনিময়",
+  "salesVanDamage": "ক্ষতি",
+  "salesVanTransfer": "স্থানান্তর",
+  "salesVanLoad": "ভ্যান লোড",
+  "salesVanUnloadMessage": "ভ্যান থেকে গুদামে স্টক ফেরত দিন।",
+  "salesVanUnloadQty": "পরিমাণ (কার্টন)",
+  "salesVanUnloadBtn": "আনলোড",
+  "salesVanLoadSelectAll": "সব নির্বাচন",
+  "salesVanLoadNoStock": "গুদামে স্টক নেই",
+  "salesVanLoadAvailable": "উপলব্ধ: {balance}",
+  "@salesVanLoadAvailable": {
+    "placeholders": {
+      "balance": {
+        "type": "String"
+      }
+    }
+  },
+  "salesVanLoadSelectOne": "অন্তত একটি পণ্য নির্বাচন করুন",
+  "salesVanLoadSuccess": "ভ্যানে {count} পণ্য লোড হয়েছে",
+  "@salesVanLoadSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "salesVanLoadAll": "সব উপলব্ধ লোড",
+  "salesVanLoadSelected": "নির্বাচিত লোড",
+  "salesVanTransferProduct": "আপনার ভ্যান পণ্য",
+  "salesVanTransferTo": "স্থানান্তর করুন",
+  "salesVanTransferCompleted": "স্থানান্তর সম্পন্ন",
+  "salesVanDamageSelect": "পণ্য নির্বাচন",
+  "salesVanDamageRecord": "প্রতিস্থাপন রেকর্ড",
+  "salesVanExchangeReturns": "গ্রাহক ফেরত",
+  "salesVanExchangeSelectReturn": "ফেরত পণ্য নির্বাচন",
+  "salesVanExchangeReturnQty": "ফেরত পরিমাণ",
+  "salesVanExchangeSettlement": "নিষ্পত্তি",
+  "salesVanExchangeGiveProduct": "অন্য পণ্য দিন",
+  "salesVanExchangeCashRefund": "নগদ ফেরত",
+  "salesVanExchangeGiveTo": "গ্রাহককে দিন",
+  "salesVanExchangeSelectOut": "আউট পণ্য নির্বাচন",
+  "salesVanExchangeOutQty": "আউট পরিমাণ",
+  "salesVanExchangeCashAmount": "নগদ পরিমাণ (SAR)",
+  "salesVanExchangeRecord": "বিনিময় রেকর্ড",
+  "salesWatchlist": "ওয়াচলিস্ট",
+  "salesWatchlistMap": "ওয়াচলিস্ট মানচিত্র",
+  "salesWatchlistViewMap": "মানচিত্রে দেখুন",
+  "salesWatchlistSortDistance": "দূরত্ব অনুযায়ী সাজান",
+  "salesWatchlistActive": "সক্রিয়",
+  "salesWatchlistArchived": "আর্কাইভ",
+  "salesWatchlistAddLocation": "অবস্থান যোগ",
+  "salesWatchlistLoading": "ওয়াচলিস্ট লোড হচ্ছে...",
+  "salesWatchlistEmpty": "এখনও কোনো ওয়াচলিস্ট আইটেম নেই।",
+  "salesWatchlistSaveTitle": "ওয়াচলিস্টে সংরক্ষণ",
+  "salesWatchlistPlaceName": "স্থানের নাম",
+  "salesWatchlistNoteOptional": "নোট (ঐচ্ছিক)",
+  "salesWatchlistSaveLocation": "অবস্থান সংরক্ষণ",
+  "salesWatchlistVoicePending": "এন্ট্রি তৈরির পর ভয়েস সংরক্ষিত হবে (বিবরণ থেকে আপলোড)।",
+  "salesWatchlistPhotosAfterSave": "বিবরণ স্ক্রিন থেকে সংরক্ষণের পর ছবি যোগ করুন।",
+  "salesWatchlistDeleteTitle": "ওয়াচলিস্ট এন্ট্রি মুছবেন?",
+  "salesWatchlistSyncBeforeConvert": "রূপান্তরের আগে অনলাইনে সিঙ্ক করুন।",
+  "salesWatchlistConvertTitle": "দোকানে রূপান্তর",
+  "salesWatchlistShopName": "দোকানের নাম *",
+  "salesWatchlistPriorityRating": "অগ্রাধিকার রেটিং",
+  "salesWatchlistShopCreated": "দোকান তৈরি হয়েছে",
+  "salesWatchlistSyncBeforeUpload": "সংযুক্তি আপলোডের আগে সিঙ্ক করুন।",
+  "salesWatchlistRecordingHint": "রেকর্ড হচ্ছে… বন্ধ করতে আবার ভয়েস ট্যাপ করুন (সর্বোচ্চ ৩ মিনিট)",
+  "salesWatchlistMarkVisited": "ভিজিট চিহ্নিত",
+  "salesWatchlistDismiss": "বাতিল",
+  "salesWatchlistVoiceNotes": "ভয়েস নোট",
+  "salesWatchlistPhotos": "ছবি",
+  "salesWatchlistConvertBtn": "দোকানে রূপান্তর",
+  "salesWatchlistPendingSync": "সিঙ্ক মুলতুবি",
+  "orderAppName": "ARM Orders",
+  "orderSignInSubtitle": "আপনার দোকান, ভ্যান বা ইমপোর্টার অ্যাকাউন্ট দিয়ে সাইন ইন করুন",
+  "orderNavCatalog": "ক্যাটালগ",
+  "orderNavOrders": "অর্ডার",
+  "orderNavManual": "ম্যানুয়াল",
+  "orderNavProfile": "প্রোফাইল",
+  "orderTitleCatalog": "ক্যাটালগ",
+  "orderTitleCreateOrder": "অর্ডার তৈরি",
+  "orderTitleOrderDetail": "অর্ডার বিবরণ",
+  "orderTitleNewRequest": "নতুন অনুরোধ",
+  "orderTitleRequestDetail": "অনুরোধ বিবরণ",
+  "orderTitleManualOrders": "ম্যানুয়াল অর্ডার",
+  "orderProfileCustomer": "গ্রাহক প্রোফাইল",
+  "orderProfileShopContacts": "দোকান যোগাযোগ",
+  "orderManualShopOnly": "ম্যানুয়াল অর্ডার অনুরোধ শুধু দোকান অ্যাকাউন্টের জন্য।",
+  "orderManualNewRequest": "নতুন অনুরোধ",
+  "orderManualEmpty": "এখনও কোনো ম্যানুয়াল অর্ডার অনুরোধ নেই",
+  "orderManualShopOnlyCreate": "শুধু দোকান অ্যাকাউন্ট ম্যানুয়াল অনুরোধ তৈরি করতে পারে",
+  "orderManualNotesRequired": "অর্ডার নোট লিখুন",
+  "orderCustomerProfileNotLoaded": "গ্রাহক প্রোফাইল লোড হয়নি",
+  "statusConfirmed": "নিশ্চিত",
+  "statusModified": "পরিবর্তিত",
+  "statusCancelled": "বাতিল",
+  "statusPending": "মুলতুবি",
+  "statusPartial": "আংশিক",
+  "statusPaid": "পরিশোধিত",
+  "statusAssigned": "নিয়োগ",
+  "statusInReview": "পর্যালোচনায়",
+  "statusConverted": "রূপান্তরিত",
+  "statusActive": "সক্রিয়",
+  "statusArchived": "আর্কাইভ",
+  "statusPendingSync": "সিঙ্ক মুলতুবি",
+  "statusDiscountPendingApproval": "ছাড় অনুমোদন মুলতুবি",
+  "statusAddItem": "আইটেম যোগ",
+  "statusUpdateItem": "আইটেম আপডেট",
+  "statusRemoveItem": "আইটেম সরান",
+  "statusReturn": "ফেরত",
+  "statusFrequent": "ঘন ঘন",
+  "statusRegular": "নিয়মিত",
+  "statusOccasional": "মাঝে মাঝে",
+  "statusDormant": "নিষ্ক্রিয়",
+  "statusNever": "কখনো নয়",
+  "statusGoodPayer": "ভালো পেয়ার",
+  "statusFair": "মোটামুটি",
+  "statusPoor": "দুর্বল",
+  "salesPickerFiltersOffline": "কিছু ফিল্টারের জন্য ইন্টারনেট প্রয়োজন। ক্যাশে গ্রাহক দেখানো হচ্ছে।",
+  "salesPickerPhoneSearch": "ফোন দিয়ে সব গ্রাহক খুঁজছি",
+  "salesPickerOrderPlaced": "অর্ডার দেওয়া হয়েছে",
+  "commonArea": "এলাকা",
+  "commonAllAreas": "সব এলাকা",
+  "commonSortAz": "ক–হ",
+  "commonSortNearest": "নিকটতম",
+  "salesPickerInactive60d": "৬০+ দিন নিষ্ক্রিয়",
+  "commonPageOf": "পৃষ্ঠা {page} / {lastPage}",
+  "salesPickerFiltersNeedInternet": "কার্যকলাপ ও এলাকা ফিল্টারের জন্য ইন্টারনেট প্রয়োজন।",
+  "salesPickerActivity1Day": "১ দিন",
+  "salesPickerActivity1Week": "১ সপ্তাহ",
+  "salesPickerActivity15Days": "১৫ দিন",
+  "salesPickerActivity30Days": "৩০ দিন",
+  "salesPickerActivity60Days": "৬০ দিন",
+  "salesPickerActivity90Days": "৯০ দিন",
+  "commonAvgOrderInterval": "~প্রতি {days} দিন"
+}

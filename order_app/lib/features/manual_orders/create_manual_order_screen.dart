@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/customer_context_provider.dart';
 import '../../providers/repositories.dart';
@@ -23,10 +24,11 @@ class _CreateManualOrderScreenState extends ConsumerState<CreateManualOrderScree
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context);
     final profile = ref.read(customerContextProvider).profile;
     if (profile == null || !profile.isShop) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Only shop accounts can create manual requests')),
+        SnackBar(content: Text(l10n.orderManualShopOnlyCreate)),
       );
       return;
     }
@@ -34,7 +36,7 @@ class _CreateManualOrderScreenState extends ConsumerState<CreateManualOrderScree
     final notes = _notesController.text.trim();
     if (notes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter order notes')),
+        SnackBar(content: Text(l10n.orderManualNotesRequired)),
       );
       return;
     }
@@ -56,6 +58,7 @@ class _CreateManualOrderScreenState extends ConsumerState<CreateManualOrderScree
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final profile = ref.watch(customerContextProvider).profile;
 
     return ListView(
@@ -66,15 +69,15 @@ class _CreateManualOrderScreenState extends ConsumerState<CreateManualOrderScree
             child: ListTile(
               leading: const Icon(Icons.storefront),
               title: Text(profile.displayName),
-              subtitle: const Text('Manual order request'),
+              subtitle: Text(l10n.commonManualOrderRequest),
             ),
           ),
         const SizedBox(height: 16),
         TextField(
           controller: _notesController,
-          decoration: const InputDecoration(
-            labelText: 'Order notes',
-            hintText: 'Describe products, quantities, or special instructions',
+          decoration: InputDecoration(
+            labelText: l10n.commonOrderNotes,
+            hintText: l10n.commonOrderNotesHint,
             alignLabelWithHint: true,
           ),
           maxLines: 6,
@@ -88,7 +91,7 @@ class _CreateManualOrderScreenState extends ConsumerState<CreateManualOrderScree
                   width: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Submit request'),
+              : Text(l10n.commonSubmitRequest),
         ),
       ],
     );

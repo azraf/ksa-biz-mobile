@@ -2,6 +2,7 @@ import 'package:core/core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
 
@@ -27,6 +28,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final auth = ref.watch(authProvider);
 
     return Scaffold(
@@ -39,26 +41,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('ARM Sales(M)', style: Theme.of(context).textTheme.headlineMedium),
+                  Text(l10n.salesAppName, style: Theme.of(context).textTheme.headlineMedium),
                   const SizedBox(height: 8),
-                  const Text('Sign in with your salesperson account'),
+                  Text(l10n.salesSignInSubtitle),
                   const SizedBox(height: 24),
                   if (AppConfig.showApiBaseUrlField) ...[
                     TextField(
                       controller: _apiUrlController,
-                      decoration: const InputDecoration(labelText: 'API base URL'),
+                      decoration: InputDecoration(labelText: l10n.commonApiBaseUrl),
                     ),
                     const SizedBox(height: 12),
                   ],
                   TextField(
                     controller: _emailController,
-                    decoration: const InputDecoration(labelText: 'Email'),
+                    decoration: InputDecoration(labelText: l10n.commonEmail),
                     keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _passwordController,
-                    decoration: const InputDecoration(labelText: 'Password'),
+                    decoration: InputDecoration(labelText: l10n.commonPassword),
                     obscureText: true,
                   ),
                   if (auth.error != null) ...[
@@ -78,7 +80,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                     child: auth.isLoading
                         ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Text('Sign in'),
+                        : Text(l10n.commonSignIn),
                   ),
                 ],
               ),

@@ -4,6 +4,7 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:l10n/l10n.dart';
 import 'package:media/media.dart';
 import 'package:path/path.dart' as p;
 import 'package:record/record.dart';
@@ -60,6 +61,7 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
   }
 
   Future<void> _uploadFile(File file, String filename, {required String recordingType}) async {
+    final l10n = AppLocalizations.of(context);
     setState(() => _working = true);
     try {
       final facade = ref.read(mediaCaptureFacadeProvider);
@@ -76,7 +78,9 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
         _working = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Recording uploaded')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.commonRecordingUploaded)),
+        );
       }
     } catch (e) {
       setState(() => _working = false);
@@ -111,6 +115,8 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     if (_loading) return const LoadingView();
     if (_error != null) return ErrorView(message: _error!, onRetry: _load);
 
@@ -119,18 +125,22 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
       padding: const EdgeInsets.all(16),
       children: [
         ListTile(
-          title: Text(request.customerShop?.name ?? 'Shop #${request.customerShopId}'),
-          subtitle: Text('Request #${request.id} · ${request.status}'),
+          title: Text(
+            request.customerShop?.name ?? l10n.commonShopFallback(request.customerShopId),
+          ),
+          subtitle: Text(
+            '${l10n.commonRequestNumber(request.id)} · ${localizedStatusLabel(context, request.status)}',
+          ),
           trailing: StatusChip(label: request.status),
         ),
         if (request.notes != null && request.notes!.isNotEmpty)
-          ListTile(title: const Text('Notes'), subtitle: Text(request.notes!)),
+          ListTile(title: Text(l10n.commonNotes), subtitle: Text(request.notes!)),
         if (request.recordings.isNotEmpty) ...[
           const SizedBox(height: 8),
-          MediaGallerySection(remoteItems: request.recordings, title: 'Recordings'),
+          MediaGallerySection(remoteItems: request.recordings, title: l10n.commonRecordings),
         ],
         const SizedBox(height: 12),
-        Text('Add recording', style: Theme.of(context).textTheme.titleMedium),
+        Text(l10n.commonAddRecording, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -139,12 +149,12 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
             OutlinedButton.icon(
               onPressed: _working ? null : _toggleAudioRecording,
               icon: Icon(_isRecording ? Icons.stop : Icons.mic),
-              label: Text(_isRecording ? 'Stop & upload' : 'Record audio'),
+              label: Text(_isRecording ? l10n.commonStopAndUpload : l10n.commonRecordAudio),
             ),
             OutlinedButton.icon(
               onPressed: _working ? null : _recordVideo,
               icon: const Icon(Icons.videocam_outlined),
-              label: const Text('Record video'),
+              label: Text(l10n.commonRecordVideo),
             ),
           ],
         ),

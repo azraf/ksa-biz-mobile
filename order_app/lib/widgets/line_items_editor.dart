@@ -1,6 +1,7 @@
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:l10n/l10n.dart';
 
 import '../providers/customer_context_provider.dart';
 import '../providers/repositories.dart';
@@ -9,10 +10,11 @@ import '../repositories/product_price_repository.dart';
 export 'package:core/widgets/line_items_editor.dart';
 
 Future<ProductModel?> pickProduct(BuildContext context, WidgetRef ref) async {
+  final l10n = AppLocalizations.of(context);
   final profile = ref.read(customerContextProvider).profile;
   if (profile == null) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Customer profile not loaded')),
+      SnackBar(content: Text(l10n.orderCustomerProfileNotLoaded)),
     );
     return null;
   }
@@ -81,6 +83,8 @@ class _ProductPickerSheetState extends State<_ProductPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SizedBox(
@@ -94,7 +98,7 @@ class _ProductPickerSheetState extends State<_ProductPickerSheet> {
                   Expanded(
                     child: TextField(
                       controller: _searchController,
-                      decoration: const InputDecoration(labelText: 'Search products'),
+                      decoration: InputDecoration(labelText: l10n.commonSearchProducts),
                       onSubmitted: (_) => _search(),
                     ),
                   ),
@@ -115,8 +119,11 @@ class _ProductPickerSheetState extends State<_ProductPickerSheet> {
                   final price = _prices[product.id] ?? product.price;
                   final piecePrice = product.piecesPerCarton > 0 ? price / product.piecesPerCarton : price;
                   final subtitle = product.allowBreakPack
-                      ? 'SAR $price / CTN · SAR ${piecePrice.toStringAsFixed(2)} / pcs'
-                      : 'SAR $price';
+                      ? l10n.commonProductPriceCtn(
+                          '$price',
+                          'SAR ${piecePrice.toStringAsFixed(2)} /',
+                        )
+                      : l10n.commonProductPrice('$price');
                   return ListTile(
                     title: Text(product.name),
                     subtitle: Text(subtitle),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/repositories.dart';
 
@@ -48,11 +49,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Scaffold(body: LoadingView());
+    final l10n = AppLocalizations.of(context);
+
+    if (_loading) return Scaffold(body: LoadingView(message: l10n.commonLoading));
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notifications'),
+        title: Text(l10n.salesNotifications),
         actions: [
           IconButton(
             icon: const Icon(Icons.done_all),
@@ -64,7 +67,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         ],
       ),
       body: _items.isEmpty
-          ? const EmptyView(message: 'No notifications')
+          ? EmptyView(message: l10n.salesNotificationsEmpty)
           : ListView.builder(
               itemCount: _items.length,
               itemBuilder: (_, i) {

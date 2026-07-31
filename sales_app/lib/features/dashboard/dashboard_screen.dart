@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/repositories.dart';
@@ -18,6 +19,7 @@ class DashboardScreen extends ConsumerStatefulWidget {
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   bool _loading = true;
   String? _error;
+  bool? _needsSalesPersonSelection;
   double _totalDue = 0;
   int _unpaidOrders = 0;
   int _openManualOrders = 0;
@@ -36,9 +38,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (salesPersonId == null) {
       setState(() {
         _loading = false;
-        _error = auth.canPickSalesPerson
-            ? 'Select a salesperson to view the dashboard.'
-            : 'Your account is not linked to a salesperson profile.';
+        _needsSalesPersonSelection = auth.canPickSalesPerson;
+        _error = '';
       });
       return;
     }
@@ -46,6 +47,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     setState(() {
       _loading = true;
       _error = null;
+      _needsSalesPersonSelection = null;
     });
 
     try {
@@ -80,11 +82,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final auth = ref.watch(authProvider);
     final currency = NumberFormat.currency(symbol: 'SAR ');
 
-    if (_loading) return const LoadingView(message: 'Loading dashboard...');
-    if (_error != null) {
+    if (_loading) return LoadingView(message: l10n.salesDashboardLoading);
+    if (_needsSalesPersonSelection != null) {
+      final message = _needsSalesPersonSelection!
+          ? l10n.salesDashboardSelectSp
+          : l10n.salesDashboardNoProfile;
+      return ErrorView(
+        message: message,
+        onRetry: _needsSalesPersonSelection! ? () => context.go('/select-salesperson') : _load,
+      );
+    }
+    if (_error != null && _error!.isNotEmpty) {
       return ErrorView(
         message: _error!,
         onRetry: auth.canPickSalesPerson ? () => context.go('/select-salesperson') : _load,
@@ -99,7 +111,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           Row(
             children: [
               Expanded(
-                child: Text('Hello, ${auth.user?.name ?? 'Salesperson'}', style: Theme.of(context).textTheme.titleLarge),
+                child: Text(
+                  l10n.salesHello(auth.user?.name ?? l10n.salesDefaultSalesperson),
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
               ),
               IconButton(
                 icon: const Icon(Icons.notifications_outlined),
@@ -108,42 +123,44 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ],
           ),
           if (auth.activeSalesPerson != null)
-            Text('Acting as: ${auth.activeSalesPerson!.name}', style: Theme.of(context).textTheme.bodyMedium)
+            Text(l10n.salesActingAsName(auth.activeSalesPerson!.name), style: Theme.of(context).textTheme.bodyMedium)
           else if (auth.salesPerson != null)
             Text(auth.salesPerson!.name, style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 16),
           _SummaryCard(
-            title: 'Outstanding dues',
+            title: l10n.salesCardOutstandingDues,
             value: currency.format(_totalDue),
-            subtitle: '$_unpaidOrders unpaid orders',
+            subtitle: l10n.salesCardUnpaidOrders(_unpaidOrders),
             icon: Icons.payments,
             onTap: () => context.go('/dues'),
           ),
           _SummaryCard(
-            title: 'Manual orders',
+            title: l10n.salesCardManualOrders,
             value: '$_openManualOrders',
-            subtitle: 'Open / assigned / in review',
+            subtitle: l10n.salesCardManualSubtitle,
             icon: Icons.phone_in_talk,
             onTap: () => context.go('/manual-orders'),
           ),
           _SummaryCard(
-            title: 'Van stock',
-            value: '$_vanProducts products',
-            subtitle: _lowStock > 0 ? '$_lowStock low stock alerts' : 'Tap to manage stock',
+            title: l10n.salesCardVanStock,
+            value: l10n.salesCardVanProducts(_vanProducts),
+            subtitle: _lowStock > 0
+                ? l10n.salesCardLowStockAlerts(_lowStock)
+                : l10n.salesCardTapManageStock,
             icon: Icons.local_shipping,
             onTap: () => context.go('/van-stock'),
           ),
           _SummaryCard(
-            title: 'My orders',
-            value: 'View all',
-            subtitle: 'Create and edit orders',
+            title: l10n.salesCardMyOrders,
+            value: l10n.salesCardViewAll,
+            subtitle: l10n.salesCardOrdersSubtitle,
             icon: Icons.receipt_long,
             onTap: () => context.go('/orders'),
           ),
           _SummaryCard(
-            title: 'Watch-list',
-            value: 'Save leads',
-            subtitle: 'GPS locations for future visits',
+            title: l10n.salesCardWatchlist,
+            value: l10n.salesCardWatchlistValue,
+            subtitle: l10n.salesCardWatchlistSubtitle,
             icon: Icons.bookmark_add_outlined,
             onTap: () => context.push('/watchlist'),
           ),
@@ -151,7 +168,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           OutlinedButton.icon(
             onPressed: () => quickSaveWatchlistLocation(context, ref),
             icon: const Icon(Icons.add_location_alt),
-            label: const Text('Quick-save current location'),
+            label: Text(l10n.salesQuickSaveLocation),
           ),
         ],
       ),

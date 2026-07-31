@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/repositories.dart';
@@ -67,29 +68,30 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
   }
 
   Future<void> _requestDiscount() async {
+    final l10n = AppLocalizations.of(context);
     final amountController = TextEditingController();
     final reasonController = TextEditingController();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Request grand discount'),
+        title: Text(l10n.salesOrderRequestGrandDiscount),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: amountController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: 'Discount amount (SAR)'),
+              decoration: InputDecoration(labelText: l10n.salesOrderDiscountAmount),
             ),
             TextField(
               controller: reasonController,
-              decoration: const InputDecoration(labelText: 'Reason'),
+              decoration: InputDecoration(labelText: l10n.commonReason),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Submit')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.commonSubmit)),
         ],
       ),
     );
@@ -105,7 +107,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             reason: reasonController.text.trim().isEmpty ? null : reasonController.text.trim(),
           );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Discount request submitted')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.salesOrderDiscountSubmitted)));
         await _load();
       }
     } catch (e) {
@@ -114,18 +116,19 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
   }
 
   Future<void> _cancel() async {
+    final l10n = AppLocalizations.of(context);
     final reasonController = TextEditingController();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Cancel order'),
+        title: Text(l10n.salesOrderCancelOrder),
         content: TextField(
           controller: reasonController,
-          decoration: const InputDecoration(labelText: 'Reason'),
+          decoration: InputDecoration(labelText: l10n.commonReason),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Back')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Cancel order')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonBack)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.salesOrderCancelOrder)),
         ],
       ),
     );
@@ -135,7 +138,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       await ref.read(offlineOrderRepositoryProvider).cancel(widget.id, reasonController.text.trim());
       ref.invalidate(pendingSyncCountProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order cancelled')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.salesOrderCancelled)));
         await _load();
       }
     } catch (e) {
@@ -145,7 +148,9 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const LoadingView();
+    final l10n = AppLocalizations.of(context);
+
+    if (_loading) return LoadingView(message: l10n.commonLoading);
     if (_error != null) return ErrorView(message: _error!, onRetry: _load);
 
     final order = _order!;
@@ -162,19 +167,19 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             alignment: Alignment.centerRight,
             child: IconButton(
               icon: const Icon(Icons.edit_outlined),
-              tooltip: 'Edit order',
+              tooltip: l10n.salesOrderEditTooltip,
               onPressed: () => context.push('/orders/${order.id}/edit'),
             ),
           ),
         if (pending)
-          const Padding(
-            padding: EdgeInsets.only(bottom: 12),
-            child: StatusChip(label: 'Pending sync'),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: StatusChip(label: 'pending sync'),
           ),
         if (order.hasPendingDiscount)
-          const Padding(
-            padding: EdgeInsets.only(bottom: 8),
-            child: StatusChip(label: 'Discount pending approval'),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: StatusChip(label: 'discount pending approval'),
           ),
         Card(
           child: Padding(
@@ -185,28 +190,28 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Total', style: Theme.of(context).textTheme.titleMedium),
+                    Text(l10n.commonTotalLabel, style: Theme.of(context).textTheme.titleMedium),
                     StatusChip(label: order.paymentStatus),
                   ],
                 ),
                 Text(currency.format(order.totalBill), style: Theme.of(context).textTheme.headlineSmall),
                 const Divider(),
-                _row('Paid', currency.format(order.amountPaid)),
-                _row('Due', currency.format(due), bold: true),
-                if (order.grandDiscount > 0) _row('Grand discount', currency.format(order.grandDiscount)),
-                if (order.dueDate != null) _row('Due date', order.dueDate!),
-                if (order.isOverdue) _row('Overdue', '${order.daysOverdue} days'),
+                _row(l10n.commonPaid, currency.format(order.amountPaid)),
+                _row(l10n.commonDue, currency.format(due), bold: true),
+                if (order.grandDiscount > 0) _row(l10n.commonGrandDiscount, currency.format(order.grandDiscount)),
+                if (order.dueDate != null) _row(l10n.commonDueDate, order.dueDate!),
+                if (order.isOverdue) _row(l10n.commonOverdue, l10n.commonOverdueDays(order.daysOverdue)),
               ],
             ),
           ),
         ),
         if (_customerDiaryTarget(order) != null)
           ListTile(
-            title: const Text('Customer'),
-            subtitle: Text(order.customerShopName ?? 'View diary'),
+            title: Text(l10n.commonCustomer),
+            subtitle: Text(order.customerShopName ?? l10n.commonDiary),
             trailing: IconButton(
               icon: const Icon(Icons.notes_outlined),
-              tooltip: 'Customer diary',
+              tooltip: l10n.commonDiary,
               onPressed: () => _openDiary(order),
             ),
           ),
@@ -214,30 +219,35 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           FilledButton.icon(
             onPressed: _collectPayment,
             icon: const Icon(Icons.payments),
-            label: const Text('Collect payment'),
+            label: Text(l10n.salesOrderCollectPayment),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: _requestDiscount,
             icon: const Icon(Icons.percent),
-            label: const Text('Request discount'),
+            label: Text(l10n.salesOrderRequestDiscount),
           ),
           const SizedBox(height: 16),
         ],
-        Text('Items', style: Theme.of(context).textTheme.titleMedium),
+        Text(l10n.commonItems, style: Theme.of(context).textTheme.titleMedium),
         for (final item in order.items)
           ListTile(
-            title: Text(item.product?.name ?? 'Product #${item.productId}'),
-            subtitle: Text('Qty ${item.quantity}'),
+            title: Text(item.product?.name ?? l10n.commonProductFallback(item.productId)),
+            subtitle: Text(l10n.commonQtyLine('${item.quantity}')),
             trailing: Text(currency.format(item.bill)),
           ),
         if (order.payments.isNotEmpty) ...[
           const SizedBox(height: 16),
-          Text('Payments', style: Theme.of(context).textTheme.titleMedium),
+          Text(l10n.commonPayments, style: Theme.of(context).textTheme.titleMedium),
           for (final p in order.payments)
             ListTile(
               title: Text(p.paymentReference ?? 'Payment #${p.id}'),
-              subtitle: Text('${p.paymentMethod ?? ''} ${p.paidAt ?? ''}'.trim()),
+              subtitle: Text(
+                [
+                  if (p.paymentMethod != null) localizedPaymentMethodLabel(context, p.paymentMethod!),
+                  if (p.paidAt != null) p.paidAt!,
+                ].join(' ').trim(),
+              ),
               trailing: Text(currency.format(p.amount)),
             ),
         ],
@@ -245,15 +255,13 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           OutlinedButton.icon(
             onPressed: _cancel,
             icon: const Icon(Icons.cancel_outlined),
-            label: const Text('Cancel order'),
+            label: Text(l10n.salesOrderCancelOrder),
           ),
         if (!pending) ...[
           const SizedBox(height: 16),
-          Text('Modification history', style: Theme.of(context).textTheme.titleMedium),
-          if (_mods.isEmpty) const Text('No modifications'),
           for (final mod in _mods)
             ListTile(
-              title: Text(mod.action.replaceAll('_', ' ')),
+              title: Text(localizedStatusLabel(context, mod.action)),
               subtitle: Text(mod.notes ?? mod.createdAt ?? ''),
             ),
         ],
@@ -269,7 +277,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       ref: ref,
       customerType: target.$1,
       customerId: target.$2,
-      customerName: order.customerShopName ?? 'Customer',
+      customerName: order.customerShopName ?? AppLocalizations.of(context).commonCustomer,
     );
   }
 

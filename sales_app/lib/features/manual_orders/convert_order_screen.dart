@@ -2,6 +2,7 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/repositories.dart';
@@ -56,7 +57,8 @@ class _ConvertOrderScreenState extends ConsumerState<ConvertOrderScreen> {
         'items': _items.map((e) => e.toJson()).toList(),
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order created')));
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.salesConvertOrderCreated)));
         context.go('/orders/${order.id}');
       }
     } catch (e) {
@@ -67,18 +69,23 @@ class _ConvertOrderScreenState extends ConsumerState<ConvertOrderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const LoadingView();
+    final l10n = AppLocalizations.of(context);
+
+    if (_loading) return LoadingView(message: l10n.commonLoading);
     if (_error != null) return ErrorView(message: _error!, onRetry: _load);
 
     return ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text(_request?.customerShop?.name ?? 'Shop order', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            _request?.customerShop?.name ?? l10n.salesConvertShopOrder,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           if (_request?.notes != null) Text(_request!.notes!),
           const SizedBox(height: 16),
           Row(
             children: [
-              Text('Order items', style: Theme.of(context).textTheme.titleMedium),
+              Text(l10n.salesConvertOrderItems, style: Theme.of(context).textTheme.titleMedium),
               const Spacer(),
               TextButton.icon(
                 onPressed: () async {
@@ -88,7 +95,7 @@ class _ConvertOrderScreenState extends ConsumerState<ConvertOrderScreen> {
                   }
                 },
                 icon: const Icon(Icons.add),
-                label: const Text('Add product'),
+                label: Text(l10n.salesConvertAddProduct),
               ),
             ],
           ),
@@ -102,7 +109,7 @@ class _ConvertOrderScreenState extends ConsumerState<ConvertOrderScreen> {
             onPressed: _submitting || _items.isEmpty ? null : _submit,
             child: _submitting
                 ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Place order'),
+                : Text(l10n.commonPlaceOrder),
           ),
         ],
     );

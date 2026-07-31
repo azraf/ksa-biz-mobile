@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:l10n/l10n.dart';
 
 class LoadingView extends StatelessWidget {
   const LoadingView({super.key, this.message});
@@ -30,6 +31,7 @@ class ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -41,7 +43,7 @@ class ErrorView extends StatelessWidget {
             Text(message, textAlign: TextAlign.center),
             if (onRetry != null) ...[
               const SizedBox(height: 16),
-              FilledButton(onPressed: onRetry, child: const Text('Retry')),
+              FilledButton(onPressed: onRetry, child: Text(l10n.commonRetry)),
             ],
           ],
         ),
@@ -98,8 +100,9 @@ class StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final display = localizedStatusLabel(context, label);
     return Chip(
-      label: Text(label.replaceAll('_', ' ')),
+      label: Text(display),
       backgroundColor: _color(context),
       visualDensity: VisualDensity.compact,
     );

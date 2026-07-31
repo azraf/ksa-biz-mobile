@@ -1,6 +1,7 @@
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/repositories.dart';
 import '../../widgets/line_items_editor.dart';
@@ -70,19 +71,20 @@ class _OrderEditScreenState extends ConsumerState<OrderEditScreen> {
   }
 
   Future<void> _returnItem(OrderItemModel item) async {
+    final l10n = AppLocalizations.of(context);
     final qtyController = TextEditingController(text: '1');
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Sales return'),
+        title: Text(l10n.salesOrderSalesReturn),
         content: TextField(
           controller: qtyController,
-          decoration: const InputDecoration(labelText: 'Quantity'),
+          decoration: InputDecoration(labelText: l10n.commonQuantity),
           keyboardType: TextInputType.number,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Return')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.salesOrderReturn)),
         ],
       ),
     );
@@ -100,23 +102,25 @@ class _OrderEditScreenState extends ConsumerState<OrderEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const LoadingView();
+    final l10n = AppLocalizations.of(context);
+
+    if (_loading) return LoadingView(message: l10n.commonLoading);
     if (_error != null) return ErrorView(message: _error!, onRetry: _load);
     final order = _order!;
     if (!order.isEditable) {
-      return const Center(child: Text('This order cannot be edited.'));
+      return Center(child: Text(l10n.salesOrderCannotEdit));
     }
 
     return ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          FilledButton.icon(onPressed: _addItem, icon: const Icon(Icons.add), label: const Text('Add product')),
+          FilledButton.icon(onPressed: _addItem, icon: const Icon(Icons.add), label: Text(l10n.salesOrderAddProduct)),
           const SizedBox(height: 12),
           for (final item in order.items)
             Card(
               child: ListTile(
-                title: Text(item.product?.name ?? 'Product #${item.productId}'),
-                subtitle: Text('Qty: ${item.quantity}'),
+                title: Text(item.product?.name ?? l10n.commonProductFallback(item.productId)),
+                subtitle: Text(l10n.commonQtyLine('${item.quantity}')),
                 trailing: PopupMenuButton<String>(
                   onSelected: (value) async {
                     if (value == 'qty') {
@@ -124,13 +128,13 @@ class _OrderEditScreenState extends ConsumerState<OrderEditScreen> {
                       final ok = await showDialog<bool>(
                         context: context,
                         builder: (ctx) => AlertDialog(
-                          title: const Text('Update quantity'),
+                          title: Text(l10n.salesOrderUpdateQty),
                           content: TextField(controller: controller, keyboardType: TextInputType.number),
                           actions: [
-                            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.commonCancel)),
                             FilledButton(
                               onPressed: () => Navigator.pop(ctx, true),
-                              child: const Text('Save'),
+                              child: Text(l10n.commonSave),
                             ),
                           ],
                         ),
@@ -142,10 +146,10 @@ class _OrderEditScreenState extends ConsumerState<OrderEditScreen> {
                       await _returnItem(item);
                     }
                   },
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'qty', child: Text('Change quantity')),
-                    PopupMenuItem(value: 'return', child: Text('Sales return')),
-                    PopupMenuItem(value: 'remove', child: Text('Remove item')),
+                  itemBuilder: (_) => [
+                    PopupMenuItem(value: 'qty', child: Text(l10n.salesOrderChangeQty)),
+                    PopupMenuItem(value: 'return', child: Text(l10n.salesOrderSalesReturn)),
+                    PopupMenuItem(value: 'remove', child: Text(l10n.salesOrderRemoveItem)),
                   ],
                 ),
               ),

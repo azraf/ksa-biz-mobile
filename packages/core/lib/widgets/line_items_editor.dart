@@ -1,6 +1,7 @@
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:l10n/l10n.dart';
 
 class LineItemDraft {
   LineItemDraft({
@@ -58,8 +59,9 @@ class LineItemsEditor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     if (items.isEmpty) {
-      return const EmptyView(message: 'No items yet');
+      return EmptyView(message: l10n.commonNoItemsYet);
     }
 
     final currency = NumberFormat.currency(symbol: 'SAR ');
@@ -96,7 +98,7 @@ class LineItemsEditor extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(8),
             child: Text(
-              'Total: ${currency.format(items.fold<double>(0, (s, e) => s + e.lineTotal))}',
+              l10n.commonTotal(currency.format(items.fold<double>(0, (s, e) => s + e.lineTotal))),
               style: Theme.of(context).textTheme.titleMedium,
             ),
           ),
@@ -150,6 +152,7 @@ class _LineItemDialogState extends State<_LineItemDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final product = widget.item.product;
     final canBreakPack = product.allowBreakPack && product.pcsUnitId != null;
 
@@ -161,44 +164,44 @@ class _LineItemDialogState extends State<_LineItemDialog> {
           if (canBreakPack)
             DropdownButtonFormField<int>(
               value: _unitId,
-              decoration: const InputDecoration(labelText: 'Unit'),
+              decoration: InputDecoration(labelText: l10n.commonUnit),
               items: [
                 if (product.defaultCartonUnitId > 0)
                   DropdownMenuItem(
                     value: product.defaultCartonUnitId,
-                    child: const Text('Carton (CTN)'),
+                    child: Text(l10n.commonUnitCarton),
                   ),
                 DropdownMenuItem(
                   value: product.pcsUnitId,
-                  child: Text('Piece (pcs) · ${product.piecesPerCarton} per CTN'),
+                  child: Text(l10n.commonUnitPiece(product.piecesPerCarton)),
                 ),
               ],
               onChanged: _onUnitChanged,
             ),
           TextField(
             controller: _qty,
-            decoration: const InputDecoration(labelText: 'Quantity'),
+            decoration: InputDecoration(labelText: l10n.commonQuantity),
             keyboardType: TextInputType.number,
           ),
           TextField(
             controller: _price,
-            decoration: const InputDecoration(labelText: 'Price'),
+            decoration: InputDecoration(labelText: l10n.commonPrice),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
           TextField(
             controller: _discount,
-            decoration: const InputDecoration(labelText: 'Discount'),
+            decoration: InputDecoration(labelText: l10n.commonDiscount),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
           TextField(
             controller: _vat,
-            decoration: const InputDecoration(labelText: 'VAT'),
+            decoration: InputDecoration(labelText: l10n.commonVat),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
         ],
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.commonCancel)),
         FilledButton(
           onPressed: () {
             widget.item.quantity = int.tryParse(_qty.text) ?? widget.item.quantity;
@@ -208,7 +211,7 @@ class _LineItemDialogState extends State<_LineItemDialog> {
             widget.item.vat = double.tryParse(_vat.text) ?? widget.item.vat;
             Navigator.pop(context, widget.item);
           },
-          child: const Text('Save'),
+          child: Text(l10n.commonSave),
         ),
       ],
     );

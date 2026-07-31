@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:l10n/l10n.dart';
 import '../models/admin_models.dart';
 import '../utils/contact_launcher.dart';
 
@@ -17,25 +18,26 @@ class ContactActionButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final number = ContactLauncher.normalizePhone(phoneNumber);
     if (number == null) return const SizedBox.shrink();
 
     Future<void> showError(String action) async {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not open $action')),
+        SnackBar(content: Text(l10n.commonCouldNotOpen(action))),
       );
     }
 
     Future<void> onCall() async {
       if (!await ContactLauncher.dialPhone(phoneNumber)) {
-        await showError('phone dialer');
+        await showError(l10n.commonPhoneDialer);
       }
     }
 
     Future<void> onWhatsApp() async {
       if (!await ContactLauncher.openWhatsApp(phoneNumber, message: whatsappMessage)) {
-        await showError('WhatsApp');
+        await showError(l10n.commonWhatsapp);
       }
     }
 
@@ -45,12 +47,12 @@ class ContactActionButtons extends StatelessWidget {
         children: [
           IconButton(
             icon: const Icon(Icons.phone_outlined),
-            tooltip: 'Call',
+            tooltip: l10n.commonCall,
             onPressed: onCall,
           ),
           IconButton(
             icon: const Icon(Icons.chat_outlined),
-            tooltip: 'WhatsApp',
+            tooltip: l10n.commonWhatsapp,
             onPressed: onWhatsApp,
           ),
         ],
@@ -62,13 +64,13 @@ class ContactActionButtons extends StatelessWidget {
         OutlinedButton.icon(
           onPressed: onCall,
           icon: const Icon(Icons.phone_outlined),
-          label: const Text('Call'),
+          label: Text(l10n.commonCall),
         ),
         const SizedBox(width: 8),
         OutlinedButton.icon(
           onPressed: onWhatsApp,
           icon: const Icon(Icons.chat_outlined),
-          label: const Text('WhatsApp'),
+          label: Text(l10n.commonWhatsapp),
         ),
       ],
     );

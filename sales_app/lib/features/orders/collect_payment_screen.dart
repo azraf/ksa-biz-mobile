@@ -2,6 +2,7 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/repositories.dart';
 
@@ -35,9 +36,10 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context);
     final amount = double.tryParse(_amountController.text.trim());
     if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a valid amount')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.salesOrderEnterValidAmount)));
       return;
     }
 
@@ -60,38 +62,39 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final currency = NumberFormat.currency(symbol: 'SAR ');
 
     return Scaffold(
-      appBar: AppBar(title: Text('Collect payment #${widget.orderId}')),
+      appBar: AppBar(title: Text(l10n.salesOrderCollectPaymentTitle(widget.orderId))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           ListTile(
-            title: const Text('Amount due'),
+            title: Text(l10n.salesOrderAmountDue),
             trailing: Text(currency.format(widget.amountDue), style: Theme.of(context).textTheme.titleMedium),
           ),
           TextField(
             controller: _amountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(labelText: 'Amount collected', prefixText: 'SAR '),
+            decoration: InputDecoration(labelText: l10n.salesOrderAmountCollected, prefixText: 'SAR '),
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             value: _method,
-            decoration: const InputDecoration(labelText: 'Payment method'),
-            items: const [
-              DropdownMenuItem(value: 'cash', child: Text('Cash')),
-              DropdownMenuItem(value: 'transfer', child: Text('Bank transfer')),
-              DropdownMenuItem(value: 'cheque', child: Text('Cheque')),
-              DropdownMenuItem(value: 'other', child: Text('Other')),
+            decoration: InputDecoration(labelText: l10n.salesOrderPaymentMethod),
+            items: [
+              DropdownMenuItem(value: 'cash', child: Text(l10n.commonCash)),
+              DropdownMenuItem(value: 'transfer', child: Text(l10n.commonBankTransfer)),
+              DropdownMenuItem(value: 'cheque', child: Text(l10n.commonCheque)),
+              DropdownMenuItem(value: 'other', child: Text(l10n.commonOther)),
             ],
             onChanged: _saving ? null : (v) => setState(() => _method = v ?? 'cash'),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _notesController,
-            decoration: const InputDecoration(labelText: 'Notes (optional)'),
+            decoration: InputDecoration(labelText: l10n.commonNotesOptional),
             maxLines: 2,
           ),
           const SizedBox(height: 24),
@@ -99,7 +102,7 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
             onPressed: _saving ? null : _submit,
             child: _saving
                 ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Record payment'),
+                : Text(l10n.salesOrderRecordPayment),
           ),
         ],
       ),

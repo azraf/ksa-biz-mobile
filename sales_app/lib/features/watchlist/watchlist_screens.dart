@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:record/record.dart';
+import 'package:l10n/l10n.dart';
 
 import 'package:maps_ui/maps_ui.dart';
 
@@ -24,6 +25,7 @@ class WatchlistListScreen extends ConsumerStatefulWidget {
 class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
   bool _loading = true;
   String? _error;
+  bool _missingSalesPerson = false;
   List<WatchlistItemModel> _items = [];
   String _status = 'active';
   bool _sortByDistance = false;
@@ -40,13 +42,14 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
     if (spId == null) {
       setState(() {
         _loading = false;
-        _error = 'Select a salesperson first.';
+        _missingSalesPerson = true;
       });
       return;
     }
     setState(() {
       _loading = true;
       _error = null;
+      _missingSalesPerson = false;
     });
     try {
       final items = await ref.read(offlineWatchlistRepositoryProvider).listLocalAndRemote(
@@ -80,11 +83,12 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
   }
 
   void _openMap() {
+    final l10n = AppLocalizations.of(context);
     final pins = _items.map(MapPin.tryFromWatchlistItem).whereType<MapPin>().toList();
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => LocationMapScreen(
-          title: 'Watch-list map',
+          title: l10n.salesWatchlistMap,
           pins: pins,
           initialFilter: MapLayerFilter.watchlist,
           onPinTap: (pin) => context.push('/watchlist/${pin.id}'),
@@ -95,19 +99,21 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Watch-list'),
+        title: Text(l10n.salesWatchlist),
         actions: [
           if (_items.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.map_outlined),
-              tooltip: 'View on map',
+              tooltip: l10n.salesWatchlistViewMap,
               onPressed: _openMap,
             ),
           IconButton(
             icon: Icon(_sortByDistance ? Icons.near_me : Icons.near_me_outlined),
-            tooltip: 'Sort by distance',
+            tooltip: l10n.salesWatchlistSortDistance,
             onPressed: () {
               setState(() => _sortByDistance = !_sortByDistance);
               _load();
@@ -119,9 +125,9 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
               setState(() => _status = v);
               _load();
             },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'active', child: Text('Active')),
-              PopupMenuItem(value: 'archived', child: Text('Archived')),
+            itemBuilder: (_) => [
+              PopupMenuItem(value: 'active', child: Text(l10n.salesWatchlistActive)),
+              PopupMenuItem(value: 'archived', child: Text(l10n.salesWatchlistArchived)),
             ],
           ),
         ],
@@ -129,14 +135,16 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/watchlist/create'),
         icon: const Icon(Icons.add_location_alt),
-        label: const Text('Add location'),
+        label: Text(l10n.salesWatchlistAddLocation),
       ),
       body: _loading
-          ? const LoadingView(message: 'Loading watch-list...')
-          : _error != null
+          ? LoadingView(message: l10n.salesWatchlistLoading)
+          : _missingSalesPerson
+              ? ErrorView(message: l10n.salesSelectSalespersonFirst, onRetry: _load)
+              : _error != null
               ? ErrorView(message: _error!, onRetry: _load)
               : _items.isEmpty
-                  ? const EmptyView(message: 'No watch-list items yet.')
+                  ? EmptyView(message: l10n.salesWatchlistEmpty)
                   : RefreshIndicator(
                       onRefresh: _load,
                       child: ListView.builder(
@@ -235,7 +243,7 @@ class _WatchlistCreateScreenState extends ConsumerState<WatchlistCreateScreen> {
       setState(() => _isRecording = false);
       if (path == null) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Voice saved after you create the entry (upload on detail).')),
+        SnackBar(content: Text(AppLocalizations.of(context).salesWatchlistVoicePending)),
       );
       return;
     }
@@ -246,17 +254,19 @@ class _WatchlistCreateScreenState extends ConsumerState<WatchlistCreateScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Save to watch-list')),
+      appBar: AppBar(title: Text(l10n.salesWatchlistSaveTitle)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           GpsLocationRow(
             gps: _gps,
-            notCapturedLabel: 'Capturing...',
+            notCapturedLabel: l10n.commonGpsCapturing,
             trailing: GpsCaptureActions(
               gps: _gps,
-              captureLabel: 'Refresh',
+              captureLabel: l10n.commonGpsRefresh,
               onGpsChanged: (value) async {
                 setState(() => _gps = value);
                 if (value != null) {
@@ -271,13 +281,13 @@ class _WatchlistCreateScreenState extends ConsumerState<WatchlistCreateScreen> {
           ),
           TextField(
             controller: _placeController,
-            decoration: const InputDecoration(labelText: 'Place name', border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: l10n.salesWatchlistPlaceName, border: const OutlineInputBorder()),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _noteController,
             maxLines: 3,
-            decoration: const InputDecoration(labelText: 'Note (optional)', border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: l10n.salesWatchlistNoteOptional, border: const OutlineInputBorder()),
           ),
           const SizedBox(height: 12),
           Row(
@@ -285,7 +295,7 @@ class _WatchlistCreateScreenState extends ConsumerState<WatchlistCreateScreen> {
               OutlinedButton.icon(
                 onPressed: _toggleRecord,
                 icon: Icon(_isRecording ? Icons.stop : Icons.mic),
-                label: Text(_isRecording ? 'Stop' : 'Voice'),
+                label: Text(_isRecording ? l10n.commonStop : l10n.commonVoice),
               ),
               const SizedBox(width: 8),
               OutlinedButton.icon(
@@ -294,12 +304,12 @@ class _WatchlistCreateScreenState extends ConsumerState<WatchlistCreateScreen> {
                   await _picker.pickImage(source: ImageSource.camera);
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Add photos after saving from detail screen.')),
+                      SnackBar(content: Text(l10n.salesWatchlistPhotosAfterSave)),
                     );
                   }
                 },
                 icon: const Icon(Icons.photo_camera),
-                label: const Text('Photo'),
+                label: Text(l10n.commonPhoto),
               ),
             ],
           ),
@@ -308,7 +318,7 @@ class _WatchlistCreateScreenState extends ConsumerState<WatchlistCreateScreen> {
             onPressed: _working || _gps == null ? null : _save,
             child: _working
                 ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Save location'),
+                : Text(l10n.salesWatchlistSaveLocation),
           ),
         ],
       ),
@@ -388,10 +398,11 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
       final dist = GpsParser.distanceMeters(pos.latitude, pos.longitude, item.gps);
       if (dist == null) return;
       if (dist <= 200 && mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text("You're at this location — convert to shop?"),
-            action: SnackBarAction(label: 'Convert', onPressed: _convert),
+            action: SnackBarAction(label: l10n.commonConvert, onPressed: _convert),
           ),
         );
       }
@@ -416,13 +427,14 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
 
   Future<void> _delete() async {
     if (_item == null) return;
+    final l10n = AppLocalizations.of(context);
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Delete watch-list entry?'),
+        title: Text(l10n.salesWatchlistDeleteTitle),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.commonDelete)),
         ],
       ),
     );
@@ -434,33 +446,34 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
   Future<void> _convert() async {
     if (_item == null || _item!.id < 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sync this item online before converting.')),
+        SnackBar(content: Text(AppLocalizations.of(context).salesWatchlistSyncBeforeConvert)),
       );
       return;
     }
+    final l10n = AppLocalizations.of(context);
     final name = await showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Convert to shop'),
+        title: Text(l10n.salesWatchlistConvertTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'Shop name *')),
-            TextField(controller: _phoneController, decoration: const InputDecoration(labelText: 'Phone')),
+            TextField(controller: _nameController, decoration: InputDecoration(labelText: l10n.salesWatchlistShopName)),
+            TextField(controller: _phoneController, decoration: InputDecoration(labelText: l10n.commonPhone)),
             const SizedBox(height: 8),
             DropdownButtonFormField<int>(
               value: _priorityRating,
-              decoration: const InputDecoration(labelText: 'Priority rating'),
+              decoration: InputDecoration(labelText: l10n.salesWatchlistPriorityRating),
               items: List.generate(5, (i) => DropdownMenuItem(value: i + 1, child: Text('${i + 1} stars'))),
               onChanged: (v) => setState(() => _priorityRating = v),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.commonCancel)),
           FilledButton(
             onPressed: () => Navigator.pop(context, _nameController.text.trim()),
-            child: const Text('Convert'),
+            child: Text(l10n.commonConvert),
           ),
         ],
       ),
@@ -475,7 +488,7 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
             priorityRating: _priorityRating,
           );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Shop created')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.salesWatchlistShopCreated)));
         context.pop();
       }
     } catch (e) {
@@ -488,7 +501,7 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
   Future<void> _uploadVoice() async {
     if (_item == null || _item!.id < 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sync this item before uploading attachments.')),
+        SnackBar(content: Text(AppLocalizations.of(context).salesWatchlistSyncBeforeUpload)),
       );
       return;
     }
@@ -516,7 +529,7 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
     setState(() => _isRecording = true);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Recording… tap Voice again to stop (max 3 min)')),
+        SnackBar(content: Text(AppLocalizations.of(context).salesWatchlistRecordingHint)),
       );
     }
   }
@@ -524,7 +537,7 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
   Future<void> _uploadPhoto() async {
     if (_item == null || _item!.id < 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sync this item before uploading attachments.')),
+        SnackBar(content: Text(AppLocalizations.of(context).salesWatchlistSyncBeforeUpload)),
       );
       return;
     }
@@ -547,7 +560,9 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Scaffold(body: LoadingView(message: 'Loading...'));
+    final l10n = AppLocalizations.of(context);
+
+    if (_loading) return Scaffold(body: LoadingView(message: l10n.commonLoading));
     if (_error != null) return Scaffold(body: ErrorView(message: _error!, onRetry: _load));
     final item = _item!;
 
@@ -564,10 +579,10 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
                 _archive(v);
               }
             },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'visited', child: Text('Mark visited')),
-              PopupMenuItem(value: 'dismissed', child: Text('Dismiss')),
-              PopupMenuItem(value: 'delete', child: Text('Delete')),
+            itemBuilder: (_) => [
+              PopupMenuItem(value: 'visited', child: Text(l10n.salesWatchlistMarkVisited)),
+              PopupMenuItem(value: 'dismissed', child: Text(l10n.salesWatchlistDismiss)),
+              PopupMenuItem(value: 'delete', child: Text(l10n.commonDelete)),
             ],
           ),
         ],
@@ -575,7 +590,8 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          if (item.isLocalOnly) const Card(child: ListTile(leading: Icon(Icons.cloud_off), title: Text('Pending sync'))),
+          if (item.isLocalOnly)
+            Card(child: ListTile(leading: const Icon(Icons.cloud_off), title: Text(l10n.salesWatchlistPendingSync))),
           GpsLocationRow(gps: item.gps),
           if (item.noteText != null) ...[
             const SizedBox(height: 12),
@@ -583,18 +599,18 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
           ],
           if (item.recordings.isNotEmpty) ...[
             const SizedBox(height: 12),
-            const Text('Voice notes', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(l10n.salesWatchlistVoiceNotes, style: const TextStyle(fontWeight: FontWeight.bold)),
             ...item.recordings.map(
               (r) => ListTile(
                 leading: const Icon(Icons.audiotrack),
-                title: Text(r.originalName ?? 'Recording'),
+                title: Text(r.originalName ?? l10n.commonRecording),
                 onTap: r.url != null ? () => ContactLauncher.openUrl(r.url!) : null,
               ),
             ),
           ],
           if (item.images.isNotEmpty) ...[
             const SizedBox(height: 12),
-            const Text('Photos', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(l10n.salesWatchlistPhotos, style: const TextStyle(fontWeight: FontWeight.bold)),
             SizedBox(
               height: 100,
               child: ListView.separated(
@@ -618,19 +634,19 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
               OutlinedButton.icon(
                 onPressed: _working ? null : _uploadVoice,
                 icon: Icon(_isRecording ? Icons.stop : Icons.mic),
-                label: Text(_isRecording ? 'Stop' : 'Voice'),
+                label: Text(_isRecording ? l10n.commonStop : l10n.commonVoice),
               ),
               const SizedBox(width: 8),
               OutlinedButton.icon(
                 onPressed: _working ? null : _uploadPhoto,
                 icon: const Icon(Icons.photo_camera),
-                label: const Text('Photo'),
+                label: Text(l10n.commonPhoto),
               ),
             ],
           ),
           const SizedBox(height: 24),
           if (item.isActive)
-            FilledButton(onPressed: _working ? null : _convert, child: const Text('Convert to shop')),
+            FilledButton(onPressed: _working ? null : _convert, child: Text(l10n.salesWatchlistConvertBtn)),
         ],
       ),
     );
@@ -639,9 +655,10 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
 
 /// Quick-save from dashboard.
 Future<void> quickSaveWatchlistLocation(BuildContext context, WidgetRef ref) async {
+  final l10n = AppLocalizations.of(context);
   final spId = requireSalesPersonId(ref.read(authProvider));
   if (spId == null) {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Select a salesperson first.')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.salesSelectSalespersonFirst)));
     return;
   }
   if (!await AppPermissions.requestLocation()) return;
@@ -660,8 +677,8 @@ Future<void> quickSaveWatchlistLocation(BuildContext context, WidgetRef ref) asy
       final wl = (nearby['watchlist'] as List?) ?? [];
       if (shops.isNotEmpty || wl.isNotEmpty) {
         final msg = shops.isNotEmpty
-            ? 'Nearby shop: ${shops.first['name']} (${shops.first['distance_m']}m)'
-            : 'Duplicate watch-list within ${wl.first['distance_m']}m';
+            ? l10n.salesNearbyShop(shops.first['name'] as String, '${shops.first['distance_m']}')
+            : l10n.salesDuplicateWatchlist('${wl.first['distance_m']}');
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       }
     }
@@ -674,9 +691,9 @@ Future<void> quickSaveWatchlistLocation(BuildContext context, WidgetRef ref) asy
   if (!context.mounted) return;
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
-      content: const Text('Location saved to watch-list'),
+      content: Text(l10n.salesLocationSaved),
       action: SnackBarAction(
-        label: 'Add notes',
+        label: l10n.salesAddNotesAction,
         onPressed: () => context.push('/watchlist/${item.id}'),
       ),
     ),

@@ -2,6 +2,7 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/customer_context_provider.dart';
@@ -11,6 +12,7 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final auth = ref.watch(authProvider);
     final customer = ref.watch(customerContextProvider);
 
@@ -19,25 +21,27 @@ class ProfileScreen extends ConsumerWidget {
       children: [
         ListTile(
           leading: const CircleAvatar(child: Icon(Icons.person)),
-          title: Text(auth.user?.name ?? 'User'),
+          title: Text(auth.user?.name ?? l10n.commonUser),
           subtitle: Text(auth.user?.email ?? ''),
         ),
         if (auth.roles.isNotEmpty) ...[
           const Divider(),
           ListTile(
-            title: const Text('Roles'),
+            title: Text(l10n.commonRoles),
             subtitle: Text(auth.roles.join(', ')),
           ),
         ],
         const Divider(),
+        const LanguagePickerTile(),
+        const Divider(),
         if (customer.isLoading)
-          const ListTile(
-            title: Text('Customer profile'),
-            subtitle: Text('Loading...'),
+          ListTile(
+            title: Text(l10n.orderProfileCustomer),
+            subtitle: Text(l10n.commonLoading),
           )
         else if (customer.error != null)
           ListTile(
-            title: const Text('Customer profile'),
+            title: Text(l10n.orderProfileCustomer),
             subtitle: Text(customer.error!),
             trailing: IconButton(
               icon: const Icon(Icons.refresh),
@@ -46,7 +50,7 @@ class ProfileScreen extends ConsumerWidget {
           )
         else if (customer.profile != null) ...[
           ListTile(
-            title: const Text('Acting as'),
+            title: Text(l10n.commonActingAs),
             subtitle: Text(
               '${customer.profile!.displayName}\n${customer.profile!.role.replaceAll('_', ' ')}',
             ),
@@ -58,7 +62,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
           if (customer.profile!.shop != null && customer.profile!.shop!.contacts.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text('Shop contacts', style: Theme.of(context).textTheme.titleSmall),
+            Text(l10n.orderProfileShopContacts, style: Theme.of(context).textTheme.titleSmall),
             ...customer.profile!.shop!.contacts.map(
               (c) => ListTile(
                 dense: true,
@@ -71,7 +75,7 @@ class ProfileScreen extends ConsumerWidget {
         if (AppConfig.showApiBaseUrlField) ...[
           const Divider(),
           ListTile(
-            title: const Text('API URL'),
+            title: Text(l10n.commonApiUrl),
             subtitle: Text(auth.apiBaseUrl ?? AppConfig.defaultApiBaseUrl),
           ),
         ],
@@ -82,7 +86,7 @@ class ProfileScreen extends ConsumerWidget {
             if (context.mounted) context.go('/login');
           },
           icon: const Icon(Icons.logout),
-          label: const Text('Sign out'),
+          label: Text(l10n.commonSignOut),
         ),
       ],
     );

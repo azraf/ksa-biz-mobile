@@ -2,6 +2,7 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:l10n/l10n.dart';
 
 import '../features/auth/login_screen.dart';
 import '../features/auth/select_sales_person_screen.dart';
@@ -171,30 +172,30 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class HomeShell extends StatelessWidget {
+class HomeShell extends ConsumerWidget {
   const HomeShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
-  String _titleForLocation(String location) {
-    if (location.contains('/orders/create')) return 'Create order';
-    if (location.contains('/orders/') && location.endsWith('/edit')) return 'Edit order';
+  String _titleForLocation(String location, AppLocalizations l10n) {
+    if (location.contains('/orders/create')) return l10n.salesTitleCreateOrder;
+    if (location.contains('/orders/') && location.endsWith('/edit')) return l10n.salesTitleEditOrder;
     final orderDetail = RegExp(r'/orders/(\d+)');
-    if (orderDetail.hasMatch(location) && !location.contains('create')) return 'Order detail';
-    if (location.contains('/manual-orders/') && location.endsWith('/convert')) return 'Convert to order';
-    if (RegExp(r'/manual-orders/\d+').hasMatch(location)) return 'Manual order';
-    if (location.contains('/van-stock/load')) return 'Load van';
-    if (location.contains('/van-stock/transfer')) return 'Transfer stock';
-    if (location.contains('/van-stock/damage')) return 'Damage replacement';
-    if (location.contains('/van-stock/exchange')) return 'Product exchange';
+    if (orderDetail.hasMatch(location) && !location.contains('create')) return l10n.salesTitleOrderDetail;
+    if (location.contains('/manual-orders/') && location.endsWith('/convert')) return l10n.salesTitleConvertOrder;
+    if (RegExp(r'/manual-orders/\d+').hasMatch(location)) return l10n.salesTitleManualOrder;
+    if (location.contains('/van-stock/load')) return l10n.salesTitleLoadVan;
+    if (location.contains('/van-stock/transfer')) return l10n.salesTitleTransferStock;
+    if (location.contains('/van-stock/damage')) return l10n.salesTitleDamageReplacement;
+    if (location.contains('/van-stock/exchange')) return l10n.salesTitleProductExchange;
 
     return switch (navigationShell.currentIndex) {
-      0 => 'Dashboard',
-      1 => 'Manual Orders',
-      2 => 'Orders',
-      3 => 'Van Stock',
-      4 => 'Dues',
-      _ => 'ARM Sales(M)',
+      0 => l10n.salesTitleDashboard,
+      1 => l10n.salesTitleManualOrders,
+      2 => l10n.salesTitleOrders,
+      3 => l10n.salesTitleVanStock,
+      4 => l10n.salesTitleDues,
+      _ => l10n.salesAppName,
     };
   }
 
@@ -203,9 +204,10 @@ class HomeShell extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final location = GoRouterState.of(context).matchedLocation;
-    final title = _titleForLocation(location);
+    final title = _titleForLocation(location, l10n);
     final showBack = _showBackButton(context);
 
     return Scaffold(
@@ -230,31 +232,31 @@ class HomeShell extends StatelessWidget {
             initialLocation: index == navigationShell.currentIndex,
           );
         },
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: 'Home',
+            icon: const Icon(Icons.dashboard_outlined),
+            selectedIcon: const Icon(Icons.dashboard),
+            label: l10n.salesNavHome,
           ),
           NavigationDestination(
-            icon: Icon(Icons.phone_in_talk_outlined),
-            selectedIcon: Icon(Icons.phone_in_talk),
-            label: 'Manual',
+            icon: const Icon(Icons.phone_in_talk_outlined),
+            selectedIcon: const Icon(Icons.phone_in_talk),
+            label: l10n.salesNavManual,
           ),
           NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long),
-            label: 'Orders',
+            icon: const Icon(Icons.receipt_long_outlined),
+            selectedIcon: const Icon(Icons.receipt_long),
+            label: l10n.salesNavOrders,
           ),
           NavigationDestination(
-            icon: Icon(Icons.local_shipping_outlined),
-            selectedIcon: Icon(Icons.local_shipping),
-            label: 'Van',
+            icon: const Icon(Icons.local_shipping_outlined),
+            selectedIcon: const Icon(Icons.local_shipping),
+            label: l10n.salesNavVan,
           ),
           NavigationDestination(
-            icon: Icon(Icons.payments_outlined),
-            selectedIcon: Icon(Icons.payments),
-            label: 'Dues',
+            icon: const Icon(Icons.payments_outlined),
+            selectedIcon: const Icon(Icons.payments),
+            label: l10n.salesNavDues,
           ),
         ],
       ),

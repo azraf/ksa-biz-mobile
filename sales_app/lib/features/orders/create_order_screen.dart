@@ -2,6 +2,7 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/connectivity_provider.dart';
@@ -48,7 +49,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
       final hasCatalog = await ref.read(referenceDataPrefetcherProvider).hasCachedCatalog();
       if (!hasCatalog) {
         setState(() {
-          _catalogError = 'Go online first to download customer and product data.';
+          _catalogError = AppLocalizations.of(context).salesOrderGoOnlineCatalog;
           _loadingTypes = false;
         });
         return;
@@ -70,7 +71,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
         _walkInShopId = walkInId;
         _selectedType = defaultType;
         _loadingTypes = false;
-        _catalogError = types.isEmpty ? 'No customer types available. Go online to refresh data.' : null;
+        _catalogError = types.isEmpty ? AppLocalizations.of(context).salesOrderNoCustomerTypes : null;
       });
     } catch (e) {
       setState(() {
@@ -117,7 +118,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     if (shopType == null || _walkInShopId == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Walk-in shop not available. Go online to sync.')),
+          SnackBar(content: Text(AppLocalizations.of(context).salesOrderWalkInUnavailable)),
         );
       }
       return;
@@ -125,14 +126,18 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     setState(() {
       _walkInMode = true;
       _selectedType = shopType;
-      _selectedCustomer = CustomerShopModel(id: _walkInShopId!, name: 'Walk-in Shop', isSystem: true);
+      _selectedCustomer = CustomerShopModel(
+        id: _walkInShopId!,
+        name: AppLocalizations.of(context).salesOrderWalkInShop,
+        isSystem: true,
+      );
     });
   }
 
   Future<void> _submit() async {
     final salesPersonId = requireSalesPersonId(ref.read(authProvider));
     if (salesPersonId == null || _selectedType == null || _selectedCustomer == null || _items.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Select customer and add items')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).salesOrderSelectCustomerItems)));
       return;
     }
 
@@ -159,7 +164,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
       if (mounted) {
         if (!online) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Order saved locally — will sync when online')),
+            SnackBar(content: Text(AppLocalizations.of(context).salesOrderSavedLocally)),
           );
         }
         final type = _selectedType!.typeName;
@@ -169,7 +174,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
           'customer_van' => (customer as CustomerVanModel).id,
           _ => (customer as CustomerImporterModel).id,
         };
-        final customerName = _customerLabel();
+        final customerName = _customerLabel(AppLocalizations.of(context));
         if (online) {
           await promptPostOrderDiaryNote(
             context,
@@ -187,17 +192,19 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     }
   }
 
-  String _customerLabel() {
-    if (_selectedCustomer == null) return 'Select customer';
+  String _customerLabel(AppLocalizations l10n) {
+    if (_selectedCustomer == null) return l10n.salesOrderSelectCustomer;
     if (_selectedCustomer is CustomerShopModel) return (_selectedCustomer as CustomerShopModel).name;
     if (_selectedCustomer is CustomerVanModel) return (_selectedCustomer as CustomerVanModel).name;
     if (_selectedCustomer is CustomerImporterModel) return (_selectedCustomer as CustomerImporterModel).name;
-    return 'Selected';
+    return l10n.salesOrderSelected;
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_loadingTypes) return const LoadingView();
+    final l10n = AppLocalizations.of(context);
+
+    if (_loadingTypes) return LoadingView(message: l10n.commonLoading);
     if (_catalogError != null) {
       return ErrorView(message: _catalogError!, onRetry: _loadTypes);
     }
@@ -208,20 +215,20 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
         FilledButton.icon(
           onPressed: _startWalkInOrder,
           icon: const Icon(Icons.flash_on),
-          label: const Text('Walk-in quick order'),
+          label: Text(l10n.salesOrderWalkInQuick),
         ),
         const SizedBox(height: 12),
         if (_walkInMode) ...[
-          const ListTile(
-            leading: Icon(Icons.storefront),
-            title: Text('Walk-in Shop'),
-            subtitle: Text('Anonymous quick sale'),
+          ListTile(
+            leading: const Icon(Icons.storefront),
+            title: Text(l10n.salesOrderWalkInShop),
+            subtitle: Text(l10n.salesOrderWalkInSubtitle),
           ),
           TextField(
             controller: _walkInNoteController,
-            decoration: const InputDecoration(
-              labelText: 'Note (optional)',
-              hintText: 'Cashier note',
+            decoration: InputDecoration(
+              labelText: l10n.salesOrderWalkInNote,
+              hintText: l10n.salesOrderWalkInNoteHint,
             ),
           ),
           const SizedBox(height: 12),
@@ -230,7 +237,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
           DropdownButtonFormField<CustomerTypeModel>(
             key: ValueKey(_selectedType?.id),
             initialValue: _selectedType,
-            decoration: const InputDecoration(labelText: 'Customer type'),
+            decoration: InputDecoration(labelText: l10n.salesOrderCustomerType),
             items: _types
                 .map((t) => DropdownMenuItem(value: t, child: Text(t.typeName)))
                 .toList(),
@@ -243,13 +250,13 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(onPressed: _pickCustomer, child: Text(_customerLabel())),
+                child: OutlinedButton(onPressed: _pickCustomer, child: Text(_customerLabel(l10n))),
               ),
               if (_supportsQuickAdd)
                 IconButton(
                   onPressed: _quickCreateCustomer,
                   icon: const Icon(Icons.person_add),
-                  tooltip: 'Add customer',
+                  tooltip: l10n.salesOrderAddCustomer,
                 ),
             ],
           ),
@@ -257,7 +264,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
         ],
         Row(
           children: [
-            Text('Items', style: Theme.of(context).textTheme.titleMedium),
+            Text(l10n.commonItems, style: Theme.of(context).textTheme.titleMedium),
             const Spacer(),
             TextButton.icon(
               onPressed: () async {
@@ -265,7 +272,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                 if (product != null) setState(() => _items.add(LineItemDraft(product: product)));
               },
               icon: const Icon(Icons.add),
-              label: const Text('Add'),
+              label: Text(l10n.commonAdd),
             ),
           ],
         ),
@@ -277,7 +284,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
         const SizedBox(height: 16),
         FilledButton(
           onPressed: _submitting ? null : _submit,
-          child: _submitting ? const CircularProgressIndicator() : const Text('Create order'),
+          child: _submitting ? const CircularProgressIndicator() : Text(l10n.commonCreateOrder),
         ),
       ],
     );

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/connectivity_provider.dart';
@@ -52,20 +53,21 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final currency = NumberFormat.currency(symbol: 'SAR ');
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/orders/create'),
         icon: const Icon(Icons.add),
-        label: const Text('New order'),
+        label: Text(l10n.commonNewOrder),
       ),
       body: _loading
-          ? const LoadingView()
+          ? LoadingView(message: l10n.commonLoading)
           : _error != null
               ? ErrorView(message: _error!, onRetry: _load)
               : _orders.isEmpty
-                  ? const EmptyView(message: 'No orders yet')
+                  ? EmptyView(message: l10n.commonNoOrdersYet)
                   : RefreshIndicator(
                       onRefresh: _load,
                       child: ListView.builder(
@@ -76,14 +78,20 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
                           return ListTile(
                             title: Row(
                               children: [
-                                Text('Order #${formatOrderId(order.id)}'),
+                                Text(
+                                  order.id >= 0
+                                      ? l10n.commonOrderNumber(order.id)
+                                      : 'Order #${formatOrderId(order.id)}',
+                                ),
                                 if (pending) ...[
                                   const SizedBox(width: 8),
-                                  const StatusChip(label: 'Pending sync'),
+                                  StatusChip(label: 'pending sync'),
                                 ],
                               ],
                             ),
-                            subtitle: Text('${order.paymentStatus} · ${order.status}'),
+                            subtitle: Text(
+                              '${localizedStatusLabel(context, order.paymentStatus)} · ${localizedStatusLabel(context, order.status)}',
+                            ),
                             trailing: Text(currency.format(order.totalBill)),
                             onTap: () => context.push('/orders/${order.id}'),
                           );

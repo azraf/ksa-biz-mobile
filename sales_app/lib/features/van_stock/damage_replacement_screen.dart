@@ -2,6 +2,7 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/repositories.dart';
@@ -49,6 +50,8 @@ class _DamageReplacementScreenState extends ConsumerState<DamageReplacementScree
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -59,18 +62,18 @@ class _DamageReplacementScreenState extends ConsumerState<DamageReplacementScree
               final product = await pickProduct(context, ref);
               if (product != null) setState(() => _product = product);
             },
-            child: Text(_product?.name ?? 'Select product'),
+            child: Text(_product?.name ?? l10n.salesVanDamageSelect),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _quantity,
-            decoration: const InputDecoration(labelText: 'Quantity', border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: l10n.commonQuantity, border: const OutlineInputBorder()),
             keyboardType: TextInputType.number,
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _reason,
-            decoration: const InputDecoration(labelText: 'Reason', border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: l10n.commonReason, border: const OutlineInputBorder()),
             maxLines: 2,
           ),
           const Spacer(),
@@ -78,7 +81,7 @@ class _DamageReplacementScreenState extends ConsumerState<DamageReplacementScree
             onPressed: _saving || _product == null ? null : _submit,
             child: _saving
                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Record replacement'),
+                : Text(l10n.salesVanDamageRecord),
           ),
         ],
       ),

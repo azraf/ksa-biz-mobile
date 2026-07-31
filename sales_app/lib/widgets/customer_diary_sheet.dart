@@ -4,6 +4,7 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:record/record.dart';
+import 'package:l10n/l10n.dart';
 
 import 'package:media/media.dart';
 
@@ -87,15 +88,16 @@ class _CustomerDiarySheetState extends ConsumerState<_CustomerDiarySheet> {
   }
 
   Future<void> _addText() async {
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController();
     final body = await showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Diary note'),
+        title: Text(l10n.commonDiaryNote),
         content: TextField(controller: controller, maxLines: 4),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, controller.text.trim()), child: const Text('Save')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(context, controller.text.trim()), child: Text(l10n.commonSave)),
         ],
       ),
     );
@@ -148,12 +150,14 @@ class _CustomerDiarySheetState extends ConsumerState<_CustomerDiarySheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Material(
       child: ListView(
         controller: widget.scrollController,
         padding: const EdgeInsets.all(16),
         children: [
-          Text('Diary — ${widget.customerName}', style: Theme.of(context).textTheme.titleLarge),
+          Text(l10n.commonDiaryTitle(widget.customerName), style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
           CustomerDiaryPanel(
             notes: _notes,
@@ -204,13 +208,14 @@ class _RecordingDialogState extends State<_RecordingDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final elapsed = DateTime.now().difference(widget.startedAt).inSeconds;
     final remaining = (widget.maxSeconds - elapsed).clamp(0, widget.maxSeconds);
     return AlertDialog(
-      title: const Text('Recording...'),
+      title: Text(l10n.commonRecordingTitle),
       content: Text('${remaining}s remaining (max ${widget.maxSeconds ~/ 60} min)'),
       actions: [
-        FilledButton(onPressed: widget.onStop, child: const Text('Stop & save')),
+        FilledButton(onPressed: widget.onStop, child: Text(l10n.commonStopAndSave)),
       ],
     );
   }
@@ -223,14 +228,15 @@ Future<void> promptPostOrderDiaryNote(
   required int customerId,
   required String customerName,
 }) async {
+  final l10n = AppLocalizations.of(context);
   final add = await showDialog<bool>(
     context: context,
     builder: (_) => AlertDialog(
-      title: const Text('Add visit note?'),
-      content: Text('Add a diary note for $customerName?'),
+      title: Text(l10n.commonAddVisitNoteTitle),
+      content: Text(l10n.commonAddVisitNoteBody(customerName)),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Skip')),
-        FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Add note')),
+        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.commonSkip)),
+        FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.commonAddNote)),
       ],
     ),
   );

@@ -1,13 +1,10 @@
 import 'package:core/core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media/media.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+export 'package:core/core.dart' show sharedPreferencesProvider;
 
 import '../repositories/product_price_repository.dart';
-
-final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
-  throw UnimplementedError();
-});
 
 final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
 

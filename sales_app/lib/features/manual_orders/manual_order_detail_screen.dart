@@ -9,6 +9,7 @@ import 'package:maps_ui/maps_ui.dart';
 import 'package:media/media.dart';
 import 'package:path/path.dart' as p;
 import 'package:record/record.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/repositories.dart';
@@ -72,7 +73,10 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
         _request = updated;
         _working = false;
       });
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Request claimed')));
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.salesManualClaimed)));
+      }
     } catch (e) {
       setState(() => _working = false);
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
@@ -88,12 +92,14 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
       if (gps == null) {
         await repo.clearShopGps(shop.id);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Shop GPS cleared')));
+          final l10n = AppLocalizations.of(context);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.salesManualGpsCleared)));
         }
       } else {
         await repo.updateShopGps(shop.id, gps);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('GPS updated: $gps')));
+          final l10n = AppLocalizations.of(context);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.salesManualGpsUpdated(gps))));
         }
       }
       await _load();
@@ -107,8 +113,9 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
     if (shop == null) return;
     if (!await AppPermissions.requestCamera()) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Camera permission is required.')),
+        SnackBar(content: Text(l10n.commonCameraPermission)),
       );
       return;
     }
@@ -118,8 +125,9 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
     try {
       await ref.read(mediaCaptureFacadeProvider).attachShopPhoto(File(photo.path), shop.id);
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Shop photo uploaded')),
+          SnackBar(content: Text(l10n.salesManualShopPhotoUploaded)),
         );
       }
     } catch (e) {
@@ -132,8 +140,9 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
   Future<void> _pickAndUploadRecording() async {
     if (!await AppPermissions.requestPhotos()) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Permission required to pick recordings.')),
+        SnackBar(content: Text(l10n.commonRecordingPermission)),
       );
       return;
     }
@@ -154,8 +163,9 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
 
     if (!await AppPermissions.requestMicrophone()) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Microphone permission is required.')),
+        SnackBar(content: Text(l10n.commonMicrophonePermission)),
       );
       return;
     }
@@ -189,7 +199,8 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
         _working = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Recording uploaded')));
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.commonRecordingUploaded)));
       }
     } catch (e) {
       setState(() => _working = false);
@@ -201,7 +212,9 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const LoadingView();
+    final l10n = AppLocalizations.of(context);
+
+    if (_loading) return LoadingView(message: l10n.commonLoading);
     if (_error != null) return ErrorView(message: _error!, onRetry: _load);
     final request = _request!;
     final shopPhone = shopContactPhone(request.customerShop);
@@ -211,32 +224,32 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
         padding: const EdgeInsets.all(16),
         children: [
           ListTile(
-            title: Text(shop?.name ?? 'Shop #${request.customerShopId}'),
-            subtitle: Text('Source: ${request.source}'),
+            title: Text(shop?.name ?? l10n.commonShopFallback(request.customerShopId)),
+            subtitle: Text(l10n.commonSourceLabel(request.source)),
             trailing: StatusChip(label: request.status),
           ),
           if (shopPhone != null) ...[
             const SizedBox(height: 8),
             ContactActionButtons(phoneNumber: shopPhone),
           ],
-          if (request.notes != null) ListTile(title: const Text('Notes'), subtitle: Text(request.notes!)),
+          if (request.notes != null) ListTile(title: Text(l10n.commonNotes), subtitle: Text(request.notes!)),
           if (request.manualReference != null)
-            ListTile(title: const Text('Reference'), subtitle: Text(request.manualReference!)),
+            ListTile(title: Text(l10n.commonReference), subtitle: Text(request.manualReference!)),
           if (request.callReference != null)
-            ListTile(title: const Text('Call reference'), subtitle: Text(request.callReference!)),
+            ListTile(title: Text(l10n.commonCallReference), subtitle: Text(request.callReference!)),
           if (request.recordings.isNotEmpty) ...[
             const SizedBox(height: 8),
-            MediaGallerySection(remoteItems: request.recordings, title: 'Recordings'),
+            MediaGallerySection(remoteItems: request.recordings, title: l10n.commonRecordings),
           ],
           const SizedBox(height: 12),
           if (shop != null) ...[
             GpsLocationRow(
               gps: shop.gps,
-              notCapturedLabel: 'Not captured',
+              notCapturedLabel: l10n.commonGpsNotCaptured,
               trailing: GpsCaptureActions(
                 gps: shop.gps,
-                captureLabel: 'Capture GPS',
-                locationRequiredMessage: 'Location permission is required for shop GPS.',
+                captureLabel: l10n.commonGpsCapture,
+                locationRequiredMessage: l10n.commonGpsLocationRequired,
                 onGpsChanged: (_) {},
                 onImmediatePersist: _persistShopGps,
               ),
@@ -245,11 +258,11 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
             OutlinedButton.icon(
               onPressed: _takeShopPhoto,
               icon: const Icon(Icons.camera_alt_outlined),
-              label: const Text('Take shop photo'),
+              label: Text(l10n.salesManualTakeShopPhoto),
             ),
           ],
           const SizedBox(height: 12),
-          Text('Add recording', style: Theme.of(context).textTheme.titleMedium),
+          Text(l10n.commonAddRecording, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -258,17 +271,17 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
               OutlinedButton.icon(
                 onPressed: _working ? null : _toggleAudioRecording,
                 icon: Icon(_isRecording ? Icons.stop : Icons.mic),
-                label: Text(_isRecording ? 'Stop & upload' : 'Record audio'),
+                label: Text(_isRecording ? l10n.commonStopAndUpload : l10n.commonRecordAudio),
               ),
               OutlinedButton.icon(
                 onPressed: _working ? null : _recordVideo,
                 icon: const Icon(Icons.videocam_outlined),
-                label: const Text('Record video'),
+                label: Text(l10n.commonRecordVideo),
               ),
               OutlinedButton.icon(
                 onPressed: _working ? null : _pickAndUploadRecording,
                 icon: const Icon(Icons.attach_file),
-                label: const Text('Pick video'),
+                label: Text(l10n.commonPickVideo),
               ),
             ],
           ),
@@ -276,17 +289,17 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
           if (request.isEditable && request.status != 'in_review')
             FilledButton(
               onPressed: _working ? null : _claim,
-              child: _working ? const CircularProgressIndicator() : const Text('Claim request'),
+              child: _working ? const CircularProgressIndicator() : Text(l10n.salesManualClaimRequest),
             ),
           if (request.isEditable && (request.status == 'in_review' || request.claimedBySalesPersonId != null))
             FilledButton(
               onPressed: () => context.push('/manual-orders/${request.id}/convert'),
-              child: const Text('Convert to order'),
+              child: Text(l10n.salesManualConvertOrder),
             ),
           if (request.convertedOrderId != null)
             OutlinedButton(
               onPressed: () => context.push('/orders/${request.convertedOrderId}'),
-              child: const Text('View converted order'),
+              child: Text(l10n.salesManualViewConverted),
             ),
         ],
     );

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/repositories.dart';
@@ -59,9 +60,10 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final currency = NumberFormat.currency(symbol: 'SAR ');
 
-    if (_loading) return const LoadingView();
+    if (_loading) return LoadingView(message: l10n.commonLoading);
     if (_error != null) return ErrorView(message: _error!, onRetry: _load);
 
     final report = _report!;
@@ -72,11 +74,11 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
         children: [
           Card(
             child: ListTile(
-              title: const Text('Total due'),
+              title: Text(l10n.salesDuesTotalDue),
               trailing: Text(currency.format(report.totalDue), style: Theme.of(context).textTheme.titleLarge),
             ),
           ),
-          if (report.orders.isEmpty) const EmptyView(message: 'No outstanding dues'),
+          if (report.orders.isEmpty) EmptyView(message: l10n.salesDuesNone),
           for (final raw in report.orders)
             Builder(
               builder: (_) {
@@ -84,8 +86,10 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
                 final due = order.amountDue > 0 ? order.amountDue : order.totalBill - order.amountPaid;
                 return Card(
                   child: ListTile(
-                    title: Text('Order #${order.id}'),
-                    subtitle: Text('${order.paymentStatus} · Due ${currency.format(due)}'),
+                    title: Text(l10n.commonOrderNumber(order.id)),
+                    subtitle: Text(
+                      '${localizedStatusLabel(context, order.paymentStatus)} · ${l10n.commonDue} ${currency.format(due)}',
+                    ),
                     trailing: Text(currency.format(order.totalBill)),
                     onTap: () => context.push('/orders/${order.id}'),
                     onLongPress: () => _collectPayment(order),
@@ -94,7 +98,7 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
               },
             ),
           const SizedBox(height: 8),
-          const Text('Long press an order to collect payment'),
+          Text(l10n.salesDuesLongPressHint),
         ],
       ),
     );
