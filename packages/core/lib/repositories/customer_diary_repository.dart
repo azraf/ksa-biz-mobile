@@ -56,6 +56,11 @@ class CustomerDiaryRepository {
     return CustomerDiaryNoteModel.fromJson(response['data'] as Map<String, dynamic>);
   }
 
+  Future<CustomerDiaryNoteModel> createFromPayload(Map<String, dynamic> payload) async {
+    final response = await _api.post('/customer-diary-notes', body: payload);
+    return CustomerDiaryNoteModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
   Future<void> uploadRecording(int noteId, List<int> bytes, String filename, {int? durationSeconds}) async {
     await _api.uploadMultipart(
       '/customer-diary-notes/$noteId/recording',

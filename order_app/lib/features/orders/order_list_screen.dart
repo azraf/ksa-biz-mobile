@@ -73,6 +73,8 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
       );
     }
 
+    final listPadding = fabScrollPadding(context, extendedFab: true, includeBottomNav: true);
+
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/orders/create'),
@@ -88,6 +90,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
                   : RefreshIndicator(
                       onRefresh: _load,
                       child: ListView.builder(
+                        padding: listPadding,
                         itemCount: _orders.length,
                         itemBuilder: (_, i) {
                           final order = _orders[i];

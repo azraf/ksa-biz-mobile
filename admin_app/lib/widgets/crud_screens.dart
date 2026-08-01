@@ -1,3 +1,4 @@
+import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 
 import 'field_config.dart';
@@ -48,22 +49,33 @@ class _CrudListScreenState<T> extends State<CrudListScreen<T>> {
   void _reload() => setState(() => _future = widget.loadItems());
 
   Widget _buildBody() {
+    final listPadding = widget.embedded ? shellBottomPadding(context) : EdgeInsets.zero;
+
     return FutureBuilder<List<T>>(
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return ListView.builder(
+            padding: listPadding,
+            itemCount: 8,
+            itemBuilder: (_, __) => const SkeletonListTile(),
+          );
         }
         if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
+          return ErrorView(
+            message: snapshot.error.toString(),
+            error: snapshot.error,
+            onRetry: _reload,
+          );
         }
         final items = snapshot.data ?? [];
         if (items.isEmpty) {
-          return const Center(child: Text('No items'));
+          return EmptyView(message: 'No items', actionLabel: widget.onAdd != null ? 'Add' : null, onAction: widget.onAdd);
         }
         return RefreshIndicator(
           onRefresh: () async => _reload(),
           child: ListView.separated(
+            padding: listPadding,
             itemCount: items.length,
             separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (context, index) {
@@ -75,10 +87,7 @@ class _CrudListScreenState<T> extends State<CrudListScreen<T>> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (pending)
-                      const Chip(
-                        label: Text('Pending', style: TextStyle(fontSize: 10)),
-                        visualDensity: VisualDensity.compact,
-                      ),
+                      const StatusChip(label: 'pending_sync', icon: Icons.cloud_upload_outlined),
                     if (widget.trailing != null) widget.trailing!(item),
                     if (widget.onDelete != null)
                       IconButton(

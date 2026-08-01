@@ -1,15 +1,69 @@
+import 'package:core/core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:l10n/l10n.dart';
 
-class MoreHubScreen extends StatelessWidget {
+import '../../providers/auth_provider.dart';
+import '../../providers/repositories.dart';
+
+class MoreHubScreen extends ConsumerWidget {
   const MoreHubScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pending = ref.watch(pendingSyncCountProvider);
+    final auth = ref.watch(authProvider);
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         Text('More', style: Theme.of(context).textTheme.headlineSmall),
+        Text('Security', style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: 4),
+        BiometricSettingsTile(
+          enabled: auth.biometricEnabled,
+          available: auth.biometricAvailable,
+          tokenExpiresAt: auth.tokenExpiresAt,
+          onEnable: (reason) => ref.read(authProvider.notifier).enableBiometricLogin(reason),
+          onDisable: () => ref.read(authProvider.notifier).disableBiometricLogin(),
+        ),
+        const Divider(),
+        ListTile(
+          leading: const Icon(Icons.sync_problem),
+          title: const Text('Sync issues'),
+          subtitle: const Text('Review failed or stuck offline uploads'),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => SyncStatusScreen(
+                  syncService: ref.read(syncServiceProvider),
+                  loadItems: () => ref.read(syncServiceProvider).actionableItems(),
+                ),
+              ),
+            );
+          },
+        ),
+        const Divider(),
+        pending.when(
+          data: (count) => count > 0
+              ? Card(
+                  margin: const EdgeInsets.only(top: 8),
+                  child: ListTile(
+                    leading: const Icon(Icons.sync_problem),
+                    title: Text('$count pending sync'),
+                    subtitle: const Text('Tap to sync when online'),
+                    onTap: () {
+                      ref.read(syncServiceProvider).syncIfOnline();
+                      ref.invalidate(pendingSyncCountProvider);
+                    },
+                  ),
+                )
+              : const SizedBox.shrink(),
+          loading: () => const SizedBox.shrink(),
+          error: (_, __) => const SizedBox.shrink(),
+        ),
         const SizedBox(height: 8),
         _section(context, 'Reports', [
           _tile(context, 'Sales Report', Icons.bar_chart, '/more/reports/sales'),
@@ -42,6 +96,22 @@ class MoreHubScreen extends StatelessWidget {
           _tile(context, 'Customer Types', Icons.badge, '/customers/types'),
           _tile(context, 'Users', Icons.manage_accounts, '/more/users'),
         ]),
+        if (kDebugMode)
+          _section(context, 'Debug', [
+            ListTile(
+              leading: const Icon(Icons.speed),
+              title: const Text('Isar benchmarks'),
+              subtitle: const Text('Logs timings to console'),
+              onTap: () async {
+                final stores = ref.read(offlineStoresProvider);
+                final results = await IsarBenchmarks.runAll(stores);
+                if (!context.mounted) return;
+                final text = results.map((r) => r.toString()).join('\n');
+                debugPrint('Isar benchmarks:\n$text');
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+              },
+            ),
+          ]),
       ],
     );
   }

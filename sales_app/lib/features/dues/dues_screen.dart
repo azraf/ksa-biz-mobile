@@ -5,49 +5,91 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:l10n/l10n.dart';
 
-import '../../providers/auth_provider.dart';
-import '../../providers/repositories.dart';
+import '../../providers/screen_providers.dart';
 import '../orders/collect_payment_screen.dart';
 
-class DuesScreen extends ConsumerStatefulWidget {
+class DuesScreen extends ConsumerWidget {
   const DuesScreen({super.key});
 
   @override
-  ConsumerState<DuesScreen> createState() => _DuesScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final currency = NumberFormat.currency(symbol: 'SAR ');
+    final duesAsync = ref.watch(duesProvider);
 
-class _DuesScreenState extends ConsumerState<DuesScreen> {
-  SalesPersonDueReport? _report;
-  bool _loading = true;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
+    return duesAsync.when(
+      loading: () => ListView.builder(
+        itemCount: 6,
+        itemBuilder: (_, __) => const SkeletonListTile(),
+      ),
+      error: (e, _) => ErrorView(
+        message: AppErrorMapper.localize(context, e),
+        error: e,
+        onRetry: () => ref.read(duesProvider.notifier).refresh(),
+      ),
+      data: (data) {
+        final report = data.report;
+        return RefreshIndicator(
+          onRefresh: () => ref.read(duesProvider.notifier).refresh(),
+          child: ListView(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            children: [
+              if (data.fromCache && data.isStale && data.fetchedAt != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: MaterialBanner(
+                    content: Text(l10n.salesDashboardCachedDues(data.fetchedAt!)),
+                    leading: const Icon(Icons.cloud_off_outlined),
+                    actions: [
+                      TextButton(
+                        onPressed: () => ref.read(duesProvider.notifier).refresh(),
+                        child: Text(l10n.commonRetry),
+                      ),
+                    ],
+                  ),
+                ),
+              Card(
+                child: ListTile(
+                  title: Text(l10n.salesDuesTotalDue),
+                  trailing: Text(
+                    currency.format(report.totalDue),
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+              ),
+              if (report.orders.isEmpty) EmptyView(message: l10n.salesDuesNone),
+              for (final raw in report.orders)
+                Builder(
+                  builder: (_) {
+                    final order = OrderModel.fromJson(raw);
+                    final due = order.amountDue > 0 ? order.amountDue : order.totalBill - order.amountPaid;
+                    return Card(
+                      child: ListTile(
+                        title: Text(
+                          order.id >= 0
+                              ? l10n.commonOrderNumber(order.id)
+                              : 'Order #${formatOrderId(order.id)}',
+                        ),
+                        subtitle: Text(
+                          '${localizedStatusLabel(context, order.paymentStatus)} · ${l10n.commonDue} ${currency.format(due)}',
+                        ),
+                        trailing: Text(currency.format(order.totalBill)),
+                        onTap: () => context.push('/orders/${order.id}'),
+                        onLongPress: () => _collectPayment(context, ref, order),
+                      ),
+                    );
+                  },
+                ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(l10n.salesDuesLongPressHint),
+            ],
+          ),
+        );
+      },
+    );
   }
 
-  Future<void> _load() async {
-    final salesPersonId = requireSalesPersonId(ref.read(authProvider));
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final report = await ref.read(reportRepositoryProvider).salesPersonDue(salesPersonId!);
-      setState(() {
-        _report = report.data;
-        _loading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _loading = false;
-      });
-    }
-  }
-
-  Future<void> _collectPayment(OrderModel order) async {
+  Future<void> _collectPayment(BuildContext context, WidgetRef ref, OrderModel order) async {
     final due = order.amountDue > 0 ? order.amountDue : order.totalBill - order.amountPaid;
     final ok = await Navigator.push<bool>(
       context,
@@ -55,52 +97,10 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
         builder: (_) => CollectPaymentScreen(orderId: order.id, amountDue: due),
       ),
     );
-    if (ok == true) await _load();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final currency = NumberFormat.currency(symbol: 'SAR ');
-
-    if (_loading) return LoadingView(message: l10n.commonLoading);
-    if (_error != null) return ErrorView(message: _error!, onRetry: _load);
-
-    final report = _report!;
-    return RefreshIndicator(
-      onRefresh: _load,
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Card(
-            child: ListTile(
-              title: Text(l10n.salesDuesTotalDue),
-              trailing: Text(currency.format(report.totalDue), style: Theme.of(context).textTheme.titleLarge),
-            ),
-          ),
-          if (report.orders.isEmpty) EmptyView(message: l10n.salesDuesNone),
-          for (final raw in report.orders)
-            Builder(
-              builder: (_) {
-                final order = OrderModel.fromJson(raw);
-                final due = order.amountDue > 0 ? order.amountDue : order.totalBill - order.amountPaid;
-                return Card(
-                  child: ListTile(
-                    title: Text(l10n.commonOrderNumber(order.id)),
-                    subtitle: Text(
-                      '${localizedStatusLabel(context, order.paymentStatus)} · ${l10n.commonDue} ${currency.format(due)}',
-                    ),
-                    trailing: Text(currency.format(order.totalBill)),
-                    onTap: () => context.push('/orders/${order.id}'),
-                    onLongPress: () => _collectPayment(order),
-                  ),
-                );
-              },
-            ),
-          const SizedBox(height: 8),
-          Text(l10n.salesDuesLongPressHint),
-        ],
-      ),
-    );
+    if (ok == true) {
+      AppHaptics.success();
+      await ref.read(duesProvider.notifier).refresh();
+      ref.invalidate(orderListProvider);
+    }
   }
 }

@@ -6,6 +6,7 @@ import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/customer_context_provider.dart';
+import '../../providers/repositories.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -33,6 +34,14 @@ class ProfileScreen extends ConsumerWidget {
         ],
         const Divider(),
         const LanguagePickerTile(),
+        const Divider(),
+        BiometricSettingsTile(
+          enabled: auth.biometricEnabled,
+          available: auth.biometricAvailable,
+          tokenExpiresAt: auth.tokenExpiresAt,
+          onEnable: (reason) => ref.read(authProvider.notifier).enableBiometricLogin(reason),
+          onDisable: () => ref.read(authProvider.notifier).disableBiometricLogin(),
+        ),
         const Divider(),
         if (customer.isLoading)
           ListTile(
@@ -72,6 +81,22 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ],
         ],
+        const Divider(),
+        ListTile(
+          leading: const Icon(Icons.sync_problem),
+          title: const Text('Sync issues'),
+          subtitle: const Text('Review failed or stuck offline uploads'),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => SyncStatusScreen(
+                  syncService: ref.read(syncServiceProvider),
+                  loadItems: () => ref.read(syncServiceProvider).actionableItems(),
+                ),
+              ),
+            );
+          },
+        ),
         if (AppConfig.showApiBaseUrlField) ...[
           const Divider(),
           ListTile(

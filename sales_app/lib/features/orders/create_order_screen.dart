@@ -6,6 +6,7 @@ import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/connectivity_provider.dart';
+import '../../providers/screen_providers.dart';
 import '../../providers/repositories.dart';
 import '../../widgets/customer_diary_sheet.dart';
 import '../../widgets/customer_picker_sheet.dart';
@@ -161,11 +162,15 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     try {
       final order = await ref.read(offlineOrderRepositoryProvider).create(body);
       ref.invalidate(pendingSyncCountProvider);
+      ref.invalidate(orderListProvider);
+      AppHaptics.success();
       if (mounted) {
         if (!online) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(AppLocalizations.of(context).salesOrderSavedLocally)),
           );
+          context.go('/orders');
+          return;
         }
         final type = _selectedType!.typeName;
         final customer = _selectedCustomer!;
@@ -175,20 +180,22 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
           _ => (customer as CustomerImporterModel).id,
         };
         final customerName = _customerLabel(AppLocalizations.of(context));
-        if (online) {
-          await promptPostOrderDiaryNote(
-            context,
-            ref,
-            customerType: type,
-            customerId: customerId,
-            customerName: customerName,
-          );
-        }
+        await promptPostOrderDiaryNote(
+          context,
+          ref,
+          customerType: type,
+          customerId: customerId,
+          customerName: customerName,
+        );
         if (mounted) context.go('/orders/${order.id}');
       }
     } catch (e) {
       setState(() => _submitting = false);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppErrorMapper.localize(context, e))),
+        );
+      }
     }
   }
 

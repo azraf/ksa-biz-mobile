@@ -2,131 +2,95 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
+import 'package:l10n/l10n.dart';
 
-import '../../providers/repositories.dart';
+import '../../providers/screen_providers.dart';
 
-class DashboardScreen extends ConsumerStatefulWidget {
+class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
-  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final dashboardAsync = ref.watch(dashboardProvider);
 
-class _DashboardScreenState extends ConsumerState<DashboardScreen> {
-  SalesReport? _sales;
-  ExpenseSummaryReport? _expenseSummary;
-  int _pendingOrders = 0;
-  int _pendingSync = 0;
-  bool _loading = true;
-  String? _salesCachedAt;
-  String? _expenseCachedAt;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
+    return dashboardAsync.when(
+      loading: () => const SkeletonDashboard(),
+      error: (e, _) => ErrorView(
+        message: AppErrorMapper.localize(context, e),
+        error: e,
+        onRetry: () => ref.read(dashboardProvider.notifier).refresh(),
+      ),
+      data: (data) => RefreshIndicator(
+        onRefresh: () => ref.read(dashboardProvider.notifier).refresh(),
+        child: ListView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          children: [
+            if (data.salesFromCache && data.salesIsStale && data.salesCachedAt != null)
+              _cachedBanner(context, ref, l10n, data.salesCachedAt!),
+            _kpiCard(
+              context,
+              l10n.adminDashboardSalesMonth,
+              '${data.sales.ordersCount} orders',
+              'SAR ${data.sales.totalBill.toStringAsFixed(2)}',
+              Icons.receipt_long,
+              cachedAt: data.salesFromCache ? data.salesCachedAt : null,
+              onTap: () => context.go('/reports/sales'),
+            ),
+            _kpiCard(
+              context,
+              l10n.adminDashboardExpensesYtd,
+              'SAR ${data.expenseSummary.grandTotal.toStringAsFixed(2)}',
+              '${data.expenseSummary.byPeriod.length} periods',
+              Icons.payments,
+              cachedAt: data.expenseFromCache ? data.expenseCachedAt : null,
+              onTap: () => context.go('/reports/expense-summary'),
+            ),
+            _kpiCard(
+              context,
+              l10n.adminDashboardPendingManual,
+              '${data.pendingManualOrders}',
+              'Awaiting review',
+              Icons.phone_in_talk,
+              onTap: () => context.go('/sales/manual-orders'),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text('Quick links', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: AppSpacing.sm),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ActionChip(label: Text(l10n.commonNewOrder), onPressed: () => context.go('/sales/orders/create')),
+                ActionChip(label: const Text('New Expense'), onPressed: () => context.go('/expenses/list/create')),
+                ActionChip(label: const Text('Products'), onPressed: () => context.go('/catalog/products')),
+                ActionChip(label: const Text('Warehouse'), onPressed: () => context.go('/inventory/warehouse')),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
-  Future<void> _load() async {
-    setState(() => _loading = true);
-    try {
-      final reports = ref.read(reportRepositoryProvider);
-      final now = DateTime.now();
-      final from = DateFormat('yyyy-MM-dd').format(DateTime(now.year, now.month, 1));
-      final to = DateFormat('yyyy-MM-dd').format(now);
-
-      final salesResult = await reports.sales(fromDate: from, toDate: to);
-      final expenseResult = await reports.expenseSummary(fromDate: '${now.year}-01-01', toDate: to);
-      final manualOrders = await ref.read(manualOrderRepositoryProvider).list(status: 'pending');
-      final pendingSync = await ref.read(localDatabaseProvider).pendingCount();
-
-      setState(() {
-        _sales = salesResult.data;
-        _salesCachedAt = salesResult.fetchedAt;
-        _expenseSummary = expenseResult.data;
-        _expenseCachedAt = expenseResult.fetchedAt;
-        _pendingOrders = manualOrders.total;
-        _pendingSync = pendingSync;
-      });
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Dashboard: $e')));
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_loading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return RefreshIndicator(
-              onRefresh: _load,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  if (_pendingSync > 0)
-                    Card(
-                      color: Colors.orange.shade50,
-                      child: ListTile(
-                        leading: const Icon(Icons.sync_problem),
-                        title: Text('$_pendingSync pending sync'),
-                        subtitle: const Text('Orders/expenses waiting to upload'),
-                        trailing: TextButton(
-                          onPressed: () {
-                            ref.read(syncServiceProvider).syncIfOnline();
-                            _load();
-                          },
-                          child: const Text('Sync'),
-                        ),
-                      ),
-                    ),
-                  _kpiCard(
-                    'Sales (this month)',
-                    '${_sales?.ordersCount ?? 0} orders',
-                    'SAR ${(_sales?.totalBill ?? 0).toStringAsFixed(2)}',
-                    Icons.receipt_long,
-                    cachedAt: _salesCachedAt,
-                    onTap: () => context.go('/reports/sales'),
-                  ),
-                  _kpiCard(
-                    'Expenses (YTD)',
-                    'SAR ${(_expenseSummary?.grandTotal ?? 0).toStringAsFixed(2)}',
-                    '${_expenseSummary?.byPeriod.length ?? 0} periods',
-                    Icons.payments,
-                    cachedAt: _expenseCachedAt,
-                    onTap: () => context.go('/reports/expense-summary'),
-                  ),
-                  _kpiCard(
-                    'Pending manual orders',
-                    '$_pendingOrders',
-                    'Awaiting review',
-                    Icons.phone_in_talk,
-                    onTap: () => context.go('/sales/manual-orders'),
-                  ),
-                  const SizedBox(height: 16),
-                  Text('Quick links', style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      ActionChip(label: const Text('New Order'), onPressed: () => context.go('/sales/orders/create')),
-                      ActionChip(label: const Text('New Expense'), onPressed: () => context.go('/expenses/list/create')),
-                      ActionChip(label: const Text('Products'), onPressed: () => context.go('/catalog/products')),
-                      ActionChip(label: const Text('Warehouse'), onPressed: () => context.go('/inventory/warehouse')),
-                    ],
-                  ),
-                ],
-              ),
+  Widget _cachedBanner(BuildContext context, WidgetRef ref, AppLocalizations l10n, String fetchedAt) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: MaterialBanner(
+        content: Text(l10n.adminShowingCachedList(fetchedAt.substring(0, 16))),
+        leading: const Icon(Icons.cloud_off_outlined),
+        actions: [
+          TextButton(
+            onPressed: () => ref.read(dashboardProvider.notifier).refresh(),
+            child: Text(l10n.commonRetry),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _kpiCard(
+    BuildContext context,
     String title,
     String value,
     String subtitle,

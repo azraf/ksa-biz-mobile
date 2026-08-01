@@ -7,22 +7,46 @@ import '../../widgets/crud_screens.dart';
 import '../../widgets/field_config.dart';
 import '../inventory/inventory_screens.dart';
 
+void _showOfflineWriteError(BuildContext context, Object e) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(AppErrorMapper.localize(context, e))),
+  );
+}
+
 class CountriesScreen extends ConsumerWidget {
   const CountriesScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final repo = ref.watch(adminRepositoriesProvider).countries;
+    final repo = cachedCrud<CountryModel>(
+      ref: ref,
+      remote: ref.watch(adminRepositoriesProvider).countries,
+      cacheKey: 'countries',
+      toJson: (c) => c.toJson(),
+    );
     return CrudListScreen<CountryModel>(
       title: 'Countries',
-      loadItems: repo.list,
+      loadItems: () async => (await repo.listParsed(fromJson: CountryModel.fromJson)).items,
       itemTitle: (c) => '${c.name} (${c.code ?? ''})',
       onTap: (c) => _edit(context, ref, c),
       onAdd: () => _edit(context, ref, null),
-      onDelete: (c) => repo.delete(c.id),
+      onDelete: (c) async {
+        try {
+          await repo.delete(c.id);
+        } catch (e) {
+          _showOfflineWriteError(context, e);
+          rethrow;
+        }
+      },
     );
   }
 
   void _edit(BuildContext context, WidgetRef ref, CountryModel? item) {
+    final repo = cachedCrud<CountryModel>(
+      ref: ref,
+      remote: ref.read(adminRepositoriesProvider).countries,
+      cacheKey: 'countries',
+      toJson: (c) => c.toJson(),
+    );
     Navigator.push(context, MaterialPageRoute(builder: (_) => CrudFormScreen(
       title: item == null ? 'New Country' : 'Edit Country',
       initialValues: item == null ? {} : {'name': item.name, 'code': item.code},
@@ -31,8 +55,13 @@ class CountriesScreen extends ConsumerWidget {
         FieldConfig(key: 'code', label: 'Code'),
       ],
       onSave: (v) async {
-        final repo = ref.read(adminRepositoriesProvider).countries;
-        if (item == null) await repo.create(v); else await repo.update(item.id, v);
+        try {
+          if (item == null) await repo.create(v);
+          else await repo.update(item.id, v);
+        } catch (e) {
+          _showOfflineWriteError(context, e);
+          rethrow;
+        }
       },
     )));
   }
@@ -42,18 +71,36 @@ class SuppliersScreen extends ConsumerWidget {
   const SuppliersScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final repo = ref.watch(adminRepositoriesProvider).suppliers;
+    final repo = cachedCrud<SupplierModel>(
+      ref: ref,
+      remote: ref.watch(adminRepositoriesProvider).suppliers,
+      cacheKey: 'suppliers',
+      toJson: (s) => s.toJson(),
+    );
     return CrudListScreen<SupplierModel>(
       title: 'Suppliers',
-      loadItems: () async => (await repo.listPaginated()).items,
+      loadItems: () async => (await repo.listParsed(fromJson: SupplierModel.fromJson)).items,
       itemTitle: (s) => s.name,
       onTap: (s) => _edit(context, ref, s),
       onAdd: () => _edit(context, ref, null),
-      onDelete: (s) => repo.delete(s.id),
+      onDelete: (s) async {
+        try {
+          await repo.delete(s.id);
+        } catch (e) {
+          _showOfflineWriteError(context, e);
+          rethrow;
+        }
+      },
     );
   }
 
   void _edit(BuildContext context, WidgetRef ref, SupplierModel? item) {
+    final repo = cachedCrud<SupplierModel>(
+      ref: ref,
+      remote: ref.read(adminRepositoriesProvider).suppliers,
+      cacheKey: 'suppliers',
+      toJson: (s) => s.toJson(),
+    );
     Navigator.push(context, MaterialPageRoute(builder: (_) => CrudFormScreen(
       title: item == null ? 'New Supplier' : 'Edit Supplier',
       initialValues: item == null ? {} : item.toJson(),
@@ -64,8 +111,13 @@ class SuppliersScreen extends ConsumerWidget {
         FieldConfig(key: 'address', label: 'Address', type: FieldType.textarea),
       ],
       onSave: (v) async {
-        final repo = ref.read(adminRepositoriesProvider).suppliers;
-        if (item == null) await repo.create(v); else await repo.update(item.id, v);
+        try {
+          if (item == null) await repo.create(v);
+          else await repo.update(item.id, v);
+        } catch (e) {
+          _showOfflineWriteError(context, e);
+          rethrow;
+        }
       },
     )));
   }
@@ -75,10 +127,15 @@ class ContainersScreen extends ConsumerWidget {
   const ContainersScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final repo = ref.watch(adminRepositoriesProvider).shippingContainers;
+    final repo = cachedCrud<ShippingContainerModel>(
+      ref: ref,
+      remote: ref.watch(adminRepositoriesProvider).shippingContainers,
+      cacheKey: 'shipping_containers',
+      toJson: (c) => c.toJson(),
+    );
     return CrudListScreen<ShippingContainerModel>(
       title: 'Shipping Containers',
-      loadItems: () async => (await repo.listPaginated()).items,
+      loadItems: () async => (await repo.listParsed(fromJson: ShippingContainerModel.fromJson)).items,
       itemTitle: (c) => '${c.containerNumber ?? 'N/A'} — ${c.status ?? ''}',
       onTap: (c) => _showDetail(context, ref, c),
       onAdd: () => _edit(context, ref, null),
@@ -106,7 +163,7 @@ class ContainersScreen extends ConsumerWidget {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Container received. Stock added to warehouse.')));
                     }
                   } catch (e) {
-                    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+                    if (context.mounted) _showOfflineWriteError(context, e);
                   }
                 },
               ),
@@ -125,6 +182,12 @@ class ContainersScreen extends ConsumerWidget {
   }
 
   void _edit(BuildContext context, WidgetRef ref, ShippingContainerModel? item) {
+    final repo = cachedCrud<ShippingContainerModel>(
+      ref: ref,
+      remote: ref.read(adminRepositoriesProvider).shippingContainers,
+      cacheKey: 'shipping_containers',
+      toJson: (c) => c.toJson(),
+    );
     Navigator.push(context, MaterialPageRoute(builder: (_) => CrudFormScreen(
       title: item == null ? 'New Container' : 'Edit Container',
       initialValues: item == null ? {} : item.toJson(),
@@ -134,8 +197,13 @@ class ContainersScreen extends ConsumerWidget {
         FieldConfig(key: 'notes', label: 'Notes', type: FieldType.textarea),
       ],
       onSave: (v) async {
-        final repo = ref.read(adminRepositoriesProvider).shippingContainers;
-        if (item == null) await repo.create(v); else await repo.update(item.id, v);
+        try {
+          if (item == null) await repo.create(v);
+          else await repo.update(item.id, v);
+        } catch (e) {
+          _showOfflineWriteError(context, e);
+          rethrow;
+        }
       },
     )));
   }
@@ -150,6 +218,7 @@ class PurchasesScreen extends ConsumerStatefulWidget {
 class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
   List<PurchaseModel> _purchases = [];
   bool _loading = true;
+  Object? _error;
 
   @override
   void initState() {
@@ -158,15 +227,21 @@ class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final list = await ref.read(purchaseRepositoryProvider).list();
       setState(() {
         _purchases = list;
         _loading = false;
       });
-    } catch (_) {
-      setState(() => _loading = false);
+    } catch (e) {
+      setState(() {
+        _error = e;
+        _loading = false;
+      });
     }
   }
 
@@ -184,30 +259,37 @@ class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
         child: const Icon(Icons.add),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: _purchases.length,
-              itemBuilder: (_, i) {
-                final p = _purchases[i];
-                return ListTile(
-                  title: Text('#${p.id} — ${p.purchaseType ?? 'local'}'),
-                  subtitle: Text('${p.status ?? 'draft'} · SAR ${(p.totalAmount ?? 0).toStringAsFixed(2)}'),
-                  trailing: p.status == 'draft'
-                      ? IconButton(
-                          icon: const Icon(Icons.check_circle_outline),
-                          onPressed: () async {
-                            try {
-                              await ref.read(purchaseRepositoryProvider).post(p.id);
-                              _load();
-                            } catch (e) {
-                              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-                            }
-                          },
-                        )
-                      : null,
-                );
-              },
-            ),
+          ? const LoadingView()
+          : _error != null
+              ? ErrorView(
+                  message: AppErrorMapper.localize(context, _error!),
+                  error: _error,
+                  onRetry: _load,
+                )
+              : ListView.builder(
+                  padding: fabScrollPadding(context, includeBottomNav: true),
+                  itemCount: _purchases.length,
+                  itemBuilder: (_, i) {
+                    final p = _purchases[i];
+                    return ListTile(
+                      title: Text('#${p.id} — ${p.purchaseType ?? 'local'}'),
+                      subtitle: Text('${p.status ?? 'draft'} · SAR ${(p.totalAmount ?? 0).toStringAsFixed(2)}'),
+                      trailing: p.status == 'draft'
+                          ? IconButton(
+                              icon: const Icon(Icons.check_circle_outline),
+                              onPressed: () async {
+                                try {
+                                  await ref.read(purchaseRepositoryProvider).post(p.id);
+                                  _load();
+                                } catch (e) {
+                                  if (mounted) _showOfflineWriteError(context, e);
+                                }
+                              },
+                            )
+                          : null,
+                    );
+                  },
+                ),
     );
   }
 }
@@ -304,7 +386,7 @@ class _CreatePurchaseScreenState extends ConsumerState<CreatePurchaseScreen> {
                       });
                       if (context.mounted) Navigator.pop(context);
                     } catch (e) {
-                      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+                      if (context.mounted) _showOfflineWriteError(context, e);
                     }
                   },
             child: const Text('Save & Post'),

@@ -394,7 +394,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get commonPickVideo => 'ভিডিও বাছুন';
 
   @override
-  String get salesAppName => 'ARM Sales(M)';
+  String get salesAppName => 'ARM Sales';
 
   @override
   String get salesSignInSubtitle =>
@@ -624,6 +624,19 @@ class AppLocalizationsBn extends AppLocalizations {
   }
 
   @override
+  String get salesOfflineAllSynced => 'সব পরিবর্তন সিঙ্ক হয়েছে';
+
+  @override
+  String salesOfflineSyncProgress(int completed, int total) {
+    return 'Syncing $completed of $total…';
+  }
+
+  @override
+  String salesDashboardCachedDues(String fetchedAt) {
+    return '$fetchedAt থেকে ক্যাশ করা বকেয়া দেখানো হচ্ছে';
+  }
+
+  @override
   String get salesManualTabOpenPool => 'খোলা পুল';
 
   @override
@@ -710,6 +723,69 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get salesOrderSavedLocally =>
       'অর্ডার স্থানীয়ভাবে সংরক্ষিত — অনলাইনে সিঙ্ক হবে';
+
+  @override
+  String get salesErrorOffline =>
+      'No internet connection. Showing saved data when available.';
+
+  @override
+  String get salesErrorGeneric => 'Something went wrong. Please try again.';
+
+  @override
+  String get salesErrorTimeout =>
+      'The server took too long to respond. Please try again.';
+
+  @override
+  String get salesErrorUnauthorized =>
+      'Your session expired. Please sign in again.';
+
+  @override
+  String get adminAccessRequired =>
+      'এই অ্যাকাউন্টটি অ্যাডমিন মোবাইল অ্যাপ ব্যবহার করতে পারবে না। অ্যাডমিন ভূমিকা প্রয়োজন।';
+
+  @override
+  String get adminLoginInvalidCredentials => 'ভুল ইমেইল বা পাসওয়ার্ড।';
+
+  @override
+  String get salesOfflineServerUnreachable =>
+      'সংযুক্ত কিন্তু সার্ভারে পৌঁছানো যাচ্ছে না';
+
+  @override
+  String get salesOfflineRetryUploads => 'আপলোড পুনরায় চেষ্টা';
+
+  @override
+  String salesOfflineUploadFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countটি আপলোড ব্যর্থ',
+      one: '1টি আপলোড ব্যর্থ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String salesOfflineUploading(int percent) {
+    return 'আপলোড হচ্ছে… $percent%';
+  }
+
+  @override
+  String get adminOfflineWriteBlocked =>
+      'This action requires an internet connection.';
+
+  @override
+  String adminShowingCachedList(String fetchedAt) {
+    return 'Showing cached list from $fetchedAt';
+  }
+
+  @override
+  String get adminDashboardSalesMonth => 'Sales (this month)';
+
+  @override
+  String get adminDashboardExpensesYtd => 'Expenses (YTD)';
+
+  @override
+  String get adminDashboardPendingManual => 'Pending manual orders';
 
   @override
   String get salesOrderWalkInUnavailable =>
@@ -1020,6 +1096,20 @@ class AppLocalizationsBn extends AppLocalizations {
   String get salesWatchlistPendingSync => 'সিঙ্ক মুলতুবি';
 
   @override
+  String get salesWatchlistActivateAgain => 'আবার সক্রিয় করুন';
+
+  @override
+  String get salesWatchlistRemove => 'সরান';
+
+  @override
+  String get salesWatchlistActivated => 'ওয়াচলিস্ট আইটেম সক্রিয় হয়েছে';
+
+  @override
+  String salesWatchlistArchivedReason(String reason) {
+    return 'আর্কাইভ: $reason';
+  }
+
+  @override
   String get orderAppName => 'ARM Orders';
 
   @override
@@ -1212,5 +1302,71 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String commonAvgOrderInterval(int days) {
     return '~প্রতি $days দিন';
+  }
+
+  @override
+  String get commonEnable => 'সক্রিয় করুন';
+
+  @override
+  String get biometricEnableTitle => 'ফিঙ্গারপ্রিন্ট লগইন';
+
+  @override
+  String get biometricEnableSubtitle =>
+      'ফিঙ্গারপ্রিন্ট বা Face ID দিয়ে দ্রুত অ্যাপ আনলক করুন';
+
+  @override
+  String get biometricEnableReason =>
+      'ফিঙ্গারপ্রিন্ট লগইন সক্রিয় করতে নিশ্চিত করুন';
+
+  @override
+  String get biometricUnlockReason => 'চালিয়ে যেতে অ্যাপ আনলক করুন';
+
+  @override
+  String get biometricUnlockButton => 'ফিঙ্গারপ্রিন্ট দিয়ে আনলক';
+
+  @override
+  String get biometricUsePassword => 'পাসওয়ার্ড ব্যবহার করুন';
+
+  @override
+  String get biometricNotAvailable =>
+      'এই ডিভাইসে বায়োমেট্রিক প্রমাণীকরণ উপলব্ধ নয়';
+
+  @override
+  String get biometricCancelled => 'প্রমাণীকরণ বাতিল করা হয়েছে';
+
+  @override
+  String get biometricNotEnrolled =>
+      'কোনো ফিঙ্গারপ্রিন্ট বা Face ID নিবন্ধিত নেই। ডিভাইস সেটিংসে একটি যোগ করুন।';
+
+  @override
+  String get biometricEnableFailed =>
+      'ফিঙ্গারপ্রিন্ট লগইন সক্রিয় করা যায়নি। আবার চেষ্টা করুন।';
+
+  @override
+  String get biometricOptInMessage =>
+      'এই ডিভাইসে অ্যাপ আনলক করতে ফিঙ্গারপ্রিন্ট বা Face ID ব্যবহার করবেন?';
+
+  @override
+  String get biometricAppLockedTitle => 'অ্যাপ লক করা';
+
+  @override
+  String get biometricAppLockedSubtitle =>
+      'অ্যাপ ব্যবহার চালিয়ে যেতে প্রমাণীকরণ করুন';
+
+  @override
+  String biometricSignInAs(String email) {
+    return '$email হিসেবে সাইন ইন';
+  }
+
+  @override
+  String get sessionExpired =>
+      'আপনার সেশন মেয়াদ শেষ হয়েছে। আবার সাইন ইন করুন।';
+
+  @override
+  String get tokenExpiresAtTitle => 'সেশন মেয়াদ শেষ';
+
+  @override
+  String tokenExpiresAtValue(String date) {
+    return '$date এর মধ্যে পুনরায় লগইন প্রয়োজন';
   }
 }

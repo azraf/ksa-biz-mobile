@@ -228,7 +228,7 @@
   "commonLanguageBangla": "বাংলা",
   "commonConvert": "تحويل",
   "commonPickVideo": "اختيار فيديو",
-  "salesAppName": "ARM Sales(M)",
+  "salesAppName": "ARM Sales",
   "salesSignInSubtitle": "سجّل الدخول بحساب مندوب المبيعات",
   "salesNavHome": "الرئيسية",
   "salesNavManual": "يدوي",
@@ -356,6 +356,29 @@
     "placeholders": {
       "count": {
         "type": "int"
+      }
+    }
+  },
+  "salesOfflineAllSynced": "تمت مزامنة جميع التغييرات",
+  "salesOfflineServerUnreachable": "متصل ولكن الخادم غير متاح",
+  "salesOfflineRetryUploads": "إعادة رفع الملفات",
+  "salesOfflineUploadFailed": "{count, plural, =1{فشل رفع ملف واحد} other{فشل رفع {count} ملفات}}",
+  "@salesOfflineUploadFailed": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "salesOfflineUploading": "جارٍ الرفع… {percent}%",
+  "@salesOfflineUploading": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "salesDashboardCachedDues": "عرض المستحقات المخزنة من {fetchedAt}",
+  "@salesDashboardCachedDues": {
+    "placeholders": {
+      "fetchedAt": {
+        "type": "String"
       }
     }
   },
@@ -513,6 +536,10 @@
   "salesWatchlistPhotos": "الصور",
   "salesWatchlistConvertBtn": "تحويل إلى متجر",
   "salesWatchlistPendingSync": "في انتظار المزامنة",
+  "salesWatchlistActivateAgain": "تفعيل مرة أخرى",
+  "salesWatchlistRemove": "إزالة",
+  "salesWatchlistActivated": "تم تفعيل عنصر قائمة المراقبة",
+  "salesWatchlistArchivedReason": "مؤرشف: {reason}",
   "orderAppName": "ARM Orders",
   "orderSignInSubtitle": "سجّل الدخول بحساب متجرك أو شاحنتك أو الاستيراد",
   "orderNavCatalog": "الكتالوج",
@@ -574,5 +601,25 @@
   "salesPickerActivity30Days": "30 يوماً",
   "salesPickerActivity60Days": "60 يوماً",
   "salesPickerActivity90Days": "90 يوماً",
-  "commonAvgOrderInterval": "~كل {days} يوم"
+  "commonAvgOrderInterval": "~كل {days} يوم",
+  "commonEnable": "تفعيل",
+  "biometricEnableTitle": "تسجيل الدخول بالبصمة",
+  "biometricEnableSubtitle": "افتح التطبيق بسرعة باستخدام بصمة الإصبع أو Face ID",
+  "biometricEnableReason": "أكد لتفعيل تسجيل الدخول بالبصمة",
+  "biometricUnlockReason": "افتح التطبيق للمتابعة",
+  "biometricUnlockButton": "فتح بالبصمة",
+  "biometricUsePassword": "استخدم كلمة المرور بدلاً من ذلك",
+  "biometricNotAvailable": "المصادقة البيومترية غير متاحة على هذا الجهاز",
+  "biometricCancelled": "تم إلغاء المصادقة",
+  "biometricNotEnrolled": "لا توجد بصمة إصبع أو Face ID مسجلة. أضف واحدة في إعدادات الجهاز.",
+  "biometricEnableFailed": "تعذر تفعيل تسجيل الدخول بالبصمة. حاول مرة أخرى.",
+  "biometricOptInMessage": "هل تريد استخدام بصمة الإصبع أو Face ID لفتح التطبيق على هذا الجهاز؟",
+  "biometricAppLockedTitle": "التطبيق مقفل",
+  "biometricAppLockedSubtitle": "صادق للمتابعة في استخدام التطبيق",
+  "biometricSignInAs": "تسجيل الدخول كـ {email}",
+  "sessionExpired": "انتهت جلستك. يرجى تسجيل الدخول مرة أخرى.",
+  "tokenExpiresAtTitle": "تنتهي الجلسة",
+  "tokenExpiresAtValue": "إعادة تسجيل الدخول مطلوبة بحلول {date}",
+  "adminAccessRequired": "لا يمكن لهذا الحساب استخدام تطبيق الإدارة. مطلوب دور المسؤول.",
+  "adminLoginInvalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة."
 }

@@ -2,30 +2,52 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../providers/repositories.dart';
-import '../../widgets/app_drawer.dart';
 import '../../widgets/crud_screens.dart';
 import '../../widgets/field_config.dart';
+
+void _showOfflineWriteError(BuildContext context, Object e) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(AppErrorMapper.localize(context, e))),
+  );
+}
 
 // --- Tags ---
 class TagsScreen extends ConsumerWidget {
   const TagsScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final repo = ref.watch(adminRepositoriesProvider).tags;
+    final repo = cachedCrud<TagModel>(
+      ref: ref,
+      remote: ref.watch(adminRepositoriesProvider).tags,
+      cacheKey: 'tags',
+      toJson: (t) => t.toJson(),
+    );
     return CrudListScreen<TagModel>(
       title: 'Tags',
-      loadItems: repo.list,
+      loadItems: () async => (await repo.listParsed(fromJson: TagModel.fromJson)).items,
       itemTitle: (t) => t.name,
       onTap: (t) => _editTag(context, ref, t),
       onAdd: () => _editTag(context, ref, null),
-      onDelete: (t) => repo.delete(t.id),
+      onDelete: (t) async {
+        try {
+          await repo.delete(t.id);
+        } catch (e) {
+          _showOfflineWriteError(context, e);
+          rethrow;
+        }
+      },
     );
   }
 
   void _editTag(BuildContext context, WidgetRef ref, TagModel? tag) {
+    final repo = cachedCrud<TagModel>(
+      ref: ref,
+      remote: ref.read(adminRepositoriesProvider).tags,
+      cacheKey: 'tags',
+      toJson: (t) => t.toJson(),
+    );
     Navigator.push(context, MaterialPageRoute(
       builder: (_) => CrudFormScreen(
         title: tag == null ? 'New Tag' : 'Edit Tag',
@@ -35,9 +57,13 @@ class TagsScreen extends ConsumerWidget {
           FieldConfig(key: 'slug', label: 'Slug'),
         ],
         onSave: (v) async {
-          final repo = ref.read(adminRepositoriesProvider).tags;
-          if (tag == null) await repo.create(v);
-          else await repo.update(tag.id, v);
+          try {
+            if (tag == null) await repo.create(v);
+            else await repo.update(tag.id, v);
+          } catch (e) {
+            _showOfflineWriteError(context, e);
+            rethrow;
+          }
         },
       ),
     ));
@@ -49,25 +75,48 @@ class BrandsScreen extends ConsumerWidget {
   const BrandsScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final repo = ref.watch(adminRepositoriesProvider).brands;
+    final repo = cachedCrud<BrandModel>(
+      ref: ref,
+      remote: ref.watch(adminRepositoriesProvider).brands,
+      cacheKey: 'brands',
+      toJson: (b) => b.toJson(),
+    );
     return CrudListScreen<BrandModel>(
       title: 'Brands',
-      loadItems: repo.list,
+      loadItems: () async => (await repo.listParsed(fromJson: BrandModel.fromJson)).items,
       itemTitle: (b) => b.name,
       onTap: (b) => _edit(context, ref, b),
       onAdd: () => _edit(context, ref, null),
-      onDelete: (b) => repo.delete(b.id),
+      onDelete: (b) async {
+        try {
+          await repo.delete(b.id);
+        } catch (e) {
+          _showOfflineWriteError(context, e);
+          rethrow;
+        }
+      },
     );
   }
 
   void _edit(BuildContext context, WidgetRef ref, BrandModel? item) {
+    final repo = cachedCrud<BrandModel>(
+      ref: ref,
+      remote: ref.read(adminRepositoriesProvider).brands,
+      cacheKey: 'brands',
+      toJson: (b) => b.toJson(),
+    );
     Navigator.push(context, MaterialPageRoute(builder: (_) => CrudFormScreen(
       title: item == null ? 'New Brand' : 'Edit Brand',
       initialValues: item == null ? {} : {'name': item.name},
       fields: const [FieldConfig(key: 'name', label: 'Name', required: true)],
       onSave: (v) async {
-        final repo = ref.read(adminRepositoriesProvider).brands;
-        if (item == null) await repo.create(v); else await repo.update(item.id, v);
+        try {
+          if (item == null) await repo.create(v);
+          else await repo.update(item.id, v);
+        } catch (e) {
+          _showOfflineWriteError(context, e);
+          rethrow;
+        }
       },
     )));
   }
@@ -142,7 +191,7 @@ class ProductsScreen extends ConsumerWidget {
   const ProductsScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final repo = ref.watch(productRepositoryProvider);
+    final repo = ref.watch(offlineProductRepositoryProvider);
     return CrudListScreen<ProductModel>(
       title: 'Products',
       loadItems: () async => (await repo.list()).items,
@@ -167,6 +216,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   final _cost = TextEditingController();
   final _description = TextEditingController();
   bool _loading = true;
+  Object? _error;
 
   @override
   void initState() {
@@ -176,16 +226,53 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   }
 
   Future<void> _load() async {
-    final p = await ref.read(productRepositoryProvider).get(widget.productId!);
-    _name.text = p.name;
-    _price.text = p.price.toString();
-    _description.text = p.description ?? '';
-    setState(() => _loading = false);
+    try {
+      final p = await ref.read(productRepositoryProvider).get(widget.productId!);
+      _name.text = p.name;
+      _price.text = p.price.toString();
+      _description.text = p.description ?? '';
+      setState(() => _loading = false);
+    } catch (e) {
+      setState(() {
+        _error = e;
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _save() async {
+    final body = {
+      'name': _name.text,
+      'price': double.tryParse(_price.text) ?? 0,
+      if (_cost.text.isNotEmpty) 'cost': double.tryParse(_cost.text),
+      'description': _description.text,
+    };
+    try {
+      final repo = ref.read(productRepositoryProvider);
+      if (widget.productId == null) await repo.create(body);
+      else await repo.update(widget.productId!, body);
+      if (context.mounted) Navigator.pop(context);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppErrorMapper.localize(context, e))),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_loading) return const Scaffold(body: LoadingView());
+    if (_error != null) {
+      return Scaffold(
+        body: ErrorView(
+          message: AppErrorMapper.localize(context, _error!),
+          error: _error,
+          onRetry: _load,
+        ),
+      );
+    }
     return Scaffold(
       appBar: AppBar(title: Text(widget.productId == null ? 'New Product' : 'Edit Product')),
       body: ListView(
@@ -199,21 +286,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
           const SizedBox(height: 12),
           TextField(controller: _description, decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()), maxLines: 3),
           const SizedBox(height: 24),
-          FilledButton(
-            onPressed: () async {
-              final body = {
-                'name': _name.text,
-                'price': double.tryParse(_price.text) ?? 0,
-                if (_cost.text.isNotEmpty) 'cost': double.tryParse(_cost.text),
-                'description': _description.text,
-              };
-              final repo = ref.read(productRepositoryProvider);
-              if (widget.productId == null) await repo.create(body);
-              else await repo.update(widget.productId!, body);
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('Save'),
-          ),
+          FilledButton(onPressed: _save, child: const Text('Save')),
         ],
       ),
     );

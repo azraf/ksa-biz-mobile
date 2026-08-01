@@ -28,6 +28,7 @@ String localizedStatusLabel(BuildContext context, String status) {
     case 'archived':
       return l10n.statusArchived;
     case 'pending sync':
+    case 'pending_sync':
       return l10n.statusPendingSync;
     case 'discount pending approval':
       return l10n.statusDiscountPendingApproval;

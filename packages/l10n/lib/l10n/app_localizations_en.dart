@@ -394,7 +394,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonPickVideo => 'Pick video';
 
   @override
-  String get salesAppName => 'ARM Sales(M)';
+  String get salesAppName => 'ARM Sales';
 
   @override
   String get salesSignInSubtitle => 'Sign in with your salesperson account';
@@ -622,6 +622,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get salesOfflineAllSynced => 'All changes synced';
+
+  @override
+  String salesOfflineSyncProgress(int completed, int total) {
+    return 'Syncing $completed of $total…';
+  }
+
+  @override
+  String salesDashboardCachedDues(String fetchedAt) {
+    return 'Showing cached dues from $fetchedAt';
+  }
+
+  @override
   String get salesManualTabOpenPool => 'Open pool';
 
   @override
@@ -707,6 +720,69 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get salesOrderSavedLocally =>
       'Order saved locally — will sync when online';
+
+  @override
+  String get salesErrorOffline =>
+      'No internet connection. Showing saved data when available.';
+
+  @override
+  String get salesErrorGeneric => 'Something went wrong. Please try again.';
+
+  @override
+  String get salesErrorTimeout =>
+      'The server took too long to respond. Please try again.';
+
+  @override
+  String get salesErrorUnauthorized =>
+      'Your session expired. Please sign in again.';
+
+  @override
+  String get adminAccessRequired =>
+      'This account cannot use the admin mobile app. An admin role is required.';
+
+  @override
+  String get adminLoginInvalidCredentials => 'Invalid email or password.';
+
+  @override
+  String get salesOfflineServerUnreachable =>
+      'Connected but server is unreachable';
+
+  @override
+  String get salesOfflineRetryUploads => 'Retry uploads';
+
+  @override
+  String salesOfflineUploadFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count uploads failed',
+      one: '1 upload failed',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String salesOfflineUploading(int percent) {
+    return 'Uploading… $percent%';
+  }
+
+  @override
+  String get adminOfflineWriteBlocked =>
+      'This action requires an internet connection.';
+
+  @override
+  String adminShowingCachedList(String fetchedAt) {
+    return 'Showing cached list from $fetchedAt';
+  }
+
+  @override
+  String get adminDashboardSalesMonth => 'Sales (this month)';
+
+  @override
+  String get adminDashboardExpensesYtd => 'Expenses (YTD)';
+
+  @override
+  String get adminDashboardPendingManual => 'Pending manual orders';
 
   @override
   String get salesOrderWalkInUnavailable =>
@@ -1017,6 +1093,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get salesWatchlistPendingSync => 'Pending sync';
 
   @override
+  String get salesWatchlistActivateAgain => 'Activate again';
+
+  @override
+  String get salesWatchlistRemove => 'Remove';
+
+  @override
+  String get salesWatchlistActivated => 'Watch-list item activated';
+
+  @override
+  String salesWatchlistArchivedReason(String reason) {
+    return 'Archived: $reason';
+  }
+
+  @override
   String get orderAppName => 'ARM Orders';
 
   @override
@@ -1209,5 +1299,70 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String commonAvgOrderInterval(int days) {
     return '~every $days days';
+  }
+
+  @override
+  String get commonEnable => 'Enable';
+
+  @override
+  String get biometricEnableTitle => 'Fingerprint login';
+
+  @override
+  String get biometricEnableSubtitle =>
+      'Unlock the app quickly with your fingerprint or Face ID';
+
+  @override
+  String get biometricEnableReason => 'Confirm to enable fingerprint login';
+
+  @override
+  String get biometricUnlockReason => 'Unlock the app to continue';
+
+  @override
+  String get biometricUnlockButton => 'Unlock with fingerprint';
+
+  @override
+  String get biometricUsePassword => 'Use password instead';
+
+  @override
+  String get biometricNotAvailable =>
+      'Biometric authentication is not available on this device';
+
+  @override
+  String get biometricCancelled => 'Authentication cancelled';
+
+  @override
+  String get biometricNotEnrolled =>
+      'No fingerprint or Face ID enrolled. Add one in device Settings.';
+
+  @override
+  String get biometricEnableFailed =>
+      'Could not enable fingerprint login. Please try again.';
+
+  @override
+  String get biometricOptInMessage =>
+      'Use your fingerprint or Face ID to unlock the app on this device?';
+
+  @override
+  String get biometricAppLockedTitle => 'App locked';
+
+  @override
+  String get biometricAppLockedSubtitle =>
+      'Authenticate to continue using the app';
+
+  @override
+  String biometricSignInAs(String email) {
+    return 'Sign in as $email';
+  }
+
+  @override
+  String get sessionExpired =>
+      'Your session has expired. Please sign in again.';
+
+  @override
+  String get tokenExpiresAtTitle => 'Session expires';
+
+  @override
+  String tokenExpiresAtValue(String date) {
+    return 'Re-login required by $date';
   }
 }

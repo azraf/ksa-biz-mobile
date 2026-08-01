@@ -6,6 +6,11 @@ import '../api/api_client.dart';
 import '../config/app_config.dart';
 import '../models/sales_person.dart';
 import '../models/user.dart';
+import 'app_lock_service.dart';
+import 'biometric_auth_service.dart';
+import 'biometric_enable_result.dart';
+import 'secure_session_store.dart';
+import 'session_migration.dart';
 
 class AuthSession {
   const AuthSession({
@@ -16,6 +21,7 @@ class AuthSession {
     this.activeSalesPerson,
     this.roles = const [],
     this.canPickSalesPerson = false,
+    this.tokenExpiresAt,
   });
 
   final UserModel user;
@@ -25,13 +31,93 @@ class AuthSession {
   final bool canPickSalesPerson;
   final String token;
   final String apiBaseUrl;
+  final DateTime? tokenExpiresAt;
+
+  Map<String, dynamic> toJson() => {
+        'token': token,
+        'api_base_url': apiBaseUrl,
+        'user': user.toJson(),
+        'roles': roles,
+        'can_pick_sales_person': canPickSalesPerson,
+        if (salesPerson != null) 'sales_person': salesPerson!.toJson(),
+        if (activeSalesPerson != null) 'active_sales_person': activeSalesPerson!.toJson(),
+        if (tokenExpiresAt != null) 'token_expires_at': tokenExpiresAt!.toIso8601String(),
+      };
+
+  factory AuthSession.fromStoredJson(Map<String, dynamic> json) {
+    return AuthSession(
+      user: UserModel.fromJson(json['user'] as Map<String, dynamic>),
+      token: json['token'] as String,
+      apiBaseUrl: json['api_base_url'] as String? ?? AppConfig.defaultApiBaseUrl,
+      salesPerson: json['sales_person'] is Map
+          ? SalesPersonModel.fromJson(json['sales_person'] as Map<String, dynamic>)
+          : null,
+      activeSalesPerson: json['active_sales_person'] is Map
+          ? SalesPersonModel.fromJson(json['active_sales_person'] as Map<String, dynamic>)
+          : null,
+      roles: (json['roles'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
+      canPickSalesPerson: json['can_pick_sales_person'] as bool? ?? false,
+      tokenExpiresAt: _parseDate(json['token_expires_at']),
+    );
+  }
+
+  static DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    return DateTime.tryParse(value.toString());
+  }
+}
+
+class AuthRestoreResult {
+  const AuthRestoreResult({
+    this.session,
+    this.pendingBiometricUnlock = false,
+    this.storedUserEmail,
+    this.biometricEnabled = false,
+    this.tokenExpiresAt,
+  });
+
+  final AuthSession? session;
+  final bool pendingBiometricUnlock;
+  final String? storedUserEmail;
+  final bool biometricEnabled;
+  final DateTime? tokenExpiresAt;
 }
 
 class AuthRepository {
-  AuthRepository(this._api, this._prefs);
+  AuthRepository(
+    this._api,
+    this._prefs, {
+    SecureSessionStore? secureStore,
+    BiometricAuthService? biometricAuth,
+    AppLockService? appLock,
+  })  : _secureStore = secureStore ?? SecureSessionStore(),
+        _biometricAuth = biometricAuth ?? BiometricAuthService(),
+        _appLock = appLock ?? AppLockService() {
+    _migration = SessionMigration(_prefs, _secureStore);
+  }
 
   final ApiClient _api;
   final SharedPreferences _prefs;
+  final SecureSessionStore _secureStore;
+  final BiometricAuthService _biometricAuth;
+  final AppLockService _appLock;
+  late final SessionMigration _migration;
+
+  AppLockService get appLock => _appLock;
+
+  Future<String?> getAuthToken() => _secureStore.readToken();
+
+  bool get isBiometricEnabled => _prefs.getBool(AppConfig.biometricEnabledKey) ?? false;
+
+  String? get storedUserEmail => _prefs.getString(AppConfig.lastUserEmailKey);
+
+  DateTime? get storedTokenExpiresAt {
+    final raw = _prefs.getString(AppConfig.tokenExpiresAtKey);
+    if (raw == null) return null;
+    return DateTime.tryParse(raw);
+  }
+
+  Future<bool> canUseBiometrics() => _biometricAuth.canCheckBiometrics();
 
   Future<AuthSession> login({
     required String email,
@@ -45,9 +131,10 @@ class AuthRepository {
       'password': password,
     });
 
-    final session = _sessionFromLoginResponse(response, resolvedUrl);
+    final session = await _sessionFromLoginResponse(response, resolvedUrl);
     await _persistSession(session);
     _api.setToken(session.token);
+    _appLock.markUnlocked();
     return session;
   }
 
@@ -59,47 +146,125 @@ class AuthRepository {
   }
 
   Future<void> clearSession() async {
-    await _prefs.remove(AppConfig.authTokenKey);
-    await _prefs.remove(AppConfig.authUserKey);
-    await _prefs.remove(AppConfig.salesPersonKey);
-    await _prefs.remove(AppConfig.activeSalesPersonKey);
-    await _prefs.remove(AppConfig.authRolesKey);
-    await _prefs.remove(AppConfig.canPickSalesPersonKey);
+    await _secureStore.clear();
+    await _prefs.remove(AppConfig.biometricEnabledKey);
+    await _prefs.remove(AppConfig.lastUserEmailKey);
+    await _prefs.remove(AppConfig.tokenExpiresAtKey);
+    await _prefs.remove(AppConfig.apiBaseUrlKey);
     _api.setToken(null);
+    _appLock.markUnlocked();
+  }
+
+  Future<AuthRestoreResult> prepareRestore() async {
+    await _migration.migrateLegacySessionIfNeeded();
+
+    final biometricEnabled = isBiometricEnabled;
+    final hasSession = await _secureStore.hasSession();
+    final storedEmail = storedUserEmail;
+    final tokenExpiresAt = storedTokenExpiresAt;
+
+    if (!hasSession) {
+      return AuthRestoreResult(
+        storedUserEmail: storedEmail,
+        biometricEnabled: biometricEnabled,
+        tokenExpiresAt: tokenExpiresAt,
+      );
+    }
+
+    if (biometricEnabled) {
+      return AuthRestoreResult(
+        pendingBiometricUnlock: true,
+        storedUserEmail: storedEmail,
+        biometricEnabled: true,
+        tokenExpiresAt: tokenExpiresAt,
+      );
+    }
+
+    final session = await _readStoredSession();
+    if (session == null) {
+      return const AuthRestoreResult();
+    }
+
+    _applySessionToApi(session);
+    _appLock.markUnlocked();
+    return AuthRestoreResult(
+      session: session,
+      storedUserEmail: session.user.email,
+      biometricEnabled: false,
+      tokenExpiresAt: session.tokenExpiresAt ?? tokenExpiresAt,
+    );
   }
 
   Future<AuthSession?> restoreSession() async {
-    final token = _prefs.getString(AppConfig.authTokenKey);
-    final apiBaseUrl = AppConfig.showApiBaseUrlField
-        ? (_prefs.getString(AppConfig.apiBaseUrlKey) ?? AppConfig.defaultApiBaseUrl)
-        : AppConfig.defaultApiBaseUrl;
-    final userJson = _prefs.getString(AppConfig.authUserKey);
+    final result = await prepareRestore();
+    return result.session;
+  }
 
-    if (token == null || userJson == null) return null;
+  Future<AuthSession?> unlockWithBiometric({required String reason}) async {
+    final ok = await _biometricAuth.authenticate(reason: reason);
+    if (!ok) return null;
 
-    _api.setBaseUrl(apiBaseUrl);
-    _api.setToken(token);
+    final session = await _readStoredSession();
+    if (session == null) return null;
 
-    return AuthSession(
-      user: UserModel.fromJson(jsonDecode(userJson) as Map<String, dynamic>),
-      salesPerson: _readSalesPerson(AppConfig.salesPersonKey),
-      activeSalesPerson: _readSalesPerson(AppConfig.activeSalesPersonKey),
-      roles: _readRoles(),
-      canPickSalesPerson: _prefs.getBool(AppConfig.canPickSalesPersonKey) ?? false,
-      token: token,
-      apiBaseUrl: apiBaseUrl,
-    );
+    _applySessionToApi(session);
+    _appLock.markUnlocked();
+    return session;
+  }
+
+  Future<BiometricEnableResult> enableBiometric({required String reason}) async {
+    if (!await canUseBiometrics()) {
+      final enrolled = await _biometricAuth.getAvailableBiometrics();
+      if (enrolled.isEmpty && !await _biometricAuth.isDeviceSupported()) {
+        return BiometricEnableResult.unavailable;
+      }
+      return BiometricEnableResult.notEnrolled;
+    }
+    final result = await _biometricAuth.authenticateWithResult(reason: reason);
+    switch (result) {
+      case BiometricAuthResult.success:
+        await _prefs.setBool(AppConfig.biometricEnabledKey, true);
+        return BiometricEnableResult.success;
+      case BiometricAuthResult.cancelled:
+        return BiometricEnableResult.cancelled;
+      case BiometricAuthResult.notEnrolled:
+        return BiometricEnableResult.notEnrolled;
+      case BiometricAuthResult.unavailable:
+        return BiometricEnableResult.unavailable;
+      case BiometricAuthResult.failed:
+        return BiometricEnableResult.failed;
+    }
+  }
+
+  Future<void> disableBiometric() async {
+    await _prefs.setBool(AppConfig.biometricEnabledKey, false);
+    _appLock.markUnlocked();
+  }
+
+  Future<bool> validateSessionOnline() async {
+    try {
+      await _api.get('/user');
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> saveActiveSalesPerson(SalesPersonModel? person) async {
-    if (person == null) {
-      await _prefs.remove(AppConfig.activeSalesPersonKey);
-      return;
-    }
-    await _prefs.setString(
-      AppConfig.activeSalesPersonKey,
-      jsonEncode(person.toJson()),
+    final session = await _readStoredSession();
+    if (session == null) return;
+
+    final updated = AuthSession(
+      user: session.user,
+      token: session.token,
+      apiBaseUrl: session.apiBaseUrl,
+      salesPerson: session.salesPerson,
+      activeSalesPerson: person,
+      roles: session.roles,
+      canPickSalesPerson: session.canPickSalesPerson,
+      tokenExpiresAt: session.tokenExpiresAt,
     );
+    await _persistSession(updated);
   }
 
   Future<void> saveApiBaseUrl(String url) async {
@@ -107,10 +272,10 @@ class AuthRepository {
     _api.setBaseUrl(url);
   }
 
-  AuthSession _sessionFromLoginResponse(
+  Future<AuthSession> _sessionFromLoginResponse(
     Map<String, dynamic> response,
     String apiBaseUrl,
-  ) {
+  ) async {
     final user = UserModel.fromJson(response['user'] as Map<String, dynamic>);
     final salesPerson = response['sales_person'] is Map
         ? SalesPersonModel.fromJson(response['sales_person'] as Map<String, dynamic>)
@@ -124,7 +289,8 @@ class AuthRepository {
     if (!canPick && salesPerson != null) {
       activeSalesPerson = salesPerson;
     } else if (canPick) {
-      activeSalesPerson = _readSalesPerson(AppConfig.activeSalesPersonKey);
+      final existing = await _readStoredSession();
+      activeSalesPerson = existing?.activeSalesPerson;
     }
 
     return AuthSession(
@@ -135,33 +301,35 @@ class AuthRepository {
       canPickSalesPerson: canPick,
       token: response['token'] as String,
       apiBaseUrl: apiBaseUrl,
+      tokenExpiresAt: AuthSession._parseDate(response['token_expires_at']),
     );
   }
 
   Future<void> _persistSession(AuthSession session) async {
+    await _secureStore.writeSession(jsonEncode(session.toJson()));
     await _prefs.setString(AppConfig.apiBaseUrlKey, session.apiBaseUrl);
-    await _prefs.setString(AppConfig.authTokenKey, session.token);
-    await _prefs.setString(AppConfig.authUserKey, jsonEncode(session.user.toJson()));
-    await _prefs.setStringList(AppConfig.authRolesKey, session.roles);
-    await _prefs.setBool(AppConfig.canPickSalesPersonKey, session.canPickSalesPerson);
-
-    if (session.salesPerson != null) {
+    await _prefs.setString(AppConfig.lastUserEmailKey, session.user.email ?? '');
+    if (session.tokenExpiresAt != null) {
       await _prefs.setString(
-        AppConfig.salesPersonKey,
-        jsonEncode(session.salesPerson!.toJson()),
+        AppConfig.tokenExpiresAtKey,
+        session.tokenExpiresAt!.toIso8601String(),
       );
-    } else {
-      await _prefs.remove(AppConfig.salesPersonKey);
     }
-
-    await saveActiveSalesPerson(session.activeSalesPerson);
   }
 
-  SalesPersonModel? _readSalesPerson(String key) {
-    final json = _prefs.getString(key);
-    if (json == null) return null;
-    return SalesPersonModel.fromJson(jsonDecode(json) as Map<String, dynamic>);
+  Future<AuthSession?> _readStoredSession() async {
+    final raw = await _secureStore.readSession();
+    if (raw == null) return null;
+    try {
+      return AuthSession.fromStoredJson(jsonDecode(raw) as Map<String, dynamic>);
+    } catch (_) {
+      await _secureStore.clear();
+      return null;
+    }
   }
 
-  List<String> _readRoles() => _prefs.getStringList(AppConfig.authRolesKey) ?? [];
+  void _applySessionToApi(AuthSession session) {
+    _api.setBaseUrl(session.apiBaseUrl);
+    _api.setToken(session.token);
+  }
 }

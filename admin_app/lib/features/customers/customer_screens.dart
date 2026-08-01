@@ -13,9 +13,19 @@ class CustomerTypesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return FutureBuilder<List<CustomerTypeModel>>(
-      future: ref.read(customerRepositoryProvider).customerTypes(),
+      future: ref.read(offlineCustomerRepositoryProvider).customerTypes(),
       builder: (context, snap) {
-        if (!snap.hasData) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Scaffold(body: LoadingView());
+        }
+        if (snap.hasError) {
+          return Scaffold(
+            body: ErrorView(
+              message: AppErrorMapper.localize(context, snap.error!),
+              error: snap.error,
+            ),
+          );
+        }
         return Scaffold(
           appBar: AppBar(title: const Text('Customer Types')),
           body: ListView.builder(
@@ -32,10 +42,10 @@ class CustomerVansScreen extends ConsumerWidget {
   const CustomerVansScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final repo = ref.watch(customerRepositoryProvider);
+    final repo = ref.watch(offlineCustomerRepositoryProvider);
     return CrudListScreen<CustomerVanModel>(
       title: 'Customer Vans',
-      loadItems: () async => (await repo.vans()).items,
+      loadItems: () async => (await repo.vans(scoped: false)).items,
       itemTitle: (v) => '${v.name} ${v.mobile ?? ''}',
       onTap: (v) => _editVan(context, ref, v),
       trailing: (v) => Row(
@@ -78,10 +88,10 @@ class CustomerImportersScreen extends ConsumerWidget {
   const CustomerImportersScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final repo = ref.watch(customerRepositoryProvider);
+    final repo = ref.watch(offlineCustomerRepositoryProvider);
     return CrudListScreen<CustomerImporterModel>(
       title: 'Customer Importers',
-      loadItems: () async => (await repo.importers()).items,
+      loadItems: () async => (await repo.importers(scoped: false)).items,
       itemTitle: (v) => '${v.name} ${v.mobile ?? ''}',
       onTap: (v) => _editImporter(context, ref, v),
       trailing: (v) => Row(
@@ -129,17 +139,52 @@ class CustomerShopsScreen extends ConsumerStatefulWidget {
 
 class _CustomerShopsScreenState extends ConsumerState<CustomerShopsScreen> {
   int _reloadToken = 0;
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final repo = ref.watch(customerRepositoryProvider);
-    return CrudListScreen<CustomerShopModel>(
-      key: ValueKey(_reloadToken),
-      title: 'Customer Shops',
-      loadItems: () async => (await repo.shops()).items,
-      itemTitle: (s) => s.name,
-      onTap: (s) => _edit(s),
-      onAdd: () => _edit(null),
+    final search = _searchController.text.trim();
+    final repo = ref.watch(offlineCustomerRepositoryProvider);
+    return Scaffold(
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                labelText: 'Search shops',
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: () => setState(() => _reloadToken++),
+                ),
+              ),
+              onSubmitted: (_) => setState(() => _reloadToken++),
+            ),
+          ),
+          Expanded(
+            child: CrudListScreen<CustomerShopModel>(
+              key: ValueKey('$_reloadToken-$search'),
+              title: 'Customer Shops',
+              embedded: true,
+              loadItems: () async => (await repo.shops(
+                search: search.isEmpty ? null : search,
+                scoped: false,
+              )).items,
+              itemTitle: (s) => s.name,
+              onTap: (s) => _edit(s),
+              onAdd: () => _edit(null),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

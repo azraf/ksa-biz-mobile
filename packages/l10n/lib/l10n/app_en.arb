@@ -228,7 +228,7 @@
   "commonLanguageBangla": "বাংলা",
   "commonConvert": "Convert",
   "commonPickVideo": "Pick video",
-  "salesAppName": "ARM Sales(M)",
+  "salesAppName": "ARM Sales",
   "salesSignInSubtitle": "Sign in with your salesperson account",
   "salesNavHome": "Home",
   "salesNavManual": "Manual",
@@ -359,6 +359,22 @@
       }
     }
   },
+  "salesOfflineAllSynced": "All changes synced",
+  "salesOfflineSyncProgress": "Syncing {completed} of {total}…",
+  "@salesOfflineSyncProgress": {
+    "placeholders": {
+      "completed": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "salesDashboardCachedDues": "Showing cached dues from {fetchedAt}",
+  "@salesDashboardCachedDues": {
+    "placeholders": {
+      "fetchedAt": {
+        "type": "String"
+      }
+    }
+  },
   "salesManualTabOpenPool": "Open pool",
   "salesManualTabAssigned": "Assigned",
   "salesManualTabInReview": "In review",
@@ -394,6 +410,36 @@
   "salesOrderAddCustomer": "Add customer",
   "salesOrderSelectCustomerItems": "Select customer and add items",
   "salesOrderSavedLocally": "Order saved locally — will sync when online",
+  "salesErrorOffline": "No internet connection. Showing saved data when available.",
+  "salesErrorGeneric": "Something went wrong. Please try again.",
+  "salesErrorTimeout": "The server took too long to respond. Please try again.",
+  "salesErrorUnauthorized": "Your session expired. Please sign in again.",
+  "adminAccessRequired": "This account cannot use the admin mobile app. An admin role is required.",
+  "adminLoginInvalidCredentials": "Invalid email or password.",
+  "salesOfflineServerUnreachable": "Connected but server is unreachable",
+  "salesOfflineRetryUploads": "Retry uploads",
+  "salesOfflineUploadFailed": "{count, plural, =1{1 upload failed} other{{count} uploads failed}}",
+  "@salesOfflineUploadFailed": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "salesOfflineUploading": "Uploading… {percent}%",
+  "@salesOfflineUploading": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "adminOfflineWriteBlocked": "This action requires an internet connection.",
+  "adminShowingCachedList": "Showing cached list from {fetchedAt}",
+  "@adminShowingCachedList": {
+    "placeholders": {
+      "fetchedAt": {"type": "String"}
+    }
+  },
+  "adminDashboardSalesMonth": "Sales (this month)",
+  "adminDashboardExpensesYtd": "Expenses (YTD)",
+  "adminDashboardPendingManual": "Pending manual orders",
   "salesOrderWalkInUnavailable": "Walk-in shop not available. Go online to sync.",
   "salesOrderGoOnlineCatalog": "Go online first to download customer and product data.",
   "salesOrderNoCustomerTypes": "No customer types available. Go online to refresh data.",
@@ -513,6 +559,15 @@
   "salesWatchlistPhotos": "Photos",
   "salesWatchlistConvertBtn": "Convert to shop",
   "salesWatchlistPendingSync": "Pending sync",
+  "salesWatchlistActivateAgain": "Activate again",
+  "salesWatchlistRemove": "Remove",
+  "salesWatchlistActivated": "Watch-list item activated",
+  "salesWatchlistArchivedReason": "Archived: {reason}",
+  "@salesWatchlistArchivedReason": {
+    "placeholders": {
+      "reason": { "type": "String" }
+    }
+  },
   "orderAppName": "ARM Orders",
   "orderSignInSubtitle": "Sign in with your shop, van, or importer account",
   "orderNavCatalog": "Catalog",
@@ -589,6 +644,38 @@
     "placeholders": {
       "days": {
         "type": "int"
+      }
+    }
+  },
+  "commonEnable": "Enable",
+  "biometricEnableTitle": "Fingerprint login",
+  "biometricEnableSubtitle": "Unlock the app quickly with your fingerprint or Face ID",
+  "biometricEnableReason": "Confirm to enable fingerprint login",
+  "biometricUnlockReason": "Unlock the app to continue",
+  "biometricUnlockButton": "Unlock with fingerprint",
+  "biometricUsePassword": "Use password instead",
+  "biometricNotAvailable": "Biometric authentication is not available on this device",
+  "biometricCancelled": "Authentication cancelled",
+  "biometricNotEnrolled": "No fingerprint or Face ID enrolled. Add one in device Settings.",
+  "biometricEnableFailed": "Could not enable fingerprint login. Please try again.",
+  "biometricOptInMessage": "Use your fingerprint or Face ID to unlock the app on this device?",
+  "biometricAppLockedTitle": "App locked",
+  "biometricAppLockedSubtitle": "Authenticate to continue using the app",
+  "biometricSignInAs": "Sign in as {email}",
+  "@biometricSignInAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionExpired": "Your session has expired. Please sign in again.",
+  "tokenExpiresAtTitle": "Session expires",
+  "tokenExpiresAtValue": "Re-login required by {date}",
+  "@tokenExpiresAtValue": {
+    "placeholders": {
+      "date": {
+        "type": "String"
       }
     }
   }

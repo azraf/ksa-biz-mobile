@@ -4,47 +4,87 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/repositories.dart';
 
-class WarehouseStockScreen extends ConsumerWidget {
+class WarehouseStockScreen extends ConsumerStatefulWidget {
   const WarehouseStockScreen({super.key});
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return FutureBuilder<List<InventoryStockModel>>(
-      future: ref.read(inventoryRepositoryProvider).warehouseStock(),
-      builder: (context, snap) {
-        if (!snap.hasData) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Warehouse Stock'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.assessment_outlined),
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InventoryValuationScreen())),
-              ),
-              IconButton(
-                icon: const Icon(Icons.history),
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StockMovementsScreen())),
-              ),
-            ],
+  ConsumerState<WarehouseStockScreen> createState() => _WarehouseStockScreenState();
+}
+
+class _WarehouseStockScreenState extends ConsumerState<WarehouseStockScreen> {
+  List<InventoryStockModel>? _stock;
+  Object? _error;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final stock = await ref.read(inventoryRepositoryProvider).warehouseStock();
+      setState(() {
+        _stock = stock;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e;
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) return const Scaffold(body: LoadingView());
+    if (_error != null) {
+      return Scaffold(
+        body: ErrorView(
+          message: AppErrorMapper.localize(context, _error!),
+          error: _error,
+          onRetry: _load,
+        ),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Warehouse Stock'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.assessment_outlined),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InventoryValuationScreen())),
           ),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StockAdjustmentScreen())),
-            icon: const Icon(Icons.tune),
-            label: const Text('Adjust'),
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StockMovementsScreen())),
           ),
-          body: ListView.builder(
-            itemCount: snap.data!.length,
-            itemBuilder: (_, i) {
-              final s = snap.data![i];
-              final low = (s.product?.alertQuantity ?? 0) > 0 && s.balance <= (s.product?.alertQuantity ?? 0);
-              return ListTile(
-                title: Text(s.product?.name ?? 'Product #${s.productId}'),
-                subtitle: low ? const Text('Low stock', style: TextStyle(color: Colors.orange)) : null,
-                trailing: Text(s.displayBalance),
-              );
-            },
-          ),
-        );
-      },
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StockAdjustmentScreen())),
+        icon: const Icon(Icons.tune),
+        label: const Text('Adjust'),
+      ),
+      body: ListView.builder(
+        padding: fabScrollPadding(context, extendedFab: true, includeBottomNav: true),
+        itemCount: _stock!.length,
+        itemBuilder: (_, i) {
+          final s = _stock![i];
+          final low = (s.product?.alertQuantity ?? 0) > 0 && s.balance <= (s.product?.alertQuantity ?? 0);
+          return ListTile(
+            title: Text(s.product?.name ?? 'Product #${s.productId}'),
+            subtitle: low ? const Text('Low stock', style: TextStyle(color: Colors.orange)) : null,
+            trailing: Text(s.displayBalance),
+          );
+        },
+      ),
     );
   }
 }
@@ -196,7 +236,9 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
     } catch (e) {
       setState(() => _loadingStock = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppErrorMapper.localize(context, e))),
+        );
       }
     }
   }
@@ -248,7 +290,9 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
     } catch (e) {
       setState(() => _submitting = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppErrorMapper.localize(context, e))),
+        );
       }
     }
   }
@@ -382,7 +426,9 @@ class _StockAdjustmentScreenState extends ConsumerState<StockAdjustmentScreen> {
                       );
                   if (context.mounted) Navigator.pop(context);
                 } catch (e) {
-                  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+                  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(AppErrorMapper.localize(context, e))),
+                  );
                 }
               },
               child: const Text('Save Adjustment'),
@@ -430,7 +476,9 @@ class _DamageWriteoffScreenState extends ConsumerState<DamageWriteoffScreen> {
                       );
                   if (context.mounted) Navigator.pop(context);
                 } catch (e) {
-                  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+                  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(AppErrorMapper.localize(context, e))),
+                  );
                 }
               },
               child: const Text('Write Off'),

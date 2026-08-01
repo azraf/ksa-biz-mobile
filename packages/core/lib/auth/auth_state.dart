@@ -7,6 +7,12 @@ class AuthState extends Equatable {
   const AuthState({
     this.isLoading = false,
     this.isAuthenticated = false,
+    this.pendingBiometricUnlock = false,
+    this.isAppLocked = false,
+    this.biometricEnabled = false,
+    this.biometricAvailable = false,
+    this.storedUserEmail,
+    this.tokenExpiresAt,
     this.user,
     this.salesPerson,
     this.activeSalesPerson,
@@ -19,6 +25,12 @@ class AuthState extends Equatable {
 
   final bool isLoading;
   final bool isAuthenticated;
+  final bool pendingBiometricUnlock;
+  final bool isAppLocked;
+  final bool biometricEnabled;
+  final bool biometricAvailable;
+  final String? storedUserEmail;
+  final DateTime? tokenExpiresAt;
   final UserModel? user;
   final SalesPersonModel? salesPerson;
   final SalesPersonModel? activeSalesPerson;
@@ -37,9 +49,22 @@ class AuthState extends Equatable {
 
   bool get isAdmin => roles.contains('admin');
 
+  bool get showBiometricLogin =>
+      !isAuthenticated &&
+      !isLoading &&
+      biometricEnabled &&
+      storedUserEmail != null &&
+      (pendingBiometricUnlock || !isAuthenticated);
+
   AuthState copyWith({
     bool? isLoading,
     bool? isAuthenticated,
+    bool? pendingBiometricUnlock,
+    bool? isAppLocked,
+    bool? biometricEnabled,
+    bool? biometricAvailable,
+    String? storedUserEmail,
+    DateTime? tokenExpiresAt,
     UserModel? user,
     SalesPersonModel? salesPerson,
     SalesPersonModel? activeSalesPerson,
@@ -51,10 +76,20 @@ class AuthState extends Equatable {
     bool clearError = false,
     bool clearSalesPerson = false,
     bool clearActiveSalesPerson = false,
+    bool clearStoredUserEmail = false,
+    bool clearTokenExpiresAt = false,
   }) {
     return AuthState(
       isLoading: isLoading ?? this.isLoading,
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
+      pendingBiometricUnlock: pendingBiometricUnlock ?? this.pendingBiometricUnlock,
+      isAppLocked: isAppLocked ?? this.isAppLocked,
+      biometricEnabled: biometricEnabled ?? this.biometricEnabled,
+      biometricAvailable: biometricAvailable ?? this.biometricAvailable,
+      storedUserEmail:
+          clearStoredUserEmail ? null : (storedUserEmail ?? this.storedUserEmail),
+      tokenExpiresAt:
+          clearTokenExpiresAt ? null : (tokenExpiresAt ?? this.tokenExpiresAt),
       user: user ?? this.user,
       salesPerson: clearSalesPerson ? null : (salesPerson ?? this.salesPerson),
       activeSalesPerson: clearActiveSalesPerson
@@ -72,6 +107,12 @@ class AuthState extends Equatable {
   List<Object?> get props => [
         isLoading,
         isAuthenticated,
+        pendingBiometricUnlock,
+        isAppLocked,
+        biometricEnabled,
+        biometricAvailable,
+        storedUserEmail,
+        tokenExpiresAt,
         user,
         salesPerson,
         activeSalesPerson,

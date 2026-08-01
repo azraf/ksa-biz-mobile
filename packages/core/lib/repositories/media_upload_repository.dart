@@ -5,7 +5,8 @@ import '../api/api_client.dart';
 import '../models/local_media_attachment.dart';
 import '../models/media_kind.dart';
 import '../models/media_target.dart';
-import '../offline/local_database.dart';
+import '../offline/offline_sync_trigger.dart';
+import '../offline/stores/media_outbox_store.dart';
 
 /// Compressed file metadata passed from the media package.
 class MediaFileInput {
@@ -27,25 +28,25 @@ class MediaFileInput {
 class MediaUploadRepository {
   MediaUploadRepository({
     required ApiClient apiClient,
-    required LocalDatabase db,
+    required MediaOutboxStore media,
     this.getAuthToken,
   })  : _api = apiClient,
-        _db = db;
+        _media = media;
 
   final ApiClient _api;
-  final LocalDatabase _db;
+  final MediaOutboxStore _media;
   final Future<String?> Function()? getAuthToken;
 
   final _statusController = StreamController<MediaSyncEvent>.broadcast();
   Stream<MediaSyncEvent> get statusStream => _statusController.stream;
 
-  Future<int> pendingCount() => _db.pendingMediaCount();
+  Future<int> pendingCount() => _media.pendingCount();
 
   Future<void> attachMedia({
     required MediaFileInput file,
     required MediaTarget target,
   }) async {
-    final blobId = await _db.insertMediaBlob(
+    final blobId = await _media.insert(
       localPath: file.localPath,
       mimeType: file.mimeType,
       mediaKind: file.kind.value,
@@ -59,33 +60,17 @@ class MediaUploadRepository {
       extraFields: target.extraFields,
     );
 
-    if (target.entityCacheKey != null && target.parentLocalId != null) {
-      final cached = await _db.getCachedEntity(target.entityCacheKey!, target.parentLocalId!);
-      if (cached != null) {
-        final localMedia = parseLocalMediaList(cached['local_media']);
-        localMedia.add(LocalMediaAttachment(
-          blobId: blobId,
-          path: file.localPath,
-          kind: file.kind,
-          mime: file.mimeType,
-          originalName: file.originalName,
-        ));
-        await _db.patchCachedEntityData(target.entityCacheKey!, target.parentLocalId!, {
-          'local_media': localMediaToJsonList(localMedia),
-          '_pending_sync': true,
-        });
-      }
-    }
-
     _statusController.add(MediaSyncEvent(blobId: blobId, status: 'pending'));
 
     if (target.hasServerParent) {
       await uploadBlobById(blobId);
     }
+
+    OfflineSyncTrigger.requestSync();
   }
 
   Future<void> uploadPendingBlobs() async {
-    final blobs = await _db.pendingMediaBlobs();
+    final blobs = await _media.pendingBlobs();
     for (final blob in blobs) {
       if (blob.parentServerId == null || blob.parentServerId! <= 0) continue;
       await uploadBlob(blob);
@@ -93,7 +78,7 @@ class MediaUploadRepository {
   }
 
   Future<void> uploadBlobById(int blobId) async {
-    final blobs = await _db.pendingMediaBlobs();
+    final blobs = await _media.pendingBlobs();
     for (final blob in blobs) {
       if (blob.id == blobId) {
         await uploadBlob(blob);
@@ -107,11 +92,11 @@ class MediaUploadRepository {
 
     final file = File(blob.localPath);
     if (!await file.exists()) {
-      await _db.updateMediaBlobStatus(blob.id, status: 'failed', errorMessage: 'File missing');
+      await _media.updateStatus(blob.id, status: 'failed', errorMessage: 'File missing');
       return;
     }
 
-    await _db.updateMediaBlobStatus(blob.id, status: 'uploading');
+    await _media.updateStatus(blob.id, status: 'uploading');
     _statusController.add(MediaSyncEvent(blobId: blob.id, status: 'uploading'));
 
     try {
@@ -125,16 +110,21 @@ class MediaUploadRepository {
         bytes: bytes,
         filename: filename,
         fields: blob.extraFields.isEmpty ? null : blob.extraFields,
+        onSendProgress: (sent, total) {
+          _statusController.add(MediaSyncEvent(
+            blobId: blob.id,
+            status: 'uploading',
+            progress: sent / total,
+          ));
+        },
       );
 
-      await _db.updateMediaBlobStatus(blob.id, status: 'done');
+      await _media.updateStatus(blob.id, status: 'done');
       _statusController.add(MediaSyncEvent(blobId: blob.id, status: 'done'));
-
-      await _markEntityMediaDone(blob);
       await file.delete();
-      await _db.deleteMediaBlob(blob.id);
+      await _media.delete(blob.id);
     } catch (e) {
-      await _db.updateMediaBlobStatus(
+      await _media.updateStatus(
         blob.id,
         status: 'failed',
         errorMessage: e.toString(),
@@ -144,22 +134,8 @@ class MediaUploadRepository {
     }
   }
 
-  Future<void> _markEntityMediaDone(MediaBlobRecord blob) async {
-    if (blob.parentLocalId == null) return;
-    final entityType = blob.parentEntityType;
-    final cached = await _db.getCachedEntity(entityType, blob.parentLocalId!);
-    if (cached == null) return;
-
-    final localMedia = parseLocalMediaList(cached['local_media'])
-        .map((m) => m.blobId == blob.id ? m.copyWith(uploadStatus: MediaUploadStatus.done) : m)
-        .toList();
-    await _db.patchCachedEntityData(entityType, blob.parentLocalId!, {
-      'local_media': localMediaToJsonList(localMedia),
-    });
-  }
-
   Future<void> retryFailed() async {
-    final blobs = await _db.pendingMediaBlobs();
+    final blobs = await _media.pendingBlobs();
     for (final blob in blobs.where((b) => b.status == 'failed')) {
       await uploadBlob(blob);
     }

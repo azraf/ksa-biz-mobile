@@ -22,7 +22,7 @@ class AdminManualOrderDetailScreen extends ConsumerStatefulWidget {
 class _AdminManualOrderDetailScreenState extends ConsumerState<AdminManualOrderDetailScreen> {
   ManualOrderRequestModel? _request;
   bool _loading = true;
-  String? _error;
+  Object? _error;
   bool _working = false;
   final _recorder = AudioRecorder();
   final _picker = ImagePicker();
@@ -54,7 +54,7 @@ class _AdminManualOrderDetailScreenState extends ConsumerState<AdminManualOrderD
       });
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = e;
         _loading = false;
       });
     }
@@ -128,7 +128,9 @@ class _AdminManualOrderDetailScreenState extends ConsumerState<AdminManualOrderD
     } catch (e) {
       setState(() => _working = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppErrorMapper.localize(context, e))),
+        );
       }
     }
   }
@@ -136,7 +138,15 @@ class _AdminManualOrderDetailScreenState extends ConsumerState<AdminManualOrderD
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Scaffold(body: LoadingView());
-    if (_error != null) return Scaffold(body: ErrorView(message: _error!, onRetry: _load));
+    if (_error != null) {
+      return Scaffold(
+        body: ErrorView(
+          message: AppErrorMapper.localize(context, _error!),
+          error: _error,
+          onRetry: _load,
+        ),
+      );
+    }
     final request = _request!;
     final shopPhone = shopContactPhone(request.customerShop);
 
@@ -213,7 +223,11 @@ class _AdminManualOrderDetailScreenState extends ConsumerState<AdminManualOrderD
                     await _load();
                   }
                 } catch (e) {
-                  if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(AppErrorMapper.localize(context, e))),
+                    );
+                  }
                 }
               },
               child: const Text('Quick convert (default item)'),

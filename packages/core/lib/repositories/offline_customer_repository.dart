@@ -2,20 +2,20 @@ import '../models/admin_models.dart';
 import '../models/customer.dart';
 import '../models/customer_assignment_models.dart';
 import '../models/paginated_response.dart';
-import '../offline/local_database.dart';
+import '../offline/stores/customer_local_store.dart';
 import 'customer_repository.dart';
 
 class OfflineCustomerRepository {
   OfflineCustomerRepository({
     required CustomerRepository remote,
-    required LocalDatabase db,
+    required CustomerLocalStore customers,
     required bool Function() isOnline,
   })  : _remote = remote,
-        _db = db,
+        _customers = customers,
         _isOnline = isOnline;
 
   final CustomerRepository _remote;
-  final LocalDatabase _db;
+  final CustomerLocalStore _customers;
   final bool Function() _isOnline;
 
   Future<List<CustomerTypeModel>> customerTypes() async {
@@ -23,23 +23,14 @@ class OfflineCustomerRepository {
       try {
         final types = await _remote.customerTypes();
         for (final type in types) {
-          await _db.cacheEntity(
-            entityType: 'customer_type',
-            entityId: type.id,
-            data: {'id': type.id, 'type_name': type.typeName},
-          );
+          await _customers.upsertType(type);
         }
         return types;
       } catch (_) {
-        return _cachedCustomerTypes();
+        return _customers.listTypes();
       }
     }
-    return _cachedCustomerTypes();
-  }
-
-  Future<List<CustomerTypeModel>> _cachedCustomerTypes() async {
-    final cached = await _db.getCachedEntities('customer_type');
-    return cached.map((e) => CustomerTypeModel.fromJson(e)).toList();
+    return _customers.listTypes();
   }
 
   Future<PaginatedResponse<CustomerShopModel>> shops({
@@ -72,14 +63,14 @@ class OfflineCustomerRepository {
       try {
         final result = await _remote.shops(query: query);
         for (final shop in result.items) {
-          await _cacheShop(shop);
+          await _customers.upsertShop(shop, salesPersonId: salesPersonId);
         }
         return result;
       } catch (_) {
-        return _cachedShopsPage(search: search, page: page, perPage: perPage);
+        return _cachedShopsPage(search: search, salesPersonId: salesPersonId, page: page, perPage: perPage);
       }
     }
-    return _cachedShopsPage(search: search, page: page, perPage: perPage);
+    return _cachedShopsPage(search: search, salesPersonId: salesPersonId, page: page, perPage: perPage);
   }
 
   Future<PaginatedResponse<CustomerVanModel>> vans({
@@ -106,14 +97,14 @@ class OfflineCustomerRepository {
       try {
         final result = await _remote.vans(query: query);
         for (final van in result.items) {
-          await _cacheVan(van);
+          await _customers.upsertVan(van, salesPersonId: salesPersonId);
         }
         return result;
       } catch (_) {
-        return _cachedVansPage(search: search, page: page, perPage: perPage);
+        return _cachedVansPage(search: search, salesPersonId: salesPersonId, page: page, perPage: perPage);
       }
     }
-    return _cachedVansPage(search: search, page: page, perPage: perPage);
+    return _cachedVansPage(search: search, salesPersonId: salesPersonId, page: page, perPage: perPage);
   }
 
   Future<PaginatedResponse<CustomerImporterModel>> importers({
@@ -140,14 +131,14 @@ class OfflineCustomerRepository {
       try {
         final result = await _remote.importers(query: query);
         for (final importer in result.items) {
-          await _cacheImporter(importer);
+          await _customers.upsertImporter(importer, salesPersonId: salesPersonId);
         }
         return result;
       } catch (_) {
-        return _cachedImportersPage(search: search, page: page, perPage: perPage);
+        return _cachedImportersPage(search: search, salesPersonId: salesPersonId, page: page, perPage: perPage);
       }
     }
-    return _cachedImportersPage(search: search, page: page, perPage: perPage);
+    return _cachedImportersPage(search: search, salesPersonId: salesPersonId, page: page, perPage: perPage);
   }
 
   Future<PaginatedResponse<SalesCustomerRow>> salesCustomersPhoneSearch({
@@ -163,7 +154,7 @@ class OfflineCustomerRepository {
 
   Future<void> prefetchAssignedForSalesPerson(int salesPersonId) async {
     if (!_isOnline()) return;
-    for (Future<PaginatedResponse<dynamic>> Function(int page) fetch in [
+    for (final Future<PaginatedResponse<dynamic>> Function(int page) fetch in [
       (page) => shops(salesPersonId: salesPersonId, scoped: true, page: page),
       (page) => vans(salesPersonId: salesPersonId, scoped: true, page: page),
       (page) => importers(salesPersonId: salesPersonId, scoped: true, page: page),
@@ -179,167 +170,69 @@ class OfflineCustomerRepository {
 
   Future<PaginatedResponse<CustomerShopModel>> _cachedShopsPage({
     String? search,
+    int? salesPersonId,
     required int page,
     required int perPage,
   }) async {
-    final cached = await _db.getCachedEntities('customer_shop');
-    final items = cached
-        .map((e) => CustomerShopModel.fromJson(e))
-        .where((e) => !e.isSystem)
-        .where((e) => _matchesShopSearch(e, search))
-        .toList()
-      ..sort((a, b) => a.name.compareTo(b.name));
-    return _pageSlice(items, page, perPage);
+    final offset = (page - 1) * perPage;
+    final items = await _customers.searchShops(
+      query: search,
+      salesPersonId: salesPersonId,
+      offset: offset,
+      limit: perPage,
+    );
+    final total = await _customers.countShops(salesPersonId: salesPersonId);
+    final lastPage = total == 0 ? 1 : (total / perPage).ceil();
+    return PaginatedResponse(items: items, currentPage: page, lastPage: lastPage, total: total);
   }
 
   Future<PaginatedResponse<CustomerVanModel>> _cachedVansPage({
     String? search,
+    int? salesPersonId,
     required int page,
     required int perPage,
   }) async {
-    final cached = await _db.getCachedEntities('customer_van');
-    final items = cached
-        .map((e) => CustomerVanModel.fromJson(e))
-        .where((e) => _matchesNameOrMobile(e.name, e.mobile, search))
-        .toList()
-      ..sort((a, b) => a.name.compareTo(b.name));
-    return _pageSlice(items, page, perPage);
+    final offset = (page - 1) * perPage;
+    final items = await _customers.searchVans(
+      query: search,
+      salesPersonId: salesPersonId,
+      offset: offset,
+      limit: perPage,
+    );
+    final total = await _customers.countVans(salesPersonId: salesPersonId);
+    final lastPage = total == 0 ? 1 : (total / perPage).ceil();
+    return PaginatedResponse(items: items, currentPage: page, lastPage: lastPage, total: total);
   }
 
   Future<PaginatedResponse<CustomerImporterModel>> _cachedImportersPage({
     String? search,
+    int? salesPersonId,
     required int page,
     required int perPage,
   }) async {
-    final cached = await _db.getCachedEntities('customer_importer');
-    final items = cached
-        .map((e) => CustomerImporterModel.fromJson(e))
-        .where((e) => _matchesNameOrMobile(e.name, e.mobile, search))
-        .toList()
-      ..sort((a, b) => a.name.compareTo(b.name));
-    return _pageSlice(items, page, perPage);
-  }
-
-  PaginatedResponse<T> _pageSlice<T>(List<T> items, int page, int perPage) {
-    final total = items.length;
+    final offset = (page - 1) * perPage;
+    final items = await _customers.searchImporters(
+      query: search,
+      salesPersonId: salesPersonId,
+      offset: offset,
+      limit: perPage,
+    );
+    final total = await _customers.countImporters(salesPersonId: salesPersonId);
     final lastPage = total == 0 ? 1 : (total / perPage).ceil();
-    final start = (page - 1) * perPage;
-    final slice = start >= total ? <T>[] : items.sublist(start, (start + perPage).clamp(0, total));
-    return PaginatedResponse(items: slice, currentPage: page, lastPage: lastPage, total: total);
+    return PaginatedResponse(items: items, currentPage: page, lastPage: lastPage, total: total);
   }
 
-  bool _matchesShopSearch(CustomerShopModel shop, String? search) {
-    if (search == null || search.isEmpty) return true;
-    final s = search.toLowerCase();
-    if (shop.name.toLowerCase().contains(s)) return true;
-    final pc = shop.primaryContact;
-    if (pc?.contactName?.toLowerCase().contains(s) ?? false) return true;
-    if (pc?.contactMobile?.contains(search.replaceAll(RegExp(r'\D'), '')) ?? false) return true;
-    return false;
-  }
-
-  bool _matchesNameOrMobile(String name, String? mobile, String? search) {
-    if (search == null || search.isEmpty) return true;
-    final s = search.toLowerCase();
-    if (name.toLowerCase().contains(s)) return true;
-    if (mobile != null && mobile.contains(search.replaceAll(RegExp(r'\D'), ''))) return true;
-    return false;
-  }
-
-  Future<void> _cacheShop(CustomerShopModel shop) async {
-    await _db.cacheEntity(
-      entityType: 'customer_shop',
-      entityId: shop.id,
-      data: {
-        'id': shop.id,
-        'name': shop.name,
-        if (shop.gps != null) 'gps': shop.gps,
-        'is_system': shop.isSystem,
-        if (shop.areaId != null) 'area_id': shop.areaId,
-        if (shop.areaName != null) 'area_name': shop.areaName,
-        if (shop.primaryContact != null) 'primary_contact': {
-          'contact_name': shop.primaryContact!.contactName,
-          'contact_mobile': shop.primaryContact!.contactMobile,
-        },
-        if (shop.lastOrderAt != null) 'last_order_at': shop.lastOrderAt,
-        'is_inactive': shop.isInactive,
-      },
-    );
-  }
-
-  Future<void> _cacheVan(CustomerVanModel van) async {
-    await _db.cacheEntity(
-      entityType: 'customer_van',
-      entityId: van.id,
-      data: {
-        'id': van.id,
-        'name': van.name,
-        if (van.mobile != null) 'mobile': van.mobile,
-        if (van.areaId != null) 'area_id': van.areaId,
-        if (van.isInactive) 'is_inactive': true,
-      },
-    );
-  }
-
-  Future<void> _cacheImporter(CustomerImporterModel importer) async {
-    await _db.cacheEntity(
-      entityType: 'customer_importer',
-      entityId: importer.id,
-      data: {
-        'id': importer.id,
-        'name': importer.name,
-        if (importer.mobile != null) 'mobile': importer.mobile,
-      },
-    );
-  }
-
-  Future<bool> hasCachedCatalog() async {
-    final types = await _db.getCachedEntities('customer_type');
-    final shops = await _db.getCachedEntities('customer_shop');
-    final vans = await _db.getCachedEntities('customer_van');
-    final importers = await _db.getCachedEntities('customer_importer');
-    return types.isNotEmpty &&
-        (shops.isNotEmpty || vans.isNotEmpty || importers.isNotEmpty);
-  }
+  Future<bool> hasCachedCatalog() => _customers.hasCatalog();
 
   Future<void> prefetchWalkInShop() async {
     if (!_isOnline()) return;
     try {
       final shop = await _remote.walkInShop();
       if (shop == null) return;
-      await _db.cacheEntity(
-        entityType: 'customer_shop',
-        entityId: shop.id,
-        data: {
-          'id': shop.id,
-          'name': shop.name,
-          'is_system': true,
-          if (shop.gps != null) 'gps': shop.gps,
-        },
-      );
-      await _db.cacheEntity(
-        entityType: 'mobile_config',
-        entityId: 1,
-        data: {'walk_in_shop_id': shop.id},
-      );
+      await _customers.upsertShop(shop);
+      await _customers.setConfig('mobile_config', {'walk_in_shop_id': shop.id});
     } catch (_) {}
   }
 
-  Future<int?> walkInShopId() async {
-    final config = await _db.getCachedEntities('mobile_config');
-    if (config.isNotEmpty) {
-      final id = config.first['walk_in_shop_id'];
-      if (id is int) return id;
-      return int.tryParse('$id');
-    }
-    final shops = await _db.getCachedEntities('customer_shop');
-    for (final row in shops) {
-      if (row['is_system'] == true) {
-        final id = row['id'];
-        if (id is int) return id;
-        return int.tryParse('$id');
-      }
-    }
-    return null;
-  }
+  Future<int?> walkInShopId() => _customers.walkInShopId();
 }

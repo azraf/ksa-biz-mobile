@@ -1,17 +1,21 @@
 import 'package:core/core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
-  throw UnimplementedError();
+import 'auth_provider.dart';
+
+final apiClientProvider = Provider<ApiClient>((ref) {
+  final client = ApiClient();
+  client.onUnauthorized = () {
+    ref.read(authProvider.notifier).handleUnauthorized();
+  };
+  return client;
 });
 
-final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
-
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  return AuthRepository(
-    ref.watch(apiClientProvider),
-    ref.watch(sharedPreferencesProvider),
+  return createAuthRepository(
+    api: ref.watch(apiClientProvider),
+    prefs: ref.watch(sharedPreferencesProvider),
+    ref: ref,
   );
 });
 

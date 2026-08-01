@@ -12,6 +12,12 @@ class AppConfig {
   static const activeSalesPersonKey = 'active_sales_person';
   static const authRolesKey = 'auth_roles';
   static const canPickSalesPersonKey = 'can_pick_sales_person';
+  static const biometricEnabledKey = 'biometric_enabled';
+  static const lastUserEmailKey = 'last_user_email';
+  static const tokenExpiresAtKey = 'token_expires_at';
+  static const sessionMigratedKey = 'auth_session_migrated';
+
+  static const appLockTimeout = Duration(minutes: 15);
 
   static const googleMapsApiKey =
       String.fromEnvironment('GOOGLE_MAPS_API_KEY', defaultValue: '');

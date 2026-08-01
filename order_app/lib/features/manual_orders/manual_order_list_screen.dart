@@ -78,6 +78,8 @@ class _ManualOrderListScreenState extends ConsumerState<ManualOrderListScreen> {
       );
     }
 
+    final listPadding = fabScrollPadding(context, extendedFab: true, includeBottomNav: true);
+
     return Scaffold(
       floatingActionButton: profile?.isShop == true
           ? FloatingActionButton.extended(
@@ -95,6 +97,7 @@ class _ManualOrderListScreenState extends ConsumerState<ManualOrderListScreen> {
                   : RefreshIndicator(
                       onRefresh: _load,
                       child: ListView.builder(
+                        padding: listPadding,
                         itemCount: _requests.length,
                         itemBuilder: (_, i) {
                           final item = _requests[i];

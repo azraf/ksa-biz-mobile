@@ -13,8 +13,17 @@ class ReferenceDataPrefetcher {
   final OfflineProductRepository _productRepo;
 
   static const _maxPages = 50;
+  static const _batchSize = 4;
+  DateTime? _lastPrefetchAt;
 
-  Future<void> prefetch({int? salesPersonId}) async {
+  Future<void> prefetch({int? salesPersonId, bool force = false}) async {
+    if (!force &&
+        _lastPrefetchAt != null &&
+        DateTime.now().difference(_lastPrefetchAt!) < const Duration(hours: 6) &&
+        await hasCachedCatalog()) {
+      return;
+    }
+
     try {
       await _customerRepo.customerTypes();
       if (salesPersonId != null) {
@@ -26,6 +35,7 @@ class ReferenceDataPrefetcher {
       }
       await _customerRepo.prefetchWalkInShop();
       await _prefetchPages(_productRepo.list);
+      _lastPrefetchAt = DateTime.now();
     } catch (_) {}
   }
 
@@ -34,9 +44,17 @@ class ReferenceDataPrefetcher {
   ) async {
     var page = 1;
     while (page <= _maxPages) {
-      final result = await fetch(page: page);
-      if (!result.hasMore) break;
-      page++;
+      final batch = <Future<PaginatedResponse<T>>>[];
+      for (var i = 0; i < _batchSize && page + i <= _maxPages; i++) {
+        batch.add(fetch(page: page + i));
+      }
+      final results = await Future.wait(batch);
+      var hasMore = false;
+      for (final result in results) {
+        if (result.hasMore) hasMore = true;
+      }
+      if (!hasMore) break;
+      page += _batchSize;
     }
   }
 

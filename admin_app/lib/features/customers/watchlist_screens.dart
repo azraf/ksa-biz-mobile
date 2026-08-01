@@ -19,6 +19,7 @@ class _AdminWatchlistScreenState extends ConsumerState<AdminWatchlistScreen> {
   bool _loading = true;
   List<WatchlistItemModel> _items = [];
   String _status = 'active';
+  Object? _error;
 
   @override
   void initState() {
@@ -27,16 +28,29 @@ class _AdminWatchlistScreenState extends ConsumerState<AdminWatchlistScreen> {
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
-      final result = await ref.read(watchlistRepositoryProvider).list(status: _status);
+      if (ref.read(isOnlineProvider)) {
+        final result = await ref.read(watchlistRepositoryProvider).list(status: _status);
+        setState(() {
+          _items = result.items;
+          _loading = false;
+        });
+      } else {
+        setState(() {
+          _items = [];
+          _loading = false;
+          _error = Exception('offline');
+        });
+      }
+    } catch (e) {
       setState(() {
-        _items = result.items;
+        _error = e;
         _loading = false;
       });
-    } catch (e) {
-      setState(() => _loading = false);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 
@@ -64,27 +78,33 @@ class _AdminWatchlistScreenState extends ConsumerState<AdminWatchlistScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _load,
-              child: ListView.builder(
-                itemCount: _items.length,
-                itemBuilder: (_, i) {
-                  final item = _items[i];
-                  return ListTile(
-                    title: Text(item.displayTitle),
-                    subtitle: Text(
-                      '${item.salesPerson?.name ?? 'SP #${item.salesPersonId}'} · ${item.noteText ?? item.gps}',
-                    ),
-                    trailing: Text(item.status),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => AdminWatchlistDetailScreen(item: item)),
-                    ),
-                  );
-                },
-              ),
-            ),
+          ? const LoadingView()
+          : _error != null
+              ? ErrorView(
+                  message: AppErrorMapper.localize(context, _error!),
+                  error: _error,
+                  onRetry: _load,
+                )
+              : RefreshIndicator(
+                  onRefresh: _load,
+                  child: ListView.builder(
+                    itemCount: _items.length,
+                    itemBuilder: (_, i) {
+                      final item = _items[i];
+                      return ListTile(
+                        title: Text(item.displayTitle),
+                        subtitle: Text(
+                          '${item.salesPerson?.name ?? 'SP #${item.salesPersonId}'} · ${item.noteText ?? item.gps}',
+                        ),
+                        trailing: Text(item.status),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => AdminWatchlistDetailScreen(item: item)),
+                        ),
+                      );
+                    },
+                  ),
+                ),
     );
   }
 }
@@ -101,6 +121,7 @@ class AdminWatchlistDetailScreen extends ConsumerStatefulWidget {
 class _AdminWatchlistDetailScreenState extends ConsumerState<AdminWatchlistDetailScreen> {
   WatchlistItemModel? _item;
   bool _loading = true;
+  Object? _error;
 
   @override
   void initState() {
@@ -109,15 +130,20 @@ class _AdminWatchlistDetailScreenState extends ConsumerState<AdminWatchlistDetai
   }
 
   Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
-      final item = await ref.read(watchlistRepositoryProvider).get(widget.item.id);
+      final item = await ref.read(offlineWatchlistRepositoryProvider).get(widget.item.id);
       setState(() {
-        _item = item;
+        _item = item ?? widget.item;
         _loading = false;
       });
-    } catch (_) {
+    } catch (e) {
       setState(() {
         _item = widget.item;
+        _error = e;
         _loading = false;
       });
     }
@@ -125,7 +151,17 @@ class _AdminWatchlistDetailScreenState extends ConsumerState<AdminWatchlistDetai
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_loading) return const Scaffold(body: LoadingView());
+    if (_error != null && _item == null) {
+      return Scaffold(
+        body: ErrorView(
+          message: AppErrorMapper.localize(context, _error!),
+          error: _error,
+          onRetry: _load,
+        ),
+      );
+    }
+
     final item = _item ?? widget.item;
     final allMedia = [...item.images, ...item.recordings];
     return Scaffold(

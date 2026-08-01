@@ -1,19 +1,21 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:media/media.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:io' show Platform;
 
 import 'app.dart';
 import 'providers/repositories.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-    try {
-      await registerMediaUploadWorker();
-    } catch (_) {}
+  try {
+    await IsarService.instance.open();
+  } catch (e) {
+    runApp(StartupErrorApp(
+      title: 'Failed to start ARM Sales',
+      message: 'Could not open offline database.\n\n$e',
+    ));
+    return;
   }
   final prefs = await SharedPreferences.getInstance();
 

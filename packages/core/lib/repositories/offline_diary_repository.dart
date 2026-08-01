@@ -1,19 +1,25 @@
 import '../models/customer_diary_note.dart';
-import '../offline/local_database.dart';
+import '../offline/offline_sync_trigger.dart';
+import '../utils/client_request_id.dart';
+import '../offline/stores/diary_local_store.dart';
+import '../offline/stores/sync_outbox_store.dart';
 import '../offline/sync_queue_item.dart';
 import 'customer_diary_repository.dart';
 
 class OfflineDiaryRepository {
   OfflineDiaryRepository({
     required CustomerDiaryRepository remote,
-    required LocalDatabase db,
+    required DiaryLocalStore diary,
+    required SyncOutboxStore outbox,
     required bool Function() isOnline,
   })  : _remote = remote,
-        _db = db,
+        _diary = diary,
+        _outbox = outbox,
         _isOnline = isOnline;
 
   final CustomerDiaryRepository _remote;
-  final LocalDatabase _db;
+  final DiaryLocalStore _diary;
+  final SyncOutboxStore _outbox;
   final bool Function() _isOnline;
 
   Future<List<CustomerDiaryNoteModel>> list({
@@ -24,12 +30,13 @@ class OfflineDiaryRepository {
     if (_isOnline()) {
       try {
         final result = await _remote.list(customerType: customerType, customerId: customerId, page: page);
+        for (final note in result.items) {
+          await _diary.upsert(note, customerId: customerId);
+        }
         return result.items;
       } catch (_) {}
     }
-    final key = '${customerType}_$customerId';
-    final cached = await _db.getCachedEntities('diary_$key');
-    return cached.map((e) => CustomerDiaryNoteModel.fromJson(e)).toList();
+    return _diary.list(customerType: customerType, customerId: customerId);
   }
 
   Future<CustomerDiaryNoteModel> createText({
@@ -46,7 +53,7 @@ class OfflineDiaryRepository {
         body: body,
         salesPersonId: salesPersonId,
       );
-      await _cacheNote(customerType, customerId, note);
+      await _diary.upsert(note, customerId: customerId);
       return note;
     }
 
@@ -62,41 +69,22 @@ class OfflineDiaryRepository {
       isLocalOnly: true,
       createdAt: DateTime.now().toIso8601String(),
     );
-    await _cacheNote(customerType, customerId, note, pending: true);
-    await _db.enqueue(SyncQueueItem(
+    await _diary.upsert(note, customerId: customerId, pendingSync: true);
+    final payload = withClientRequestId({
+      ...note.toCreateJson(),
+      'customer_id': customerId,
+    });
+    await _outbox.enqueue(SyncQueueItem(
       id: 0,
       entityType: 'diary',
       operation: 'create',
       localId: localId,
-      payload: {
-        ...note.toCreateJson(),
-        'customer_id': customerId,
-      },
+      payload: payload,
       status: 'pending',
       retryCount: 0,
       createdAt: DateTime.now().toIso8601String(),
     ));
+    OfflineSyncTrigger.requestSync();
     return note;
-  }
-
-  Future<void> _cacheNote(
-    String customerType,
-    int customerId,
-    CustomerDiaryNoteModel note, {
-    bool pending = false,
-  }) async {
-    final key = 'diary_${customerType}_$customerId';
-    final data = {
-      'id': note.id,
-      'customer_type': note.customerType,
-      'note_type': note.noteType,
-      'body': note.body,
-      'customer_shop_id': note.customerShopId,
-      'customer_van_id': note.customerVanId,
-      'customer_importer_id': note.customerImporterId,
-      'created_at': note.createdAt,
-      if (pending) '_pending_sync': true,
-    };
-    await _db.cacheEntity(entityType: key, entityId: note.id, data: data);
   }
 }

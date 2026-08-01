@@ -148,7 +148,9 @@ class _CustomerAssignmentsScreenState extends ConsumerState<CustomerAssignmentsS
         _load();
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppErrorMapper.localize(context, e))),
+      );
     }
   }
 

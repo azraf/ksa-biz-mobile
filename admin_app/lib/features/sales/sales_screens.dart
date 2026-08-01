@@ -2,8 +2,11 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/repositories.dart';
+import '../../providers/screen_providers.dart';
 import '../../widgets/crud_screens.dart';
 import '../../widgets/field_config.dart';
 import '../../widgets/line_items_editor.dart';
@@ -45,76 +48,177 @@ class SalesPersonsScreen extends ConsumerWidget {
 
 class OrdersScreen extends ConsumerWidget {
   const OrdersScreen({super.key});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final repo = ref.watch(offlineOrderRepositoryProvider);
-    return CrudListScreen<OrderModel>(
-      title: 'Orders',
-      loadItems: () async => (await repo.list()).items,
-      itemTitle: (o) => '#${o.id} — SAR ${o.totalBill.toStringAsFixed(2)} (${o.paymentStatus})',
-      isPending: (o) => o.id < 0,
-      onTap: (o) => context.push('/sales/orders/${o.id}'),
-      onAdd: () => context.push('/sales/orders/create'),
+    final l10n = AppLocalizations.of(context);
+    final currency = NumberFormat.currency(symbol: 'SAR ');
+    final ordersAsync = ref.watch(adminOrdersProvider);
+
+    final listPadding = fabScrollPadding(context, extendedFab: true, includeBottomNav: true);
+
+    return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push('/sales/orders/create'),
+        icon: const Icon(Icons.add),
+        label: Text(l10n.commonNewOrder),
+      ),
+      body: ordersAsync.when(
+        loading: () => ListView.builder(
+          padding: listPadding,
+          itemCount: 8,
+          itemBuilder: (_, __) => const SkeletonListTile(),
+        ),
+        error: (e, _) => ErrorView(
+          message: AppErrorMapper.localize(context, e),
+          error: e,
+          onRetry: () => ref.read(adminOrdersProvider.notifier).refresh(),
+        ),
+        data: (state) => state.orders.isEmpty
+            ? EmptyView(
+                message: l10n.commonNoOrdersYet,
+                actionLabel: l10n.commonNewOrder,
+                onAction: () => context.push('/sales/orders/create'),
+              )
+            : RefreshIndicator(
+                onRefresh: () => ref.read(adminOrdersProvider.notifier).refresh(),
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (n) {
+                    if (n is ScrollEndNotification &&
+                        n.metrics.extentAfter < 200 &&
+                        state.hasMore &&
+                        !state.loadingMore) {
+                      ref.read(adminOrdersProvider.notifier).loadMore();
+                    }
+                    return false;
+                  },
+                  child: ListView.builder(
+                    padding: listPadding,
+                    itemCount: state.orders.length + (state.loadingMore ? 1 : 0),
+                    itemBuilder: (_, i) {
+                      if (i >= state.orders.length) {
+                        return const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+                      final order = state.orders[i];
+                      return OrderCard(
+                        order: order,
+                        currency: currency,
+                        onTap: () => context.push('/sales/orders/${order.id}'),
+                      );
+                    },
+                  ),
+                ),
+              ),
+      ),
     );
   }
 }
 
-class OrderDetailScreen extends ConsumerWidget {
+class OrderDetailScreen extends ConsumerStatefulWidget {
   const OrderDetailScreen({super.key, required this.orderId});
   final int orderId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return FutureBuilder<OrderModel>(
-      future: ref.read(offlineOrderRepositoryProvider).get(orderId),
-      builder: (context, snap) {
-        if (!snap.hasData) return const Center(child: CircularProgressIndicator());
-        final order = snap.data!;
-        return ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            if (order.id < 0)
-              const Card(
-                color: Colors.orange,
-                child: ListTile(
-                  leading: Icon(Icons.sync),
-                  title: Text('Pending sync'),
-                  subtitle: Text('This order will upload when online'),
-                ),
-              ),
-            if (order.isEditable && order.id > 0)
-              Align(
-                alignment: Alignment.centerRight,
-                child: IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () => context.push('/sales/orders/${order.id}/edit'),
-                ),
-              ),
-            Text('Status: ${order.status}'),
-              Text('Payment: ${order.paymentStatus}'),
-              Text('Total: SAR ${order.totalBill.toStringAsFixed(2)}'),
-              const Divider(),
-              const Text('Items', style: TextStyle(fontWeight: FontWeight.bold)),
-              ...order.items.map((i) => ListTile(
-                    title: Text('Product #${i.productId}'),
-                    trailing: Text('${i.quantity} x ${i.productPrice}'),
-                  )),
-              if (order.isEditable) ...[
-                const SizedBox(height: 16),
-                OutlinedButton(
-                  onPressed: () async {
-                    final reason = await _prompt(context, 'Cancellation reason');
-                    if (reason == null) return;
-                    await ref.read(offlineOrderRepositoryProvider).cancel(order.id, reason);
-                    ref.invalidate(pendingSyncCountProvider);
-                    if (context.mounted) Navigator.pop(context);
-                  },
-                  child: const Text('Cancel Order'),
-                ),
-              ],
-            ],
-        );
-      },
+  ConsumerState<OrderDetailScreen> createState() => _OrderDetailScreenState();
+}
+
+class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
+  OrderModel? _order;
+  bool _loading = true;
+  Object? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final order = await ref.read(offlineOrderRepositoryProvider).get(widget.orderId);
+      setState(() {
+        _order = order;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e;
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    if (_loading) return LoadingView(message: l10n.commonLoading);
+    if (_error != null) {
+      return ErrorView(
+        message: AppErrorMapper.localize(context, _error!),
+        error: _error,
+        onRetry: _load,
+      );
+    }
+
+    final order = _order!;
+    final pending = isPendingSyncOrder(order.id);
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        if (pending)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: StatusChip(label: 'pending sync'),
+          ),
+        if (order.isEditable && order.id > 0 && !pending)
+          Align(
+            alignment: Alignment.centerRight,
+            child: IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () => context.push('/sales/orders/${order.id}/edit'),
+            ),
+          ),
+        Text('Status: ${order.status}'),
+        Text('Payment: ${order.paymentStatus}'),
+        Text('Total: SAR ${order.totalBill.toStringAsFixed(2)}'),
+        const Divider(),
+        Text(l10n.commonItems, style: const TextStyle(fontWeight: FontWeight.bold)),
+        ...order.items.map((i) => ListTile(
+              title: Text(i.product?.name ?? l10n.commonProductFallback(i.productId)),
+              trailing: Text('${i.quantity} x ${i.productPrice}'),
+            )),
+        if (order.isEditable && !pending) ...[
+          const SizedBox(height: 16),
+          OutlinedButton(
+            onPressed: () async {
+              final reason = await _prompt(context, 'Cancellation reason');
+              if (reason == null) return;
+              try {
+                await ref.read(offlineOrderRepositoryProvider).cancel(order.id, reason);
+                ref.invalidate(pendingSyncCountProvider);
+                ref.invalidate(adminOrdersProvider);
+                if (context.mounted) Navigator.pop(context);
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(AppErrorMapper.localize(context, e))),
+                  );
+                }
+              }
+            },
+            child: Text(l10n.salesOrderCancelOrder),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -152,11 +256,12 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
   }
 
   Future<void> _load() async {
-    final customerRepo = ref.read(customerRepositoryProvider);
+    final customerRepo = ref.read(offlineCustomerRepositoryProvider);
+    final remoteCustomerRepo = ref.read(customerRepositoryProvider);
     _types = await customerRepo.customerTypes();
-    _salesPersons = (await customerRepo.salesPersons()).items;
+    _salesPersons = (await remoteCustomerRepo.salesPersons()).items;
     _walkInShopId = await customerRepo.walkInShopId();
-    _shops = (await customerRepo.shops()).items.where((s) => !s.isSystem).toList();
+    _shops = (await customerRepo.shops(scoped: false)).items.where((s) => !s.isSystem).toList();
     if (_shops.isNotEmpty) _selectedShop = _shops.first;
     if (_salesPersons.isNotEmpty) _salesPersonId = _salesPersons.first.id;
     if (_types.isNotEmpty) {
@@ -206,9 +311,15 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
       }
       await ref.read(offlineOrderRepositoryProvider).create(body);
       ref.invalidate(pendingSyncCountProvider);
+      ref.invalidate(adminOrdersProvider);
+      AppHaptics.success();
       if (mounted) context.pop();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppErrorMapper.localize(context, e))),
+        );
+      }
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -216,7 +327,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_loading) return const LoadingView();
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -301,14 +412,47 @@ class ManualOrdersScreen extends ConsumerWidget {
   }
 }
 
-class InvoicesScreen extends ConsumerWidget {
+class InvoicesScreen extends ConsumerStatefulWidget {
   const InvoicesScreen({super.key});
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<InvoicesScreen> createState() => _InvoicesScreenState();
+}
+
+class _InvoicesScreenState extends ConsumerState<InvoicesScreen> {
+  late Future<List<InvoiceModel>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _load();
+  }
+
+  void _reload() => setState(() => _future = _load());
+
+  Future<List<InvoiceModel>> _load() async {
+    final response = await ref.read(apiClientProvider).get('/invoices');
+    return (response['data'] as List<dynamic>)
+        .map((e) => InvoiceModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return FutureBuilder<List<InvoiceModel>>(
-      future: _load(ref),
+      future: _future,
       builder: (context, snap) {
-        if (!snap.hasData) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Scaffold(body: LoadingView());
+        }
+        if (snap.hasError) {
+          return Scaffold(
+            body: ErrorView(
+              message: AppErrorMapper.localize(context, snap.error!),
+              error: snap.error,
+              onRetry: _reload,
+            ),
+          );
+        }
         return Scaffold(
           appBar: AppBar(title: const Text('Invoices')),
           body: ListView.builder(
@@ -324,13 +468,6 @@ class InvoicesScreen extends ConsumerWidget {
         );
       },
     );
-  }
-
-  Future<List<InvoiceModel>> _load(WidgetRef ref) async {
-    final response = await ref.read(apiClientProvider).get('/invoices');
-    return (response['data'] as List<dynamic>)
-        .map((e) => InvoiceModel.fromJson(e as Map<String, dynamic>))
-        .toList();
   }
 }
 

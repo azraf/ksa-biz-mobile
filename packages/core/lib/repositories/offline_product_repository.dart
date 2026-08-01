@@ -1,19 +1,19 @@
 import '../models/paginated_response.dart';
 import '../models/product.dart';
-import '../offline/local_database.dart';
+import '../offline/stores/catalog_local_store.dart';
 import 'product_repository.dart';
 
 class OfflineProductRepository {
   OfflineProductRepository({
     required ProductRepository remote,
-    required LocalDatabase db,
+    required CatalogLocalStore catalog,
     required bool Function() isOnline,
   })  : _remote = remote,
-        _db = db,
+        _catalog = catalog,
         _isOnline = isOnline;
 
   final ProductRepository _remote;
-  final LocalDatabase _db;
+  final CatalogLocalStore _catalog;
   final bool Function() _isOnline;
 
   Future<PaginatedResponse<ProductModel>> list({
@@ -21,6 +21,7 @@ class OfflineProductRepository {
     int? categoryId,
     int? brandId,
     int page = 1,
+    int perPage = 50,
   }) async {
     if (_isOnline()) {
       try {
@@ -30,49 +31,31 @@ class OfflineProductRepository {
           brandId: brandId,
           page: page,
         );
-        for (final product in result.items) {
-          await _db.cacheEntity(
-            entityType: 'product',
-            entityId: product.id,
-            data: {
-              'id': product.id,
-              'name': product.name,
-              'price': product.price,
-              'wholesale_price': product.wholesalePrice,
-              'alert_quantity': product.alertQuantity,
-              if (product.description != null) 'description': product.description,
-            },
-          );
-        }
+        await _catalog.upsertAll(result.items);
         return result;
       } catch (_) {
-        return _cachedList(search: search);
+        return _cachedList(search: search, page: page, perPage: perPage);
       }
     }
-    return _cachedList(search: search);
+    return _cachedList(search: search, page: page, perPage: perPage);
   }
 
-  Future<PaginatedResponse<ProductModel>> _cachedList({String? search}) async {
-    final cached = await _db.getCachedEntities('product');
-    final items = cached
-        .map((e) => ProductModel.fromJson(e))
-        .where((e) => _matchesSearch(e.name, search))
-        .toList();
+  Future<PaginatedResponse<ProductModel>> _cachedList({
+    String? search,
+    int page = 1,
+    int perPage = 50,
+  }) async {
+    final offset = (page - 1) * perPage;
+    final items = await _catalog.search(query: search, offset: offset, limit: perPage);
+    final total = await _catalog.count();
+    final lastPage = total == 0 ? 1 : (total / perPage).ceil();
     return PaginatedResponse(
       items: items,
-      currentPage: 1,
-      lastPage: 1,
-      total: items.length,
+      currentPage: page,
+      lastPage: lastPage,
+      total: total,
     );
   }
 
-  bool _matchesSearch(String name, String? search) {
-    if (search == null || search.isEmpty) return true;
-    return name.toLowerCase().contains(search.toLowerCase());
-  }
-
-  Future<bool> hasCachedProducts() async {
-    final products = await _db.getCachedEntities('product');
-    return products.isNotEmpty;
-  }
+  Future<bool> hasCachedProducts() => _catalog.hasCatalog();
 }

@@ -15,6 +15,7 @@ class DiscountApprovalScreen extends ConsumerStatefulWidget {
 class _DiscountApprovalScreenState extends ConsumerState<DiscountApprovalScreen> {
   List<DiscountApprovalRequestModel> _items = [];
   bool _loading = true;
+  Object? _error;
 
   @override
   void initState() {
@@ -23,32 +24,63 @@ class _DiscountApprovalScreenState extends ConsumerState<DiscountApprovalScreen>
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final items = await ref.read(orderRepositoryProvider).listPendingDiscountRequests();
       setState(() {
         _items = items;
         _loading = false;
       });
-    } catch (_) {
-      setState(() => _loading = false);
+    } catch (e) {
+      setState(() {
+        _error = e;
+        _loading = false;
+      });
     }
   }
 
   Future<void> _approve(int id) async {
-    await ref.read(orderRepositoryProvider).approveDiscount(id);
-    await _load();
+    try {
+      await ref.read(orderRepositoryProvider).approveDiscount(id);
+      await _load();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppErrorMapper.localize(context, e))),
+        );
+      }
+    }
   }
 
   Future<void> _reject(int id) async {
-    await ref.read(orderRepositoryProvider).rejectDiscount(id);
-    await _load();
+    try {
+      await ref.read(orderRepositoryProvider).rejectDiscount(id);
+      await _load();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppErrorMapper.localize(context, e))),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final currency = NumberFormat.currency(symbol: 'SAR ');
     if (_loading) return const Scaffold(body: LoadingView());
+    if (_error != null) {
+      return Scaffold(
+        body: ErrorView(
+          message: AppErrorMapper.localize(context, _error!),
+          error: _error,
+          onRetry: _load,
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Discount approval')),

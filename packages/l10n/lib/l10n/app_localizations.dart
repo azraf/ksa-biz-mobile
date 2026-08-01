@@ -805,7 +805,7 @@ abstract class AppLocalizations {
   /// No description provided for @salesAppName.
   ///
   /// In en, this message translates to:
-  /// **'ARM Sales(M)'**
+  /// **'ARM Sales'**
   String get salesAppName;
 
   /// No description provided for @salesSignInSubtitle.
@@ -1192,6 +1192,24 @@ abstract class AppLocalizations {
   /// **'Offline — {count, plural, =1{1 change saved locally} other{{count} changes saved locally}}'**
   String salesOfflineSaved(int count);
 
+  /// No description provided for @salesOfflineAllSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'All changes synced'**
+  String get salesOfflineAllSynced;
+
+  /// No description provided for @salesOfflineSyncProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing {completed} of {total}…'**
+  String salesOfflineSyncProgress(int completed, int total);
+
+  /// No description provided for @salesDashboardCachedDues.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing cached dues from {fetchedAt}'**
+  String salesDashboardCachedDues(String fetchedAt);
+
   /// No description provided for @salesManualTabOpenPool.
   ///
   /// In en, this message translates to:
@@ -1359,6 +1377,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Order saved locally — will sync when online'**
   String get salesOrderSavedLocally;
+
+  /// No description provided for @salesErrorOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection. Showing saved data when available.'**
+  String get salesErrorOffline;
+
+  /// No description provided for @salesErrorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get salesErrorGeneric;
+
+  /// No description provided for @salesErrorTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'The server took too long to respond. Please try again.'**
+  String get salesErrorTimeout;
+
+  /// No description provided for @salesErrorUnauthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session expired. Please sign in again.'**
+  String get salesErrorUnauthorized;
+
+  /// No description provided for @adminAccessRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This account cannot use the admin mobile app. An admin role is required.'**
+  String get adminAccessRequired;
+
+  /// No description provided for @adminLoginInvalidCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email or password.'**
+  String get adminLoginInvalidCredentials;
+
+  /// No description provided for @salesOfflineServerUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected but server is unreachable'**
+  String get salesOfflineServerUnreachable;
+
+  /// No description provided for @salesOfflineRetryUploads.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry uploads'**
+  String get salesOfflineRetryUploads;
+
+  /// No description provided for @salesOfflineUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 upload failed} other{{count} uploads failed}}'**
+  String salesOfflineUploadFailed(int count);
+
+  /// No description provided for @salesOfflineUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading… {percent}%'**
+  String salesOfflineUploading(int percent);
+
+  /// No description provided for @adminOfflineWriteBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'This action requires an internet connection.'**
+  String get adminOfflineWriteBlocked;
+
+  /// No description provided for @adminShowingCachedList.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing cached list from {fetchedAt}'**
+  String adminShowingCachedList(String fetchedAt);
+
+  /// No description provided for @adminDashboardSalesMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales (this month)'**
+  String get adminDashboardSalesMonth;
+
+  /// No description provided for @adminDashboardExpensesYtd.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses (YTD)'**
+  String get adminDashboardExpensesYtd;
+
+  /// No description provided for @adminDashboardPendingManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending manual orders'**
+  String get adminDashboardPendingManual;
 
   /// No description provided for @salesOrderWalkInUnavailable.
   ///
@@ -1948,6 +2056,30 @@ abstract class AppLocalizations {
   /// **'Pending sync'**
   String get salesWatchlistPendingSync;
 
+  /// No description provided for @salesWatchlistActivateAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate again'**
+  String get salesWatchlistActivateAgain;
+
+  /// No description provided for @salesWatchlistRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get salesWatchlistRemove;
+
+  /// No description provided for @salesWatchlistActivated.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch-list item activated'**
+  String get salesWatchlistActivated;
+
+  /// No description provided for @salesWatchlistArchivedReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived: {reason}'**
+  String salesWatchlistArchivedReason(String reason);
+
   /// No description provided for @orderAppName.
   ///
   /// In en, this message translates to:
@@ -2319,6 +2451,105 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'~every {days} days'**
   String commonAvgOrderInterval(int days);
+
+  /// No description provided for @commonEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable'**
+  String get commonEnable;
+
+  /// No description provided for @biometricEnableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fingerprint login'**
+  String get biometricEnableTitle;
+
+  /// No description provided for @biometricEnableSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the app quickly with your fingerprint or Face ID'**
+  String get biometricEnableSubtitle;
+
+  /// No description provided for @biometricEnableReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm to enable fingerprint login'**
+  String get biometricEnableReason;
+
+  /// No description provided for @biometricUnlockReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the app to continue'**
+  String get biometricUnlockReason;
+
+  /// No description provided for @biometricUnlockButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock with fingerprint'**
+  String get biometricUnlockButton;
+
+  /// No description provided for @biometricUsePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Use password instead'**
+  String get biometricUsePassword;
+
+  /// No description provided for @biometricNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric authentication is not available on this device'**
+  String get biometricNotAvailable;
+
+  /// No description provided for @biometricCancelled.
+  String get biometricCancelled;
+
+  /// No description provided for @biometricNotEnrolled.
+  String get biometricNotEnrolled;
+
+  /// No description provided for @biometricEnableFailed.
+  String get biometricEnableFailed;
+
+  /// No description provided for @biometricOptInMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your fingerprint or Face ID to unlock the app on this device?'**
+  String get biometricOptInMessage;
+
+  /// No description provided for @biometricAppLockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App locked'**
+  String get biometricAppLockedTitle;
+
+  /// No description provided for @biometricAppLockedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to continue using the app'**
+  String get biometricAppLockedSubtitle;
+
+  /// No description provided for @biometricSignInAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in as {email}'**
+  String biometricSignInAs(String email);
+
+  /// No description provided for @sessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session has expired. Please sign in again.'**
+  String get sessionExpired;
+
+  /// No description provided for @tokenExpiresAtTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Session expires'**
+  String get tokenExpiresAtTitle;
+
+  /// No description provided for @tokenExpiresAtValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-login required by {date}'**
+  String tokenExpiresAtValue(String date);
 }
 
 class _AppLocalizationsDelegate

@@ -391,7 +391,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commonPickVideo => 'اختيار فيديو';
 
   @override
-  String get salesAppName => 'ARM Sales(M)';
+  String get salesAppName => 'ARM Sales';
 
   @override
   String get salesSignInSubtitle => 'سجّل الدخول بحساب مندوب المبيعات';
@@ -617,6 +617,19 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get salesOfflineAllSynced => 'تمت مزامنة جميع التغييرات';
+
+  @override
+  String salesOfflineSyncProgress(int completed, int total) {
+    return 'Syncing $completed of $total…';
+  }
+
+  @override
+  String salesDashboardCachedDues(String fetchedAt) {
+    return 'عرض المستحقات المخزنة من $fetchedAt';
+  }
+
+  @override
   String get salesManualTabOpenPool => 'المجموعة المفتوحة';
 
   @override
@@ -702,6 +715,69 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get salesOrderSavedLocally =>
       'تم حفظ الطلب محلياً — ستتم المزامنة عند الاتصال';
+
+  @override
+  String get salesErrorOffline =>
+      'No internet connection. Showing saved data when available.';
+
+  @override
+  String get salesErrorGeneric => 'Something went wrong. Please try again.';
+
+  @override
+  String get salesErrorTimeout =>
+      'The server took too long to respond. Please try again.';
+
+  @override
+  String get salesErrorUnauthorized =>
+      'Your session expired. Please sign in again.';
+
+  @override
+  String get adminAccessRequired =>
+      'لا يمكن لهذا الحساب استخدام تطبيق الإدارة. مطلوب دور المسؤول.';
+
+  @override
+  String get adminLoginInvalidCredentials =>
+      'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+
+  @override
+  String get salesOfflineServerUnreachable => 'متصل ولكن الخادم غير متاح';
+
+  @override
+  String get salesOfflineRetryUploads => 'إعادة رفع الملفات';
+
+  @override
+  String salesOfflineUploadFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'فشل رفع $count ملفات',
+      one: 'فشل رفع ملف واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String salesOfflineUploading(int percent) {
+    return 'جارٍ الرفع… $percent%';
+  }
+
+  @override
+  String get adminOfflineWriteBlocked =>
+      'This action requires an internet connection.';
+
+  @override
+  String adminShowingCachedList(String fetchedAt) {
+    return 'Showing cached list from $fetchedAt';
+  }
+
+  @override
+  String get adminDashboardSalesMonth => 'Sales (this month)';
+
+  @override
+  String get adminDashboardExpensesYtd => 'Expenses (YTD)';
+
+  @override
+  String get adminDashboardPendingManual => 'Pending manual orders';
 
   @override
   String get salesOrderWalkInUnavailable =>
@@ -1012,6 +1088,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get salesWatchlistPendingSync => 'في انتظار المزامنة';
 
   @override
+  String get salesWatchlistActivateAgain => 'تفعيل مرة أخرى';
+
+  @override
+  String get salesWatchlistRemove => 'إزالة';
+
+  @override
+  String get salesWatchlistActivated => 'تم تفعيل عنصر قائمة المراقبة';
+
+  @override
+  String salesWatchlistArchivedReason(String reason) {
+    return 'مؤرشف: $reason';
+  }
+
+  @override
   String get orderAppName => 'ARM Orders';
 
   @override
@@ -1204,5 +1294,68 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String commonAvgOrderInterval(int days) {
     return '~كل $days يوم';
+  }
+
+  @override
+  String get commonEnable => 'تفعيل';
+
+  @override
+  String get biometricEnableTitle => 'تسجيل الدخول بالبصمة';
+
+  @override
+  String get biometricEnableSubtitle =>
+      'افتح التطبيق بسرعة باستخدام بصمة الإصبع أو Face ID';
+
+  @override
+  String get biometricEnableReason => 'أكد لتفعيل تسجيل الدخول بالبصمة';
+
+  @override
+  String get biometricUnlockReason => 'افتح التطبيق للمتابعة';
+
+  @override
+  String get biometricUnlockButton => 'فتح بالبصمة';
+
+  @override
+  String get biometricUsePassword => 'استخدم كلمة المرور بدلاً من ذلك';
+
+  @override
+  String get biometricNotAvailable =>
+      'المصادقة البيومترية غير متاحة على هذا الجهاز';
+
+  @override
+  String get biometricCancelled => 'تم إلغاء المصادقة';
+
+  @override
+  String get biometricNotEnrolled =>
+      'لا توجد بصمة إصبع أو Face ID مسجلة. أضف واحدة في إعدادات الجهاز.';
+
+  @override
+  String get biometricEnableFailed =>
+      'تعذر تفعيل تسجيل الدخول بالبصمة. حاول مرة أخرى.';
+
+  @override
+  String get biometricOptInMessage =>
+      'هل تريد استخدام بصمة الإصبع أو Face ID لفتح التطبيق على هذا الجهاز؟';
+
+  @override
+  String get biometricAppLockedTitle => 'التطبيق مقفل';
+
+  @override
+  String get biometricAppLockedSubtitle => 'صادق للمتابعة في استخدام التطبيق';
+
+  @override
+  String biometricSignInAs(String email) {
+    return 'تسجيل الدخول كـ $email';
+  }
+
+  @override
+  String get sessionExpired => 'انتهت جلستك. يرجى تسجيل الدخول مرة أخرى.';
+
+  @override
+  String get tokenExpiresAtTitle => 'تنتهي الجلسة';
+
+  @override
+  String tokenExpiresAtValue(String date) {
+    return 'إعادة تسجيل الدخول مطلوبة بحلول $date';
   }
 }

@@ -21,6 +21,7 @@ class CustomerDiarySection extends ConsumerStatefulWidget {
 class _CustomerDiarySectionState extends ConsumerState<CustomerDiarySection> {
   List<CustomerDiaryNoteModel> _notes = [];
   bool _loading = true;
+  Object? _error;
 
   @override
   void initState() {
@@ -29,18 +30,24 @@ class _CustomerDiarySectionState extends ConsumerState<CustomerDiarySection> {
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
-      final result = await ref.read(customerDiaryRepositoryProvider).list(
+      final notes = await ref.read(offlineDiaryRepositoryProvider).list(
             customerType: widget.customerType,
             customerId: widget.customerId,
           );
       setState(() {
-        _notes = result.items;
+        _notes = notes;
         _loading = false;
       });
-    } catch (_) {
-      setState(() => _loading = false);
+    } catch (e) {
+      setState(() {
+        _error = e;
+        _loading = false;
+      });
     }
   }
 
@@ -58,17 +65,33 @@ class _CustomerDiarySectionState extends ConsumerState<CustomerDiarySection> {
       ),
     );
     if (body == null || body.isEmpty) return;
-    await ref.read(customerDiaryRepositoryProvider).create(
-          customerType: widget.customerType,
-          customerId: widget.customerId,
-          noteType: 'text',
-          body: body,
+    try {
+      await ref.read(offlineDiaryRepositoryProvider).createText(
+            customerType: widget.customerType,
+            customerId: widget.customerId,
+            body: body,
+          );
+      ref.invalidate(pendingSyncCountProvider);
+      await _load();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppErrorMapper.localize(context, e))),
         );
-    await _load();
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_error != null && !_loading && _notes.isEmpty) {
+      return ErrorView(
+        message: AppErrorMapper.localize(context, _error!),
+        error: _error,
+        onRetry: _load,
+      );
+    }
+
     return CustomerDiaryPanel(
       notes: _notes,
       loading: _loading,

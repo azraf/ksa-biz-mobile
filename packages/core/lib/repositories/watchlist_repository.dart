@@ -45,6 +45,11 @@ class WatchlistRepository {
     return WatchlistItemModel.fromJson(response['data'] as Map<String, dynamic>);
   }
 
+  Future<WatchlistItemModel> createFromPayload(Map<String, dynamic> payload) async {
+    final response = await _api.post('/watchlist-items', body: payload);
+    return WatchlistItemModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
   Future<WatchlistItemModel> update(int id, Map<String, dynamic> body) async {
     final response = await _api.patch('/watchlist-items/$id', body: body);
     return WatchlistItemModel.fromJson(response['data'] as Map<String, dynamic>);

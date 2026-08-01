@@ -37,10 +37,10 @@ read_pubspec_version() {
 
 resolve_arm_apk_name() {
   case "$1" in
-    admin_app) echo "ARM-AdminApp.apk" ;;
-    monitor_app) echo "ARM-MonitorApp.apk" ;;
-    order_app) echo "ARM-OrderApp.apk" ;;
-    sales_app) echo "ARM-SalesApp.apk" ;;
+    admin_app) echo "ARM-AdminApp-v2.apk" ;;
+    monitor_app) echo "ARM-MonitorApp-v2.apk" ;;
+    order_app) echo "ARM-OrderApp-v2.apk" ;;
+    sales_app) echo "ARM-SalesApp-v2.apk" ;;
     *)
       echo "Error: unknown app '$1' for ARM APK naming." >&2
       exit 1
@@ -53,10 +53,10 @@ remove_arm_apk_outputs() {
   local names=()
 
   case "$app" in
-    admin_app) names=(ARM-AdminApp.apk) ;;
-    monitor_app) names=(ARM-MonitorApp.apk) ;;
-    order_app) names=(ARM-OrderApp.apk ARM-SaleOrderApp.apk) ;;
-    sales_app) names=(ARM-SalesApp.apk ARM-SalesPersonApp.apk) ;;
+    admin_app) names=(ARM-AdminApp-v2.apk ARM-AdminApp.apk) ;;
+    monitor_app) names=(ARM-MonitorApp-v2.apk ARM-MonitorApp.apk) ;;
+    order_app) names=(ARM-OrderApp-v2.apk ARM-OrderApp.apk ARM-SaleOrderApp.apk) ;;
+    sales_app) names=(ARM-SalesApp-v2.apk ARM-SalesApp.apk ARM-SalesPersonApp.apk) ;;
     *) return 0 ;;
   esac
 
@@ -87,14 +87,26 @@ OUTPUT_APK="$APP_BUILTS_DIR/$ARM_APK_NAME"
 
 echo "Building release APK for $APP_NAME (version $VERSION)..."
 
+"$SCRIPT_DIR/ensure_android_gradle_compat.sh"
 flutter pub get
+"$SCRIPT_DIR/patch_wakelock_plus.sh"
+if [[ "${KSA_WAKELOCK_PATCH_APPLIED:-0}" == "1" ]]; then
+  echo "wakelock_plus was patched — running flutter clean to refresh Android plugin build..."
+  flutter clean
+  flutter pub get
+  "$SCRIPT_DIR/patch_wakelock_plus.sh"
+fi
 
 BUILD_ARGS=()
 if [[ -n "${KSA_GOOGLE_MAPS_API_KEY:-}" ]]; then
   BUILD_ARGS+=(--dart-define=GOOGLE_MAPS_API_KEY="$KSA_GOOGLE_MAPS_API_KEY")
 fi
 
-flutter build apk --release "${BUILD_ARGS[@]}" "$@"
+if ((${#BUILD_ARGS[@]} > 0)); then
+  flutter build apk --release "${BUILD_ARGS[@]}" "$@"
+else
+  flutter build apk --release "$@"
+fi
 
 if [[ ! -f "$FLUTTER_APK" ]]; then
   echo "Error: expected APK not found at $FLUTTER_APK" >&2

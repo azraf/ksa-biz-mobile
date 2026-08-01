@@ -12,6 +12,8 @@ class SyncQueueItem extends Equatable {
     this.retryCount = 0,
     this.errorMessage,
     this.createdAt,
+    this.clientRequestId,
+    this.nextRetryAt,
   });
 
   final int id;
@@ -24,8 +26,12 @@ class SyncQueueItem extends Equatable {
   final int retryCount;
   final String? errorMessage;
   final String? createdAt;
+  final String? clientRequestId;
+  final DateTime? nextRetryAt;
 
   bool get isPending => status == 'pending' || status == 'failed';
+
+  bool get isActionable => status == 'pending' || status == 'failed' || status == 'dead';
 
   factory SyncQueueItem.fromMap(Map<String, dynamic> map) => SyncQueueItem(
         id: map['id'] as int,

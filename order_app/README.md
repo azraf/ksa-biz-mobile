@@ -44,7 +44,7 @@ cd order_app
 ./run_release.sh
 ```
 
-APK output: `../app-builts/ARM-OrderApp.apk`
+APK output: `../app-builts/ARM-OrderApp-v2.apk`
 
 ## Navigation
 

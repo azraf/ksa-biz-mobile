@@ -127,7 +127,7 @@ class MonitorHomeShell extends StatelessWidget {
       2 => 'Inventory',
       3 => 'Expenses',
       4 => 'Reports',
-      _ => 'ARM Monitor(M)',
+      _ => 'ARM Monitor',
     };
   }
 

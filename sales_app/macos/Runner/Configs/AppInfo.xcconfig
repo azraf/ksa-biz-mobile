@@ -8,7 +8,7 @@
 PRODUCT_NAME = sales_app
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.ksabiz.salesApp
+PRODUCT_BUNDLE_IDENTIFIER = com.ksabiz2.salesApp
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.ksabiz. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 com.ksabiz2. All rights reserved.

@@ -100,7 +100,9 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppErrorMapper.localize(context, e))),
+        );
       }
     } finally {
       if (mounted) setState(() => _saving = false);

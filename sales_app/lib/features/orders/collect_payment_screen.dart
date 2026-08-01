@@ -52,9 +52,14 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
             notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
           );
       ref.invalidate(pendingSyncCountProvider);
+      AppHaptics.success();
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppErrorMapper.localize(context, e))),
+        );
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }

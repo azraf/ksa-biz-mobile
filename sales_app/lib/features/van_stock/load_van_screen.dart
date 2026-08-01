@@ -145,6 +145,9 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
       body: _lines.isEmpty
           ? EmptyView(message: l10n.salesVanLoadNoStock)
           : ListView.builder(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.paddingOf(context).bottom + 112,
+              ),
               itemCount: _lines.length,
               itemBuilder: (_, i) {
                 final line = _lines[i];

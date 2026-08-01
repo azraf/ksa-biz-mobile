@@ -1,50 +1,44 @@
 import '../models/watchlist_item.dart';
-import '../offline/local_database.dart';
+import '../offline/offline_sync_trigger.dart';
+import '../utils/client_request_id.dart';
+import '../offline/stores/sync_outbox_store.dart';
+import '../offline/stores/watchlist_local_store.dart';
 import '../offline/sync_queue_item.dart';
 import 'watchlist_repository.dart';
 
 class OfflineWatchlistRepository {
   OfflineWatchlistRepository({
     required WatchlistRepository remote,
-    required LocalDatabase db,
+    required WatchlistLocalStore watchlist,
+    required SyncOutboxStore outbox,
     required bool Function() isOnline,
   })  : _remote = remote,
-        _db = db,
+        _watchlist = watchlist,
+        _outbox = outbox,
         _isOnline = isOnline;
 
   final WatchlistRepository _remote;
-  final LocalDatabase _db;
+  final WatchlistLocalStore _watchlist;
+  final SyncOutboxStore _outbox;
   final bool Function() _isOnline;
 
   Future<List<WatchlistItemModel>> listLocalAndRemote({
     required int salesPersonId,
     String status = 'active',
   }) async {
-    final local = await _localItems(salesPersonId, status);
+    final local = await _watchlist.list(salesPersonId: salesPersonId, status: status);
     if (!_isOnline()) return local;
 
     try {
       final remote = await _remote.list(salesPersonId: salesPersonId, status: status);
       for (final item in remote.items) {
-        await _db.cacheEntity(
-          entityType: 'watchlist',
-          entityId: item.id,
-          data: _toCache(item),
-        );
+        await _watchlist.upsert(item);
       }
       final pending = local.where((e) => e.isLocalOnly).toList();
       return [...pending, ...remote.items];
     } catch (_) {
       return local;
     }
-  }
-
-  Future<List<WatchlistItemModel>> _localItems(int salesPersonId, String status) async {
-    final cached = await _db.getCachedEntities('watchlist');
-    return cached
-        .where((e) => e['sales_person_id'] == salesPersonId && (e['status'] as String? ?? 'active') == status)
-        .map((e) => WatchlistItemModel.fromJson(e))
-        .toList();
   }
 
   Future<WatchlistItemModel> create({
@@ -60,7 +54,7 @@ class OfflineWatchlistRepository {
         placeName: placeName,
         noteText: noteText,
       );
-      await _db.cacheEntity(entityType: 'watchlist', entityId: item.id, data: _toCache(item));
+      await _watchlist.upsert(item);
       return item;
     }
 
@@ -75,32 +69,52 @@ class OfflineWatchlistRepository {
       isLocalOnly: true,
       createdAt: DateTime.now().toIso8601String(),
     );
-    await _db.cacheEntity(entityType: 'watchlist', entityId: localId, data: _toCache(item, pending: true));
-    await _db.enqueue(SyncQueueItem(
+    await _watchlist.upsert(item, pendingSync: true);
+    final payload = withClientRequestId(item.toCreateJson());
+    await _outbox.enqueue(SyncQueueItem(
       id: 0,
       entityType: 'watchlist',
       operation: 'create',
       localId: localId,
-      payload: item.toCreateJson(),
+      payload: payload,
       status: 'pending',
       retryCount: 0,
       createdAt: DateTime.now().toIso8601String(),
     ));
+    OfflineSyncTrigger.requestSync();
     return item;
   }
 
   Future<WatchlistItemModel> update(int id, Map<String, dynamic> body) async {
-    if (id < 0 || !_isOnline()) {
-      if (id < 0) {
-        final cached = await _db.getCachedEntity('watchlist', id);
-        if (cached != null) {
-          cached.addAll(body);
-          await _db.cacheEntity(entityType: 'watchlist', entityId: id, data: cached);
-          return WatchlistItemModel.fromJson(cached);
+    if (id < 0 && !_isOnline()) {
+      final cached = await _watchlist.get(id);
+      if (cached != null) {
+        final updated = WatchlistItemModel.fromJson({..._toJson(cached), ...body});
+        await _watchlist.upsert(updated, pendingSync: true);
+        final pendingCreate = await _outbox.findPendingCreateForLocalId(id);
+        if (pendingCreate != null) {
+          final mergedPayload = {...pendingCreate.payload, ...body};
+          await _outbox.updatePayloadForLocalId(id, mergedPayload);
+        } else {
+          await _outbox.enqueue(SyncQueueItem(
+            id: 0,
+            entityType: 'watchlist',
+            operation: 'update',
+            serverId: id,
+            payload: body,
+            status: 'pending',
+            retryCount: 0,
+            createdAt: DateTime.now().toIso8601String(),
+          ));
         }
+        OfflineSyncTrigger.requestSync();
+        return updated;
       }
+      throw Exception('Watch-list item not found offline');
+    }
+    if (id < 0 || !_isOnline()) {
       if (_isOnline()) return _remote.update(id, body);
-      await _db.enqueue(SyncQueueItem(
+      await _outbox.enqueue(SyncQueueItem(
         id: 0,
         entityType: 'watchlist',
         operation: 'update',
@@ -110,29 +124,40 @@ class OfflineWatchlistRepository {
         retryCount: 0,
         createdAt: DateTime.now().toIso8601String(),
       ));
-      final cached = await _db.getCachedEntity('watchlist', id);
+      OfflineSyncTrigger.requestSync();
+      final cached = await _watchlist.get(id);
       if (cached != null) {
-        cached.addAll(body);
-        return WatchlistItemModel.fromJson(cached);
+        return WatchlistItemModel.fromJson({..._toJson(cached), ...body});
       }
       throw Exception('Watch-list item not found offline');
     }
     final item = await _remote.update(id, body);
-    await _db.cacheEntity(entityType: 'watchlist', entityId: item.id, data: _toCache(item));
+    await _watchlist.upsert(item);
     return item;
+  }
+
+  Future<WatchlistItemModel?> get(int id) async {
+    final local = await _watchlist.get(id);
+    if (local != null) return local;
+    if (_isOnline()) {
+      final item = await _remote.get(id);
+      await _watchlist.upsert(item);
+      return item;
+    }
+    return null;
   }
 
   Future<void> delete(int id) async {
     if (id < 0) {
-      await _db.removeCachedEntity('watchlist', id);
+      await _watchlist.remove(id);
       return;
     }
     if (_isOnline()) {
       await _remote.delete(id);
-      await _db.removeCachedEntity('watchlist', id);
+      await _watchlist.remove(id);
       return;
     }
-    await _db.enqueue(SyncQueueItem(
+    await _outbox.enqueue(SyncQueueItem(
       id: 0,
       entityType: 'watchlist',
       operation: 'delete',
@@ -142,9 +167,10 @@ class OfflineWatchlistRepository {
       retryCount: 0,
       createdAt: DateTime.now().toIso8601String(),
     ));
+    OfflineSyncTrigger.requestSync();
   }
 
-  Map<String, dynamic> _toCache(WatchlistItemModel item, {bool pending = false}) => {
+  Map<String, dynamic> _toJson(WatchlistItemModel item) => {
         'id': item.id,
         'sales_person_id': item.salesPersonId,
         'gps': item.gps,
@@ -154,6 +180,5 @@ class OfflineWatchlistRepository {
         'archived_reason': item.archivedReason,
         'customer_shop_id': item.customerShopId,
         'created_at': item.createdAt,
-        if (pending) '_pending_sync': true,
       };
 }

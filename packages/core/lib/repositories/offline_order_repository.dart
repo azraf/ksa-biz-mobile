@@ -1,20 +1,26 @@
 import '../models/order.dart';
 import '../models/paginated_response.dart';
-import '../offline/local_database.dart';
+import '../offline/offline_sync_trigger.dart';
+import '../utils/client_request_id.dart';
+import '../offline/stores/order_local_store.dart';
+import '../offline/stores/sync_outbox_store.dart';
 import '../offline/sync_queue_item.dart';
 import 'order_repository.dart';
 
 class OfflineOrderRepository {
   OfflineOrderRepository({
     required OrderRepository remote,
-    required LocalDatabase db,
+    required OrderLocalStore orders,
+    required SyncOutboxStore outbox,
     required bool Function() isOnline,
   })  : _remote = remote,
-        _db = db,
+        _orders = orders,
+        _outbox = outbox,
         _isOnline = isOnline;
 
   final OrderRepository _remote;
-  final LocalDatabase _db;
+  final OrderLocalStore _orders;
+  final SyncOutboxStore _outbox;
   final bool Function() _isOnline;
 
   Future<PaginatedResponse<OrderModel>> list({
@@ -22,6 +28,7 @@ class OfflineOrderRepository {
     String? status,
     String? paymentStatus,
     int page = 1,
+    int perPage = 25,
   }) async {
     if (_isOnline()) {
       try {
@@ -31,14 +38,8 @@ class OfflineOrderRepository {
           paymentStatus: paymentStatus,
           page: page,
         );
-        for (final order in result.items) {
-          await _db.cacheEntity(
-            entityType: 'order',
-            entityId: order.id,
-            data: _toCache(order),
-          );
-        }
-        final pending = await _pendingOrders();
+        await _orders.upsertAll(result.items);
+        final pending = await _orders.pendingOrders();
         if (page == 1 && pending.isNotEmpty) {
           return PaginatedResponse(
             items: [...pending, ...result.items],
@@ -49,63 +50,61 @@ class OfflineOrderRepository {
         }
         return result;
       } catch (_) {
-        return _cachedList();
+        return _cachedList(page: page, perPage: perPage);
       }
     }
-    return _cachedList();
+    return _cachedList(page: page, perPage: perPage);
   }
 
-  Future<PaginatedResponse<OrderModel>> _cachedList() async {
-    final cached = await _db.getCachedEntities('order');
-    final orders = cached.map((e) => OrderModel.fromJson(e)).toList();
+  Future<PaginatedResponse<OrderModel>> _cachedList({
+    int page = 1,
+    int perPage = 25,
+  }) async {
+    final offset = (page - 1) * perPage;
+    final orders = await _orders.list(offset: offset, limit: perPage);
+    final total = await _orders.count();
+    final lastPage = total == 0 ? 1 : (total / perPage).ceil();
     return PaginatedResponse(
       items: orders,
-      currentPage: 1,
-      lastPage: 1,
-      total: orders.length,
+      currentPage: page,
+      lastPage: lastPage,
+      total: total,
     );
-  }
-
-  Future<List<OrderModel>> _pendingOrders() async {
-    final cached = await _db.getCachedEntities('order');
-    return cached
-        .where((e) => e['_pending_sync'] == true)
-        .map((e) => OrderModel.fromJson(e))
-        .toList();
   }
 
   Future<OrderModel> get(int id) async {
     if (id < 0) {
-      final cached = await _db.getCachedEntity('order', id);
-      if (cached != null) return OrderModel.fromJson(cached);
+      final cached = await _orders.getByServerId(id);
+      if (cached != null) return cached;
     }
     if (_isOnline()) {
       try {
         final order = await _remote.get(id);
-        await _db.cacheEntity(entityType: 'order', entityId: order.id, data: _toCache(order));
+        await _orders.upsert(order);
         return order;
       } catch (_) {}
     }
-    final cached = await _db.getCachedEntity('order', id);
-    if (cached != null) return OrderModel.fromJson(cached);
+    final cached = await _orders.getByServerId(id);
+    if (cached != null) return cached;
     throw Exception('Order not available offline');
   }
 
   Future<OrderModel> create(Map<String, dynamic> body) async {
     if (_isOnline()) {
       final order = await _remote.create(body);
-      await _db.cacheEntity(entityType: 'order', entityId: order.id, data: _toCache(order));
+      await _orders.upsert(order);
       return order;
     }
 
-    final localId = await _db.nextLocalId();
-    final normalizedItems = _normalizeCreateItems(body['items'] as List<dynamic>? ?? []);
+    final payload = withClientRequestId(body);
+    final localId = await _orders.nextLocalId();
+    final normalizedItems = _normalizeCreateItems(payload['items'] as List<dynamic>? ?? []);
     final totalBill = normalizedItems.fold<double>(
       0,
       (sum, item) => sum + (item['bill'] as num).toDouble(),
     );
     final pending = {
-      ...body,
+      ...payload,
       'id': localId,
       'status': 'confirmed',
       'payment_status': body['payment_status'] ?? 'pending',
@@ -114,46 +113,57 @@ class OfflineOrderRepository {
       '_pending_sync': true,
       'created_at': DateTime.now().toIso8601String(),
     };
-    await _db.cacheEntity(entityType: 'order', entityId: localId, data: pending);
-    await _db.enqueue(SyncQueueItem(
+    final order = OrderModel.fromJson(pending);
+    await _orders.upsert(order, pendingSync: true);
+    await _outbox.enqueue(SyncQueueItem(
       id: 0,
       entityType: 'order',
       operation: 'create',
       localId: localId,
-      payload: body,
+      payload: payload,
     ));
-    return OrderModel.fromJson(pending);
+    OfflineSyncTrigger.requestSync();
+    return order;
   }
 
   Future<OrderModel> cancel(int orderId, String reason) async {
     if (_isOnline()) {
       final order = await _remote.cancel(orderId, reason);
-      await _db.cacheEntity(entityType: 'order', entityId: order.id, data: _toCache(order));
+      await _orders.upsert(order);
       return order;
     }
 
     if (orderId < 0) {
-      final cached = await _db.getCachedEntity('order', orderId);
+      final cached = await _orders.getByServerId(orderId);
       if (cached != null) {
-        final updated = {...cached, 'status': 'cancelled', 'cancellation_reason': reason};
-        await _db.cacheEntity(entityType: 'order', entityId: orderId, data: updated);
-        await _db.cancelPendingByLocalId(orderId);
-        return OrderModel.fromJson(updated);
+        final updated = OrderModel.fromJson({
+          ..._orderToJson(cached),
+          'status': 'cancelled',
+          'cancellation_reason': reason,
+        });
+        await _orders.upsert(updated, pendingSync: true);
+        await _outbox.cancelPendingByLocalId(orderId);
+        return updated;
       }
     }
 
-    await _db.enqueue(SyncQueueItem(
+    await _outbox.enqueue(SyncQueueItem(
       id: 0,
       entityType: 'order',
       operation: 'cancel',
       serverId: orderId,
       payload: {'reason': reason},
     ));
-    final cached = await _db.getCachedEntity('order', orderId);
+    OfflineSyncTrigger.requestSync();
+    final cached = await _orders.getByServerId(orderId);
     if (cached != null) {
-      final updated = {...cached, 'status': 'cancelled', 'cancellation_reason': reason};
-      await _db.cacheEntity(entityType: 'order', entityId: orderId, data: updated);
-      return OrderModel.fromJson(updated);
+      final updated = OrderModel.fromJson({
+        ..._orderToJson(cached),
+        'status': 'cancelled',
+        'cancellation_reason': reason,
+      });
+      await _orders.upsert(updated);
+      return updated;
     }
     throw Exception('Order not found');
   }
@@ -171,11 +181,11 @@ class OfflineOrderRepository {
         paymentMethod: paymentMethod,
         notes: notes,
       );
-      await _db.cacheEntity(entityType: 'order', entityId: order.id, data: _toCache(order));
+      await _orders.upsert(order);
       return order;
     }
 
-    await _db.enqueue(SyncQueueItem(
+    await _outbox.enqueue(SyncQueueItem(
       id: 0,
       entityType: 'order',
       operation: 'payment',
@@ -186,24 +196,24 @@ class OfflineOrderRepository {
         if (notes != null) 'notes': notes,
       },
     ));
-    final cached = await _db.getCachedEntity('order', orderId);
+    OfflineSyncTrigger.requestSync();
+    final cached = await _orders.getByServerId(orderId);
     if (cached != null) {
-      final paid = _toDouble(cached['amount_paid']) + amount;
-      final total = _toDouble(cached['total_bill']);
-      final due = (total - paid).clamp(0, double.infinity);
-      final updated = {
-        ...cached,
+      final paid = cached.amountPaid + amount;
+      final due = (cached.totalBill - paid).clamp(0, double.infinity);
+      final updated = OrderModel.fromJson({
+        ..._orderToJson(cached),
         'amount_paid': paid,
         'amount_due': due,
         'payment_status': due <= 0 ? 'paid' : 'partial',
-      };
-      await _db.cacheEntity(entityType: 'order', entityId: orderId, data: updated);
-      return OrderModel.fromJson(updated);
+      });
+      await _orders.upsert(updated);
+      return updated;
     }
     throw Exception('Order not available offline');
   }
 
-  Map<String, dynamic> _toCache(OrderModel order) => {
+  Map<String, dynamic> _orderToJson(OrderModel order) => {
         'id': order.id,
         'sales_person_id': order.salesPersonId,
         'customer_type_id': order.customerTypeId,
@@ -253,5 +263,5 @@ class OfflineOrderRepository {
     return double.tryParse(value.toString()) ?? 0;
   }
 
-  Future<int> pendingSyncCount() => _db.pendingCount();
+  Future<int> pendingSyncCount() => _outbox.pendingCount();
 }

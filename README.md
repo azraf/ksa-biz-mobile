@@ -2,7 +2,7 @@
 
 This folder contains four Flutter apps that consume the Laravel API:
 
-- **packages/core** – Shared package: API client, auth, DTOs, theme, **offline sync layer** (SQLite + queue), permissions, contact launcher.
+- **packages/core** – Shared package: API client, auth, DTOs, theme, **offline sync layer** (Isar + typed stores + outbox queue), permissions, contact launcher.
 - **admin_app** – Admin mobile app with full CRUD and offline support.
 - **monitor_app** – Read-only dashboards for monitor role users.
 - **sales_app** – Sales person: van stock, manual orders, orders, dues.
@@ -71,9 +71,9 @@ cd admin_app          # or sales_app, monitor_app, order_app
 
 The script runs `flutter pub get` and `flutter build apk --release`, then copies the APK to:
 
-`app-builts/ARM-<AppName>.apk` — e.g. `app-builts/ARM-AdminApp.apk`, `ARM-SalesApp.apk`, `ARM-MonitorApp.apk`, `ARM-OrderApp.apk`
+`app-builts/ARM-<AppName>-v2.apk` — e.g. `app-builts/ARM-AdminApp-v2.apk`, `ARM-SalesApp-v2.apk`, `ARM-MonitorApp-v2.apk`, `ARM-OrderApp-v2.apk`
 
-If an APK with that name already exists in `app-builts/`, it is removed and replaced with the new build (legacy filenames from older app names are cleaned up too).
+If an APK with that name already exists in `app-builts/`, it is removed and replaced with the new build (legacy filenames without `-v2` and older app names are cleaned up too).
 
 Flutter’s default output remains at `build/app/outputs/flutter-apk/app-release.apk`.
 
@@ -127,6 +127,18 @@ cd admin_app
 - **Reports** – Sales, profit, expenses, expense summary (cached offline)
 - **Users** – User list/create/edit with roles
 
+### Offline storage (Isar)
+
+`admin_app` shares the same Isar stack as `sales_app`:
+
+- `OfflineStores` with orders, expenses, customers, products, watchlist, diary, reports cache, and **admin list cache** for CRUD screens
+- `AsyncNotifier` providers (`dashboardProvider`, `adminOrdersProvider`, `expensesListProvider`)
+- `SyncLifecycle` — auto-sync after local save, 45s foreground sync, API reachability check
+- Offline banner with sync progress and server-unreachable state
+- Debug benchmarks: **More → Isar benchmarks** (`kDebugMode`)
+
+Admin-only remote writes (users, shipping CRUD, assignments) are blocked offline with localized `adminOfflineWriteBlocked` message.
+
 ---
 
 ## Sales app
@@ -154,6 +166,20 @@ cd sales_app
 ```
 
 See the root **DEVELOPMENT_PLAN.md** for full API details.
+
+### Offline storage (Isar)
+
+`sales_app` uses **Isar Community** (native, not SQLite) via `packages/core`:
+
+- Typed `@collection` schemas under `packages/core/lib/offline/isar/`
+- `OfflineStores` + `IsarService` opened in `main.dart`
+- `AsyncNotifier` screen providers (`dashboardProvider`, `orderListProvider`, `duesProvider`)
+- Reactive pending-sync count via `StreamProvider`
+- Skeleton loaders, `OrderCard`, localized errors (`AppErrorMapper`)
+
+Debug benchmarks: Profile → **Isar benchmarks** (`doc/ISAR_BENCHMARKS.md`).
+
+Regenerate codegen: `./scripts/codegen.sh`
 
 ---
 

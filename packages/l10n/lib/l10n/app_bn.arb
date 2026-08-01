@@ -228,7 +228,7 @@
   "commonLanguageBangla": "বাংলা",
   "commonConvert": "রূপান্তর",
   "commonPickVideo": "ভিডিও বাছুন",
-  "salesAppName": "ARM Sales(M)",
+  "salesAppName": "ARM Sales",
   "salesSignInSubtitle": "আপনার সেলসপারসন অ্যাকাউন্ট দিয়ে সাইন ইন করুন",
   "salesNavHome": "হোম",
   "salesNavManual": "ম্যানুয়াল",
@@ -356,6 +356,29 @@
     "placeholders": {
       "count": {
         "type": "int"
+      }
+    }
+  },
+  "salesOfflineAllSynced": "সব পরিবর্তন সিঙ্ক হয়েছে",
+  "salesOfflineServerUnreachable": "সংযুক্ত কিন্তু সার্ভারে পৌঁছানো যাচ্ছে না",
+  "salesOfflineRetryUploads": "আপলোড পুনরায় চেষ্টা",
+  "salesOfflineUploadFailed": "{count, plural, =1{1টি আপলোড ব্যর্থ} other{{count}টি আপলোড ব্যর্থ}}",
+  "@salesOfflineUploadFailed": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "salesOfflineUploading": "আপলোড হচ্ছে… {percent}%",
+  "@salesOfflineUploading": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "salesDashboardCachedDues": "{fetchedAt} থেকে ক্যাশ করা বকেয়া দেখানো হচ্ছে",
+  "@salesDashboardCachedDues": {
+    "placeholders": {
+      "fetchedAt": {
+        "type": "String"
       }
     }
   },
@@ -513,6 +536,10 @@
   "salesWatchlistPhotos": "ছবি",
   "salesWatchlistConvertBtn": "দোকানে রূপান্তর",
   "salesWatchlistPendingSync": "সিঙ্ক মুলতুবি",
+  "salesWatchlistActivateAgain": "আবার সক্রিয় করুন",
+  "salesWatchlistRemove": "সরান",
+  "salesWatchlistActivated": "ওয়াচলিস্ট আইটেম সক্রিয় হয়েছে",
+  "salesWatchlistArchivedReason": "আর্কাইভ: {reason}",
   "orderAppName": "ARM Orders",
   "orderSignInSubtitle": "আপনার দোকান, ভ্যান বা ইমপোর্টার অ্যাকাউন্ট দিয়ে সাইন ইন করুন",
   "orderNavCatalog": "ক্যাটালগ",
@@ -574,5 +601,25 @@
   "salesPickerActivity30Days": "৩০ দিন",
   "salesPickerActivity60Days": "৬০ দিন",
   "salesPickerActivity90Days": "৯০ দিন",
-  "commonAvgOrderInterval": "~প্রতি {days} দিন"
+  "commonAvgOrderInterval": "~প্রতি {days} দিন",
+  "commonEnable": "সক্রিয় করুন",
+  "biometricEnableTitle": "ফিঙ্গারপ্রিন্ট লগইন",
+  "biometricEnableSubtitle": "ফিঙ্গারপ্রিন্ট বা Face ID দিয়ে দ্রুত অ্যাপ আনলক করুন",
+  "biometricEnableReason": "ফিঙ্গারপ্রিন্ট লগইন সক্রিয় করতে নিশ্চিত করুন",
+  "biometricUnlockReason": "চালিয়ে যেতে অ্যাপ আনলক করুন",
+  "biometricUnlockButton": "ফিঙ্গারপ্রিন্ট দিয়ে আনলক",
+  "biometricUsePassword": "পাসওয়ার্ড ব্যবহার করুন",
+  "biometricNotAvailable": "এই ডিভাইসে বায়োমেট্রিক প্রমাণীকরণ উপলব্ধ নয়",
+  "biometricCancelled": "প্রমাণীকরণ বাতিল করা হয়েছে",
+  "biometricNotEnrolled": "কোনো ফিঙ্গারপ্রিন্ট বা Face ID নিবন্ধিত নেই। ডিভাইস সেটিংসে একটি যোগ করুন।",
+  "biometricEnableFailed": "ফিঙ্গারপ্রিন্ট লগইন সক্রিয় করা যায়নি। আবার চেষ্টা করুন।",
+  "biometricOptInMessage": "এই ডিভাইসে অ্যাপ আনলক করতে ফিঙ্গারপ্রিন্ট বা Face ID ব্যবহার করবেন?",
+  "biometricAppLockedTitle": "অ্যাপ লক করা",
+  "biometricAppLockedSubtitle": "অ্যাপ ব্যবহার চালিয়ে যেতে প্রমাণীকরণ করুন",
+  "biometricSignInAs": "{email} হিসেবে সাইন ইন",
+  "sessionExpired": "আপনার সেশন মেয়াদ শেষ হয়েছে। আবার সাইন ইন করুন।",
+  "tokenExpiresAtTitle": "সেশন মেয়াদ শেষ",
+  "tokenExpiresAtValue": "{date} এর মধ্যে পুনরায় লগইন প্রয়োজন",
+  "adminAccessRequired": "এই অ্যাকাউন্টটি অ্যাডমিন মোবাইল অ্যাপ ব্যবহার করতে পারবে না। অ্যাডমিন ভূমিকা প্রয়োজন।",
+  "adminLoginInvalidCredentials": "ভুল ইমেইল বা পাসওয়ার্ড।"
 }

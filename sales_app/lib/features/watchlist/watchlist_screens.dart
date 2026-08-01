@@ -148,6 +148,7 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
                   : RefreshIndicator(
                       onRefresh: _load,
                       child: ListView.builder(
+                        padding: fabScrollPadding(context, extendedFab: true),
                         itemCount: _items.length,
                         itemBuilder: (_, i) {
                           final item = _items[i];
@@ -229,9 +230,14 @@ class _WatchlistCreateScreenState extends ConsumerState<WatchlistCreateScreen> {
         placeName: _placeController.text.trim().isEmpty ? null : _placeController.text.trim(),
         noteText: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
       );
+      AppHaptics.success();
       if (mounted) context.go('/watchlist/${item.id}');
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppErrorMapper.localize(context, e))),
+        );
+      }
     } finally {
       if (mounted) setState(() => _working = false);
     }
@@ -370,9 +376,8 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
     try {
       WatchlistItemModel item;
       if (widget.id < 0) {
-        final cached = await ref.read(localDatabaseProvider).getCachedEntity('watchlist', widget.id);
-        if (cached == null) throw Exception('Not found');
-        item = WatchlistItemModel.fromJson(cached);
+        item = await ref.read(offlineWatchlistRepositoryProvider).get(widget.id) ??
+            (throw Exception('Not found'));
       } else {
         item = await ref.read(watchlistRepositoryProvider).get(widget.id);
       }
@@ -407,6 +412,27 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
         );
       }
     } catch (_) {}
+  }
+
+  Future<void> _activate() async {
+    if (_item == null) return;
+    setState(() => _working = true);
+    try {
+      await ref.read(offlineWatchlistRepositoryProvider).update(_item!.id, {
+        'status': 'active',
+        'archived_reason': null,
+      });
+      await _load();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).salesWatchlistActivated)),
+        );
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    } finally {
+      if (mounted) setState(() => _working = false);
+    }
   }
 
   Future<void> _archive(String reason) async {
@@ -580,8 +606,10 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
               }
             },
             itemBuilder: (_) => [
-              PopupMenuItem(value: 'visited', child: Text(l10n.salesWatchlistMarkVisited)),
-              PopupMenuItem(value: 'dismissed', child: Text(l10n.salesWatchlistDismiss)),
+              if (item.isActive) ...[
+                PopupMenuItem(value: 'visited', child: Text(l10n.salesWatchlistMarkVisited)),
+                PopupMenuItem(value: 'dismissed', child: Text(l10n.salesWatchlistDismiss)),
+              ],
               PopupMenuItem(value: 'delete', child: Text(l10n.commonDelete)),
             ],
           ),
@@ -592,6 +620,18 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
         children: [
           if (item.isLocalOnly)
             Card(child: ListTile(leading: const Icon(Icons.cloud_off), title: Text(l10n.salesWatchlistPendingSync))),
+          if (!item.isActive)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Chip(
+                avatar: const Icon(Icons.archive_outlined, size: 18),
+                label: Text(
+                  item.archivedReason != null
+                      ? l10n.salesWatchlistArchivedReason(item.archivedReason!)
+                      : l10n.salesWatchlistArchived,
+                ),
+              ),
+            ),
           GpsLocationRow(gps: item.gps),
           if (item.noteText != null) ...[
             const SizedBox(height: 12),
@@ -646,7 +686,19 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
           ),
           const SizedBox(height: 24),
           if (item.isActive)
-            FilledButton(onPressed: _working ? null : _convert, child: Text(l10n.salesWatchlistConvertBtn)),
+            FilledButton(onPressed: _working ? null : _convert, child: Text(l10n.salesWatchlistConvertBtn))
+          else ...[
+            FilledButton(
+              onPressed: _working ? null : _activate,
+              child: Text(l10n.salesWatchlistActivateAgain),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton(
+              onPressed: _working ? null : _delete,
+              style: OutlinedButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
+              child: Text(l10n.salesWatchlistRemove),
+            ),
+          ],
         ],
       ),
     );
@@ -689,6 +741,7 @@ Future<void> quickSaveWatchlistLocation(BuildContext context, WidgetRef ref) asy
         placeName: placeName,
       );
   if (!context.mounted) return;
+  AppHaptics.success();
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(l10n.salesLocationSaved),
