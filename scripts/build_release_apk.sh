@@ -87,7 +87,7 @@ OUTPUT_APK="$APP_BUILTS_DIR/$ARM_APK_NAME"
 
 echo "Building release APK for $APP_NAME (version $VERSION)..."
 
-"$SCRIPT_DIR/ensure_android_gradle_compat.sh"
+"$SCRIPT_DIR/prepare_android_toolchain.sh" release
 flutter pub get
 "$SCRIPT_DIR/patch_wakelock_plus.sh"
 if [[ "${KSA_WAKELOCK_PATCH_APPLIED:-0}" == "1" ]]; then
