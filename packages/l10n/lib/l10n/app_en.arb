@@ -262,6 +262,12 @@
   "salesDashboardLoading": "Loading dashboard...",
   "salesDashboardSelectSp": "Select a salesperson to view the dashboard.",
   "salesDashboardNoProfile": "Your account is not linked to a salesperson profile.",
+  "salesDashboardCachedDues": "Showing cached dues from {fetchedAt}",
+  "@salesDashboardCachedDues": {
+    "placeholders": {
+      "fetchedAt": { "type": "String" }
+    }
+  },
   "salesHello": "Hello, {name}",
   "@salesHello": {
     "placeholders": {
@@ -513,6 +519,15 @@
   "salesWatchlistPhotos": "Photos",
   "salesWatchlistConvertBtn": "Convert to shop",
   "salesWatchlistPendingSync": "Pending sync",
+  "salesWatchlistActivateAgain": "Activate again",
+  "salesWatchlistRemove": "Remove",
+  "salesWatchlistActivated": "Watch-list item activated",
+  "salesWatchlistArchivedReason": "Archived: {reason}",
+  "@salesWatchlistArchivedReason": {
+    "placeholders": {
+      "reason": { "type": "String" }
+    }
+  },
   "orderAppName": "ARM Orders",
   "orderSignInSubtitle": "Sign in with your shop, van, or importer account",
   "orderNavCatalog": "Catalog",
@@ -589,6 +604,35 @@
     "placeholders": {
       "days": {
         "type": "int"
+      }
+    }
+  },
+  "commonEnable": "Enable",
+  "biometricEnableTitle": "Fingerprint login",
+  "biometricEnableSubtitle": "Unlock the app quickly with your fingerprint or Face ID",
+  "biometricEnableReason": "Confirm to enable fingerprint login",
+  "biometricUnlockReason": "Unlock the app to continue",
+  "biometricUnlockButton": "Unlock with fingerprint",
+  "biometricUsePassword": "Use password instead",
+  "biometricNotAvailable": "Biometric authentication is not available on this device",
+  "biometricOptInMessage": "Use your fingerprint or Face ID to unlock the app on this device?",
+  "biometricAppLockedTitle": "App locked",
+  "biometricAppLockedSubtitle": "Authenticate to continue using the app",
+  "biometricSignInAs": "Sign in as {email}",
+  "@biometricSignInAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionExpired": "Your session has expired. Please sign in again.",
+  "tokenExpiresAtTitle": "Session expires",
+  "tokenExpiresAtValue": "Re-login required by {date}",
+  "@tokenExpiresAtValue": {
+    "placeholders": {
+      "date": {
+        "type": "String"
       }
     }
   }

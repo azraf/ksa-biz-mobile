@@ -20,6 +20,10 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
   SalesPersonDueReport? _report;
   bool _loading = true;
   String? _error;
+  bool _forceRefresh = false;
+  bool _fromCache = false;
+  bool _isStale = false;
+  String? _fetchedAt;
 
   @override
   void initState() {
@@ -34,9 +38,17 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
       _error = null;
     });
     try {
-      final report = await ref.read(reportRepositoryProvider).salesPersonDue(salesPersonId!);
+      final result = await ref.read(reportRepositoryProvider).salesPersonDue(
+            salesPersonId!,
+            forceRefresh: _forceRefresh,
+            onRevalidate: _applyRevalidate,
+          );
       setState(() {
-        _report = report.data;
+        _report = result.data;
+        _fromCache = result.isCached;
+        _isStale = result.isStale;
+        _fetchedAt = result.fetchedAt;
+        _forceRefresh = false;
         _loading = false;
       });
     } catch (e) {
@@ -47,6 +59,21 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
     }
   }
 
+  Future<void> _refresh() async {
+    _forceRefresh = true;
+    await _load();
+  }
+
+  void _applyRevalidate(ReportResult<SalesPersonDueReport> result) {
+    if (!mounted) return;
+    setState(() {
+      _report = result.data;
+      _fromCache = result.isCached;
+      _isStale = result.isStale;
+      _fetchedAt = result.fetchedAt;
+    });
+  }
+
   Future<void> _collectPayment(OrderModel order) async {
     final due = order.amountDue > 0 ? order.amountDue : order.totalBill - order.amountPaid;
     final ok = await Navigator.push<bool>(
@@ -55,7 +82,7 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
         builder: (_) => CollectPaymentScreen(orderId: order.id, amountDue: due),
       ),
     );
-    if (ok == true) await _load();
+    if (ok == true) await _refresh();
   }
 
   @override
@@ -68,10 +95,21 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
 
     final report = _report!;
     return RefreshIndicator(
-      onRefresh: _load,
+      onRefresh: _refresh,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          if (_fromCache && _isStale && _fetchedAt != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: MaterialBanner(
+                content: Text(l10n.salesDashboardCachedDues(_fetchedAt!.substring(0, 16))),
+                leading: const Icon(Icons.cloud_off_outlined),
+                actions: [
+                  TextButton(onPressed: _refresh, child: Text(l10n.commonRetry)),
+                ],
+              ),
+            ),
           Card(
             child: ListTile(
               title: Text(l10n.salesDuesTotalDue),

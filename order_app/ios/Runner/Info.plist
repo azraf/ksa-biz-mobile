@@ -55,6 +55,8 @@
 	<string>Attach existing photos or recordings.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Save captured media when needed.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Use Face ID to unlock the app quickly and securely.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

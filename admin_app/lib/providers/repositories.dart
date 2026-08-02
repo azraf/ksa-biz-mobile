@@ -3,11 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media/media.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'auth_provider.dart';
+
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
   throw UnimplementedError();
 });
 
-final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
+final apiClientProvider = Provider<ApiClient>((ref) {
+  final client = ApiClient();
+  client.onUnauthorized = () {
+    ref.read(authProvider.notifier).handleUnauthorized();
+  };
+  return client;
+});
 
 final connectivityServiceProvider = Provider<ConnectivityService>((ref) {
   final service = ConnectivityService();
@@ -23,9 +31,10 @@ final isOnlineProvider = Provider<bool>((ref) {
 final localDatabaseProvider = Provider<LocalDatabase>((ref) => LocalDatabase.instance);
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  return AuthRepository(
-    ref.watch(apiClientProvider),
-    ref.watch(sharedPreferencesProvider),
+  return createAuthRepository(
+    api: ref.watch(apiClientProvider),
+    prefs: ref.watch(sharedPreferencesProvider),
+    ref: ref,
   );
 });
 
@@ -121,7 +130,7 @@ final mediaUploadRepositoryProvider = Provider<MediaUploadRepository>((ref) {
   final repo = MediaUploadRepository(
     apiClient: ref.watch(apiClientProvider),
     db: ref.watch(localDatabaseProvider),
-    getAuthToken: () async => ref.read(sharedPreferencesProvider).getString(AppConfig.authTokenKey),
+    getAuthToken: () => ref.read(authRepositoryProvider).getAuthToken(),
   );
   ref.onDispose(repo.dispose);
   return repo;

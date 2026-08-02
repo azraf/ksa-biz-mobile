@@ -262,6 +262,12 @@
   "salesDashboardLoading": "ড্যাশবোর্ড লোড হচ্ছে...",
   "salesDashboardSelectSp": "ড্যাশবোর্ড দেখতে সেলসপারসন নির্বাচন করুন।",
   "salesDashboardNoProfile": "আপনার অ্যাকাউন্ট কোনো সেলসপারসন প্রোফাইলের সাথে যুক্ত নয়।",
+  "salesDashboardCachedDues": "{fetchedAt} থেকে ক্যাশ করা বকেয়া দেখানো হচ্ছে",
+  "@salesDashboardCachedDues": {
+    "placeholders": {
+      "fetchedAt": { "type": "String" }
+    }
+  },
   "salesHello": "হ্যালো, {name}",
   "@salesHello": {
     "placeholders": {
@@ -513,6 +519,15 @@
   "salesWatchlistPhotos": "ছবি",
   "salesWatchlistConvertBtn": "দোকানে রূপান্তর",
   "salesWatchlistPendingSync": "সিঙ্ক মুলতুবি",
+  "salesWatchlistActivateAgain": "আবার সক্রিয় করুন",
+  "salesWatchlistRemove": "সরান",
+  "salesWatchlistActivated": "ওয়াচলিস্ট আইটেম সক্রিয় হয়েছে",
+  "salesWatchlistArchivedReason": "আর্কাইভ: {reason}",
+  "@salesWatchlistArchivedReason": {
+    "placeholders": {
+      "reason": { "type": "String" }
+    }
+  },
   "orderAppName": "ARM Orders",
   "orderSignInSubtitle": "আপনার দোকান, ভ্যান বা ইমপোর্টার অ্যাকাউন্ট দিয়ে সাইন ইন করুন",
   "orderNavCatalog": "ক্যাটালগ",
@@ -574,5 +589,20 @@
   "salesPickerActivity30Days": "৩০ দিন",
   "salesPickerActivity60Days": "৬০ দিন",
   "salesPickerActivity90Days": "৯০ দিন",
-  "commonAvgOrderInterval": "~প্রতি {days} দিন"
+  "commonAvgOrderInterval": "~প্রতি {days} দিন",
+  "commonEnable": "সক্রিয় করুন",
+  "biometricEnableTitle": "ফিঙ্গারপ্রিন্ট লগইন",
+  "biometricEnableSubtitle": "ফিঙ্গারপ্রিন্ট বা Face ID দিয়ে দ্রুত অ্যাপ আনলক করুন",
+  "biometricEnableReason": "ফিঙ্গারপ্রিন্ট লগইন সক্রিয় করতে নিশ্চিত করুন",
+  "biometricUnlockReason": "চালিয়ে যেতে অ্যাপ আনলক করুন",
+  "biometricUnlockButton": "ফিঙ্গারপ্রিন্ট দিয়ে আনলক",
+  "biometricUsePassword": "পাসওয়ার্ড ব্যবহার করুন",
+  "biometricNotAvailable": "এই ডিভাইসে বায়োমেট্রিক প্রমাণীকরণ উপলব্ধ নয়",
+  "biometricOptInMessage": "এই ডিভাইসে অ্যাপ আনলক করতে ফিঙ্গারপ্রিন্ট বা Face ID ব্যবহার করবেন?",
+  "biometricAppLockedTitle": "অ্যাপ লক করা",
+  "biometricAppLockedSubtitle": "অ্যাপ ব্যবহার চালিয়ে যেতে প্রমাণীকরণ করুন",
+  "biometricSignInAs": "{email} হিসেবে সাইন ইন",
+  "sessionExpired": "আপনার সেশন মেয়াদ শেষ হয়েছে। আবার সাইন ইন করুন।",
+  "tokenExpiresAtTitle": "সেশন মেয়াদ শেষ",
+  "tokenExpiresAtValue": "{date} এর মধ্যে পুনরায় লগইন প্রয়োজন"
 }

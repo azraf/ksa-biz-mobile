@@ -87,7 +87,15 @@ OUTPUT_APK="$APP_BUILTS_DIR/$ARM_APK_NAME"
 
 echo "Building release APK for $APP_NAME (version $VERSION)..."
 
+"$SCRIPT_DIR/ensure_android_gradle_compat.sh"
 flutter pub get
+"$SCRIPT_DIR/patch_wakelock_plus.sh"
+if [[ "${KSA_WAKELOCK_PATCH_APPLIED:-0}" == "1" ]]; then
+  echo "wakelock_plus was patched — running flutter clean to refresh Android plugin build..."
+  flutter clean
+  flutter pub get
+  "$SCRIPT_DIR/patch_wakelock_plus.sh"
+fi
 
 BUILD_ARGS=()
 if [[ -n "${KSA_GOOGLE_MAPS_API_KEY:-}" ]]; then

@@ -25,6 +25,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   int _openManualOrders = 0;
   int _vanProducts = 0;
   int _lowStock = 0;
+  bool _forceRefresh = false;
+  bool _duesFromCache = false;
+  bool _duesIsStale = false;
+  String? _duesCachedAt;
 
   @override
   void initState() {
@@ -54,8 +58,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       final reportRepo = ref.read(reportRepositoryProvider);
       final manualRepo = ref.read(manualOrderRepositoryProvider);
       final inventoryRepo = ref.read(inventoryRepositoryProvider);
+      final force = _forceRefresh;
 
-      final due = await reportRepo.salesPersonDue(salesPersonId);
+      final due = await reportRepo.salesPersonDue(
+        salesPersonId,
+        forceRefresh: force,
+        onRevalidate: _applyDuesRevalidate,
+      );
       final openPool = await manualRepo.list(openPool: true);
       final assigned = await manualRepo.list(assignedSalesPersonId: salesPersonId, status: 'assigned');
       final inReview = await manualRepo.list(assignedSalesPersonId: salesPersonId, status: 'in_review');
@@ -64,12 +73,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       setState(() {
         _totalDue = due.data.totalDue;
         _unpaidOrders = due.data.orders.length;
+        _duesFromCache = due.isCached;
+        _duesIsStale = due.isStale;
+        _duesCachedAt = due.fetchedAt;
         _openManualOrders = openPool.total + assigned.total + inReview.total;
         _vanProducts = vanStock.length;
         _lowStock = vanStock.where((s) {
           final alert = s.product?.alertQuantity ?? 0;
           return alert > 0 && s.balance <= alert;
         }).length;
+        _forceRefresh = false;
         _loading = false;
       });
     } catch (e) {
@@ -78,6 +91,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         _loading = false;
       });
     }
+  }
+
+  Future<void> _refresh() async {
+    _forceRefresh = true;
+    await _load();
+  }
+
+  void _applyDuesRevalidate(ReportResult<SalesPersonDueReport> result) {
+    if (!mounted) return;
+    setState(() {
+      _totalDue = result.data.totalDue;
+      _unpaidOrders = result.data.orders.length;
+      _duesFromCache = result.isCached;
+      _duesIsStale = result.isStale;
+      _duesCachedAt = result.fetchedAt;
+    });
   }
 
   @override
@@ -104,10 +133,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     }
 
     return RefreshIndicator(
-      onRefresh: _load,
+      onRefresh: _refresh,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          if (_duesFromCache && _duesIsStale && _duesCachedAt != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: MaterialBanner(
+                content: Text(l10n.salesDashboardCachedDues(_duesCachedAt!.substring(0, 16))),
+                leading: const Icon(Icons.cloud_off_outlined),
+                actions: [
+                  TextButton(onPressed: _refresh, child: Text(l10n.commonRetry)),
+                ],
+              ),
+            ),
           Row(
             children: [
               Expanded(

@@ -3,8 +3,6 @@ library media;
 export 'media_capture_facade.dart';
 export 'compression/media_compression_service.dart';
 export 'models/compressed_media.dart';
-export 'upload/background_upload_service.dart';
-export 'upload/media_upload_worker.dart';
 export 'widgets/media_audio_player.dart';
 export 'widgets/media_gallery_section.dart';
 export 'widgets/media_image_tile.dart';

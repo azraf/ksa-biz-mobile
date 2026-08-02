@@ -494,6 +494,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get salesDashboardNoProfile => 'حسابك غير مرتبط بملف مندوب مبيعات.';
 
   @override
+  String salesDashboardCachedDues(String fetchedAt) {
+    return 'عرض المستحقات المخزنة من $fetchedAt';
+  }
+
+  @override
   String salesHello(String name) {
     return 'مرحباً، $name';
   }
@@ -1012,6 +1017,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get salesWatchlistPendingSync => 'في انتظار المزامنة';
 
   @override
+  String get salesWatchlistActivateAgain => 'تفعيل مرة أخرى';
+
+  @override
+  String get salesWatchlistRemove => 'إزالة';
+
+  @override
+  String get salesWatchlistActivated => 'تم تفعيل عنصر قائمة المراقبة';
+
+  @override
+  String salesWatchlistArchivedReason(String reason) {
+    return 'مؤرشف: $reason';
+  }
+
+  @override
   String get orderAppName => 'ARM Orders';
 
   @override
@@ -1204,5 +1223,57 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String commonAvgOrderInterval(int days) {
     return '~كل $days يوم';
+  }
+
+  @override
+  String get commonEnable => 'تفعيل';
+
+  @override
+  String get biometricEnableTitle => 'تسجيل الدخول بالبصمة';
+
+  @override
+  String get biometricEnableSubtitle =>
+      'افتح التطبيق بسرعة باستخدام بصمة الإصبع أو Face ID';
+
+  @override
+  String get biometricEnableReason => 'أكد لتفعيل تسجيل الدخول بالبصمة';
+
+  @override
+  String get biometricUnlockReason => 'افتح التطبيق للمتابعة';
+
+  @override
+  String get biometricUnlockButton => 'فتح بالبصمة';
+
+  @override
+  String get biometricUsePassword => 'استخدم كلمة المرور بدلاً من ذلك';
+
+  @override
+  String get biometricNotAvailable =>
+      'المصادقة البيومترية غير متاحة على هذا الجهاز';
+
+  @override
+  String get biometricOptInMessage =>
+      'هل تريد استخدام بصمة الإصبع أو Face ID لفتح التطبيق على هذا الجهاز؟';
+
+  @override
+  String get biometricAppLockedTitle => 'التطبيق مقفل';
+
+  @override
+  String get biometricAppLockedSubtitle => 'صادق للمتابعة في استخدام التطبيق';
+
+  @override
+  String biometricSignInAs(String email) {
+    return 'تسجيل الدخول كـ $email';
+  }
+
+  @override
+  String get sessionExpired => 'انتهت جلستك. يرجى تسجيل الدخول مرة أخرى.';
+
+  @override
+  String get tokenExpiresAtTitle => 'تنتهي الجلسة';
+
+  @override
+  String tokenExpiresAtValue(String date) {
+    return 'إعادة تسجيل الدخول مطلوبة بحلول $date';
   }
 }

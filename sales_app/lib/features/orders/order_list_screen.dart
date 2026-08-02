@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,7 +37,10 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
     });
     try {
       if (ref.read(onlineStatusProvider)) {
-        await ref.read(syncServiceProvider).syncIfOnline();
+        unawaited(ref.read(syncServiceProvider).syncIfOnline().timeout(
+              const Duration(seconds: 30),
+              onTimeout: () {},
+            ));
         ref.invalidate(pendingSyncCountProvider);
       }
       final result = await ref.read(offlineOrderRepositoryProvider).list(salesPersonId: salesPersonId);

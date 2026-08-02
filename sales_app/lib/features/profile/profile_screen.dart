@@ -35,6 +35,14 @@ class ProfileScreen extends ConsumerWidget {
           const Divider(),
           const LanguagePickerTile(),
           const Divider(),
+          BiometricSettingsTile(
+            enabled: auth.biometricEnabled,
+            available: auth.biometricAvailable,
+            tokenExpiresAt: auth.tokenExpiresAt,
+            onEnable: (reason) => ref.read(authProvider.notifier).enableBiometricLogin(reason),
+            onDisable: () => ref.read(authProvider.notifier).disableBiometricLogin(),
+          ),
+          const Divider(),
           if (actingAs != null) ...[
             ListTile(
               title: Text(l10n.commonActingAs),

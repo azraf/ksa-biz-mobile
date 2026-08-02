@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -50,7 +52,13 @@ class OrdersScreen extends ConsumerWidget {
     final repo = ref.watch(offlineOrderRepositoryProvider);
     return CrudListScreen<OrderModel>(
       title: 'Orders',
-      loadItems: () async => (await repo.list()).items,
+      loadItems: () async {
+        unawaited(ref.read(syncServiceProvider).syncIfOnline().timeout(
+              const Duration(seconds: 30),
+              onTimeout: () {},
+            ));
+        return (await repo.list()).items;
+      },
       itemTitle: (o) => '#${o.id} — SAR ${o.totalBill.toStringAsFixed(2)} (${o.paymentStatus})',
       isPending: (o) => o.id < 0,
       onTap: (o) => context.push('/sales/orders/${o.id}'),

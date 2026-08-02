@@ -499,6 +499,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your account is not linked to a salesperson profile.';
 
   @override
+  String salesDashboardCachedDues(String fetchedAt) {
+    return 'Showing cached dues from $fetchedAt';
+  }
+
+  @override
   String salesHello(String name) {
     return 'Hello, $name';
   }
@@ -1017,6 +1022,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get salesWatchlistPendingSync => 'Pending sync';
 
   @override
+  String get salesWatchlistActivateAgain => 'Activate again';
+
+  @override
+  String get salesWatchlistRemove => 'Remove';
+
+  @override
+  String get salesWatchlistActivated => 'Watch-list item activated';
+
+  @override
+  String salesWatchlistArchivedReason(String reason) {
+    return 'Archived: $reason';
+  }
+
+  @override
   String get orderAppName => 'ARM Orders';
 
   @override
@@ -1209,5 +1228,59 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String commonAvgOrderInterval(int days) {
     return '~every $days days';
+  }
+
+  @override
+  String get commonEnable => 'Enable';
+
+  @override
+  String get biometricEnableTitle => 'Fingerprint login';
+
+  @override
+  String get biometricEnableSubtitle =>
+      'Unlock the app quickly with your fingerprint or Face ID';
+
+  @override
+  String get biometricEnableReason => 'Confirm to enable fingerprint login';
+
+  @override
+  String get biometricUnlockReason => 'Unlock the app to continue';
+
+  @override
+  String get biometricUnlockButton => 'Unlock with fingerprint';
+
+  @override
+  String get biometricUsePassword => 'Use password instead';
+
+  @override
+  String get biometricNotAvailable =>
+      'Biometric authentication is not available on this device';
+
+  @override
+  String get biometricOptInMessage =>
+      'Use your fingerprint or Face ID to unlock the app on this device?';
+
+  @override
+  String get biometricAppLockedTitle => 'App locked';
+
+  @override
+  String get biometricAppLockedSubtitle =>
+      'Authenticate to continue using the app';
+
+  @override
+  String biometricSignInAs(String email) {
+    return 'Sign in as $email';
+  }
+
+  @override
+  String get sessionExpired =>
+      'Your session has expired. Please sign in again.';
+
+  @override
+  String get tokenExpiresAtTitle => 'Session expires';
+
+  @override
+  String tokenExpiresAtValue(String date) {
+    return 'Re-login required by $date';
   }
 }

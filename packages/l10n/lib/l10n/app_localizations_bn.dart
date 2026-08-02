@@ -500,6 +500,11 @@ class AppLocalizationsBn extends AppLocalizations {
       'আপনার অ্যাকাউন্ট কোনো সেলসপারসন প্রোফাইলের সাথে যুক্ত নয়।';
 
   @override
+  String salesDashboardCachedDues(String fetchedAt) {
+    return '$fetchedAt থেকে ক্যাশ করা বকেয়া দেখানো হচ্ছে';
+  }
+
+  @override
   String salesHello(String name) {
     return 'হ্যালো, $name';
   }
@@ -1020,6 +1025,20 @@ class AppLocalizationsBn extends AppLocalizations {
   String get salesWatchlistPendingSync => 'সিঙ্ক মুলতুবি';
 
   @override
+  String get salesWatchlistActivateAgain => 'আবার সক্রিয় করুন';
+
+  @override
+  String get salesWatchlistRemove => 'সরান';
+
+  @override
+  String get salesWatchlistActivated => 'ওয়াচলিস্ট আইটেম সক্রিয় হয়েছে';
+
+  @override
+  String salesWatchlistArchivedReason(String reason) {
+    return 'আর্কাইভ: $reason';
+  }
+
+  @override
   String get orderAppName => 'ARM Orders';
 
   @override
@@ -1212,5 +1231,60 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String commonAvgOrderInterval(int days) {
     return '~প্রতি $days দিন';
+  }
+
+  @override
+  String get commonEnable => 'সক্রিয় করুন';
+
+  @override
+  String get biometricEnableTitle => 'ফিঙ্গারপ্রিন্ট লগইন';
+
+  @override
+  String get biometricEnableSubtitle =>
+      'ফিঙ্গারপ্রিন্ট বা Face ID দিয়ে দ্রুত অ্যাপ আনলক করুন';
+
+  @override
+  String get biometricEnableReason =>
+      'ফিঙ্গারপ্রিন্ট লগইন সক্রিয় করতে নিশ্চিত করুন';
+
+  @override
+  String get biometricUnlockReason => 'চালিয়ে যেতে অ্যাপ আনলক করুন';
+
+  @override
+  String get biometricUnlockButton => 'ফিঙ্গারপ্রিন্ট দিয়ে আনলক';
+
+  @override
+  String get biometricUsePassword => 'পাসওয়ার্ড ব্যবহার করুন';
+
+  @override
+  String get biometricNotAvailable =>
+      'এই ডিভাইসে বায়োমেট্রিক প্রমাণীকরণ উপলব্ধ নয়';
+
+  @override
+  String get biometricOptInMessage =>
+      'এই ডিভাইসে অ্যাপ আনলক করতে ফিঙ্গারপ্রিন্ট বা Face ID ব্যবহার করবেন?';
+
+  @override
+  String get biometricAppLockedTitle => 'অ্যাপ লক করা';
+
+  @override
+  String get biometricAppLockedSubtitle =>
+      'অ্যাপ ব্যবহার চালিয়ে যেতে প্রমাণীকরণ করুন';
+
+  @override
+  String biometricSignInAs(String email) {
+    return '$email হিসেবে সাইন ইন';
+  }
+
+  @override
+  String get sessionExpired =>
+      'আপনার সেশন মেয়াদ শেষ হয়েছে। আবার সাইন ইন করুন।';
+
+  @override
+  String get tokenExpiresAtTitle => 'সেশন মেয়াদ শেষ';
+
+  @override
+  String tokenExpiresAtValue(String date) {
+    return '$date এর মধ্যে পুনরায় লগইন প্রয়োজন';
   }
 }

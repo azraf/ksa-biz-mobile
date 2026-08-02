@@ -29,6 +29,14 @@ class ProfileScreen extends ConsumerWidget {
               subtitle: Text(auth.roles.join(', ')),
             ),
           ],
+          const Divider(),
+          BiometricSettingsTile(
+            enabled: auth.biometricEnabled,
+            available: auth.biometricAvailable,
+            tokenExpiresAt: auth.tokenExpiresAt,
+            onEnable: (reason) => ref.read(authProvider.notifier).enableBiometricLogin(reason),
+            onDisable: () => ref.read(authProvider.notifier).disableBiometricLogin(),
+          ),
           if (AppConfig.showApiBaseUrlField) ...[
             const Divider(),
             ListTile(

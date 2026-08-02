@@ -166,9 +166,15 @@ class PeriodExpenseRow extends Equatable {
 }
 
 class ReportResult<T> {
-  const ReportResult({required this.data, this.fetchedAt, this.isCached = false});
+  const ReportResult({
+    required this.data,
+    this.fetchedAt,
+    this.isCached = false,
+    this.isStale = false,
+  });
 
   final T data;
   final String? fetchedAt;
   final bool isCached;
+  final bool isStale;
 }

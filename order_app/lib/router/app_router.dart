@@ -134,6 +134,13 @@ class HomeShell extends ConsumerWidget {
       appBar: AppBar(
         leading: showBack ? BackButton(onPressed: () => context.pop()) : null,
         title: Text(title),
+        actions: [
+          if (navigationShell.currentIndex != 3)
+            IconButton(
+              icon: const Icon(Icons.person_outline),
+              onPressed: () => context.go('/profile'),
+            ),
+        ],
       ),
       body: navigationShell,
       bottomNavigationBar: NavigationBar(

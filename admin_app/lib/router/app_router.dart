@@ -200,15 +200,62 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class AdminHomeShell extends StatelessWidget {
+class AdminHomeShell extends ConsumerWidget {
   const AdminHomeShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
+  String _titleForIndex(int index) {
+    return switch (index) {
+      0 => 'Home',
+      1 => 'Sales',
+      2 => 'Customers',
+      3 => 'Inventory',
+      _ => 'More',
+    };
+  }
+
+  void _showProfileMenu(BuildContext context, WidgetRef ref) {
+    final auth = ref.read(authProvider);
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const CircleAvatar(child: Icon(Icons.admin_panel_settings)),
+              title: Text(auth.user?.name ?? 'Admin'),
+              subtitle: Text(auth.user?.email ?? ''),
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Sign out'),
+              onTap: () async {
+                Navigator.pop(ctx);
+                await ref.read(authProvider.notifier).logout();
+                if (context.mounted) context.go('/login');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       drawer: const AppDrawer(),
+      appBar: AppBar(
+        title: Text(_titleForIndex(navigationShell.currentIndex)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person_outline),
+            onPressed: () => _showProfileMenu(context, ref),
+          ),
+        ],
+      ),
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,

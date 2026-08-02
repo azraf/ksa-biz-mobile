@@ -90,6 +90,14 @@ class AppDrawer extends ConsumerWidget {
           _tile(context, 'More hub', Icons.more_horiz, '/more'),
           _tile(context, 'Users', Icons.manage_accounts, '/users'),
           const Divider(),
+          BiometricSettingsTile(
+            enabled: auth.biometricEnabled,
+            available: auth.biometricAvailable,
+            tokenExpiresAt: auth.tokenExpiresAt,
+            onEnable: (reason) => ref.read(authProvider.notifier).enableBiometricLogin(reason),
+            onDisable: () => ref.read(authProvider.notifier).disableBiometricLogin(),
+          ),
+          const Divider(),
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Sign out'),

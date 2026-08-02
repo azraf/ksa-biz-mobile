@@ -20,8 +20,6 @@ dependencies:
   just_audio: ^0.9.46
   video_player: ^2.9.5
   chewie: ^1.11.3
-  flutter_uploader: ^3.0.0-beta.4
-  workmanager: ^0.5.2
   http: ^1.2.0
 
 dev_dependencies:
