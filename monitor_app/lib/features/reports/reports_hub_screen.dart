@@ -14,6 +14,12 @@ class ReportsHubScreen extends StatelessWidget {
         const Text('Read-only business reports'),
         const SizedBox(height: 16),
         _ReportTile(
+          title: 'Watch-list',
+          subtitle: 'Prospect locations with photos and recordings',
+          icon: Icons.bookmark_border,
+          onTap: () => context.push('/watchlist'),
+        ),
+        _ReportTile(
           title: 'Location map',
           subtitle: 'Shops and watch-list pins on map',
           icon: Icons.map_outlined,

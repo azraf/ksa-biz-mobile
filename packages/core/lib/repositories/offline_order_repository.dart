@@ -2,6 +2,7 @@ import '../models/order.dart';
 import '../models/paginated_response.dart';
 import '../offline/offline_sync_trigger.dart';
 import '../utils/client_request_id.dart';
+import '../widgets/line_items_editor.dart';
 import '../offline/stores/order_local_store.dart';
 import '../offline/stores/sync_outbox_store.dart';
 import '../offline/sync_queue_item.dart';
@@ -98,7 +99,10 @@ class OfflineOrderRepository {
 
     final payload = withClientRequestId(body);
     final localId = await _orders.nextLocalId();
-    final normalizedItems = _normalizeCreateItems(payload['items'] as List<dynamic>? ?? []);
+    final normalizedItems = _normalizeCreateItems(
+      payload['items'] as List<dynamic>? ?? [],
+      includeVat: payload['include_vat'] == true,
+    );
     final totalBill = normalizedItems.fold<double>(
       0,
       (sum, item) => sum + (item['bill'] as num).toDouble(),
@@ -108,6 +112,7 @@ class OfflineOrderRepository {
       'id': localId,
       'status': 'confirmed',
       'payment_status': body['payment_status'] ?? 'pending',
+      'include_vat': body['include_vat'] == true,
       'total_bill': totalBill,
       'items': normalizedItems,
       '_pending_sync': true,
@@ -220,6 +225,7 @@ class OfflineOrderRepository {
         'customer_van_id': order.customerVanId,
         'customer_importer_id': order.customerImporterId,
         'customer_shop_id': order.customerShopId,
+        'include_vat': order.includeVat,
         'total_bill': order.totalBill,
         'grand_discount': order.grandDiscount,
         'amount_paid': order.amountPaid,
@@ -237,13 +243,14 @@ class OfflineOrderRepository {
         '_pending_sync': order.id < 0,
       };
 
-  List<Map<String, dynamic>> _normalizeCreateItems(List<dynamic> rawItems) {
+  List<Map<String, dynamic>> _normalizeCreateItems(List<dynamic> rawItems, {bool includeVat = false}) {
     return rawItems.asMap().entries.map((entry) {
       final item = Map<String, dynamic>.from(entry.value as Map);
       final quantity = item['quantity'] as int? ?? 0;
       final price = _toDouble(item['product_price']);
       final discount = _toDouble(item['product_discount']);
-      final vat = _toDouble(item['product_vat']);
+      final lineNet = (price * quantity) - discount;
+      final vat = includeVat ? ((lineNet * LineItemDraft.defaultVatRate / 100 * 100).round() / 100) : 0.0;
       return {
         'id': -(entry.key + 1),
         'product_id': item['product_id'],
@@ -251,7 +258,7 @@ class OfflineOrderRepository {
         'product_price': price,
         'product_discount': discount,
         'product_vat': vat,
-        'bill': (price * quantity) - discount + vat,
+        'bill': lineNet + vat,
         'is_preorder': item['is_preorder'] as bool? ?? false,
       };
     }).toList();

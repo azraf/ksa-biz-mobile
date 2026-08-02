@@ -10,18 +10,25 @@ class LineItemDraft {
     int? unitId,
     double? price,
     this.discount = 0,
-    this.vat = 0,
   })  : unitId = unitId ?? product.defaultCartonUnitId,
         price = price ?? product.priceForUnitId(unitId ?? product.defaultCartonUnitId);
+
+  static const double defaultVatRate = 15;
 
   final ProductModel product;
   int quantity;
   int? unitId;
   double price;
   double discount;
-  double vat;
 
-  double get lineTotal => (price * quantity) - discount + vat;
+  double get lineNet => (price * quantity) - discount;
+
+  double vatAmount({bool includeVat = false}) {
+    if (!includeVat) return 0;
+    return (lineNet * defaultVatRate / 100 * 100).round() / 100;
+  }
+
+  double lineTotalFor({bool includeVat = false}) => lineNet + vatAmount(includeVat: includeVat);
 
   String get unitLabel => product.unitLabel(unitId);
 
@@ -38,7 +45,6 @@ class LineItemDraft {
         if (unitId != null) 'unit_id': unitId,
         'product_price': price,
         'product_discount': discount,
-        'product_vat': vat,
         'is_preorder': false,
       };
 }
@@ -50,12 +56,14 @@ class LineItemsEditor extends StatelessWidget {
     required this.onChanged,
     this.onRemove,
     this.readOnly = false,
+    this.includeVat = false,
   });
 
   final List<LineItemDraft> items;
   final VoidCallback onChanged;
   final void Function(int index)? onRemove;
   final bool readOnly;
+  final bool includeVat;
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +80,9 @@ class LineItemsEditor extends StatelessWidget {
           Card(
             child: ListTile(
               title: Text(items[i].product.name),
-              subtitle: Text('${items[i].quantityLabel} · ${currency.format(items[i].lineTotal)}'),
+              subtitle: Text(
+                '${items[i].quantityLabel} · ${currency.format(items[i].lineTotalFor(includeVat: includeVat))}',
+              ),
               trailing: readOnly
                   ? null
                   : IconButton(
@@ -98,7 +108,11 @@ class LineItemsEditor extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(8),
             child: Text(
-              l10n.commonTotal(currency.format(items.fold<double>(0, (s, e) => s + e.lineTotal))),
+              l10n.commonTotal(
+                currency.format(
+                  items.fold<double>(0, (s, e) => s + e.lineTotalFor(includeVat: includeVat)),
+                ),
+              ),
               style: Theme.of(context).textTheme.titleMedium,
             ),
           ),
@@ -121,7 +135,6 @@ class _LineItemDialogState extends State<_LineItemDialog> {
   late final TextEditingController _qty;
   late final TextEditingController _price;
   late final TextEditingController _discount;
-  late final TextEditingController _vat;
   late int? _unitId;
 
   @override
@@ -131,7 +144,6 @@ class _LineItemDialogState extends State<_LineItemDialog> {
     _qty = TextEditingController(text: '${widget.item.quantity}');
     _price = TextEditingController(text: '${widget.item.price}');
     _discount = TextEditingController(text: '${widget.item.discount}');
-    _vat = TextEditingController(text: '${widget.item.vat}');
   }
 
   @override
@@ -139,7 +151,6 @@ class _LineItemDialogState extends State<_LineItemDialog> {
     _qty.dispose();
     _price.dispose();
     _discount.dispose();
-    _vat.dispose();
     super.dispose();
   }
 
@@ -193,11 +204,6 @@ class _LineItemDialogState extends State<_LineItemDialog> {
             decoration: InputDecoration(labelText: l10n.commonDiscount),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
-          TextField(
-            controller: _vat,
-            decoration: InputDecoration(labelText: l10n.commonVat),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          ),
         ],
       ),
       actions: [
@@ -208,7 +214,6 @@ class _LineItemDialogState extends State<_LineItemDialog> {
             widget.item.unitId = _unitId;
             widget.item.price = double.tryParse(_price.text) ?? widget.item.price;
             widget.item.discount = double.tryParse(_discount.text) ?? widget.item.discount;
-            widget.item.vat = double.tryParse(_vat.text) ?? widget.item.vat;
             Navigator.pop(context, widget.item);
           },
           child: Text(l10n.commonSave),

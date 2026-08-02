@@ -199,6 +199,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                 _row(l10n.commonPaid, currency.format(order.amountPaid)),
                 _row(l10n.commonDue, currency.format(due), bold: true),
                 if (order.grandDiscount > 0) _row(l10n.commonGrandDiscount, currency.format(order.grandDiscount)),
+                if (order.includeVat && order.vatTotal > 0) _row(l10n.commonVat, currency.format(order.vatTotal)),
                 if (order.dueDate != null) _row(l10n.commonDueDate, order.dueDate!),
                 if (order.isOverdue) _row(l10n.commonOverdue, l10n.commonOverdueDays(order.daysOverdue)),
               ],

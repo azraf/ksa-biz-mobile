@@ -91,12 +91,27 @@ class _AdminWatchlistScreenState extends ConsumerState<AdminWatchlistScreen> {
                     itemCount: _items.length,
                     itemBuilder: (_, i) {
                       final item = _items[i];
+                      final mediaCount = item.images.length + item.recordings.length;
                       return ListTile(
                         title: Text(item.displayTitle),
                         subtitle: Text(
                           '${item.salesPerson?.name ?? 'SP #${item.salesPersonId}'} · ${item.noteText ?? item.gps}',
                         ),
-                        trailing: Text(item.status),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (mediaCount > 0)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: Chip(
+                                  visualDensity: VisualDensity.compact,
+                                  label: Text('$mediaCount'),
+                                  avatar: const Icon(Icons.perm_media, size: 16),
+                                ),
+                              ),
+                            Text(item.status),
+                          ],
+                        ),
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(builder: (_) => AdminWatchlistDetailScreen(item: item)),
@@ -120,6 +135,7 @@ class AdminWatchlistDetailScreen extends ConsumerStatefulWidget {
 
 class _AdminWatchlistDetailScreenState extends ConsumerState<AdminWatchlistDetailScreen> {
   WatchlistItemModel? _item;
+  List<LocalMediaAttachment> _pendingMedia = const [];
   bool _loading = true;
   Object? _error;
 
@@ -135,9 +151,15 @@ class _AdminWatchlistDetailScreenState extends ConsumerState<AdminWatchlistDetai
       _error = null;
     });
     try {
-      final item = await ref.read(offlineWatchlistRepositoryProvider).get(widget.item.id);
+      final item = await ref.read(offlineWatchlistRepositoryProvider).get(widget.item.id) ??
+          widget.item;
+      final pending = await loadWatchlistPendingMedia(
+        ref.read(offlineStoresProvider).media,
+        item,
+      );
       setState(() {
-        _item = item ?? widget.item;
+        _item = item;
+        _pendingMedia = pending;
         _loading = false;
       });
     } catch (e) {
@@ -165,7 +187,12 @@ class _AdminWatchlistDetailScreenState extends ConsumerState<AdminWatchlistDetai
     final item = _item ?? widget.item;
     final allMedia = [...item.images, ...item.recordings];
     return Scaffold(
-      appBar: AppBar(title: Text(item.displayTitle)),
+      appBar: AppBar(
+        title: Text(item.displayTitle),
+        actions: [
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _load),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -178,10 +205,17 @@ class _AdminWatchlistDetailScreenState extends ConsumerState<AdminWatchlistDetai
               title: const Text('Linked shop'),
               subtitle: Text('Shop #${item.customerShopId}'),
             ),
-          if (allMedia.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            MediaGallerySection(remoteItems: allMedia, title: 'Media'),
-          ],
+          const SizedBox(height: 12),
+          MediaGallerySection(
+            remoteItems: allMedia,
+            localItems: _pendingMedia,
+            title: 'Media',
+          ),
+          if (allMedia.isEmpty && _pendingMedia.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Text('No media attached.', style: TextStyle(color: Colors.grey)),
+            ),
         ],
       ),
     );

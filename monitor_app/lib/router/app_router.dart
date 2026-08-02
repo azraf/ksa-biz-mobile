@@ -12,6 +12,7 @@ import '../features/maps/location_map_screen_wrapper.dart';
 import '../features/reports/report_screens.dart';
 import '../features/reports/reports_hub_screen.dart';
 import '../features/sales/order_screens.dart';
+import '../features/watchlist/watchlist_screens.dart';
 import '../providers/auth_provider.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -101,6 +102,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
+        path: '/watchlist',
+        builder: (context, state) => const MonitorWatchlistScreen(),
+        routes: [
+          GoRoute(
+            path: ':id',
+            builder: (_, state) => MonitorWatchlistDetailScreen(
+              id: int.parse(state.pathParameters['id']!),
+            ),
+          ),
+        ],
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
         path: '/profile',
         builder: (context, state) => const ProfileScreen(),
       ),
@@ -114,6 +128,8 @@ class MonitorHomeShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   String _titleForLocation(String location) {
+    if (RegExp(r'/watchlist/\d+').hasMatch(location)) return 'Watch-list detail';
+    if (location.contains('/watchlist')) return 'Watch-list';
     if (RegExp(r'/sales/orders/\d+').hasMatch(location)) return 'Order detail';
     if (location.contains('/reports/map')) return 'Location map';
     if (location.contains('/reports/sales')) return 'Sales report';

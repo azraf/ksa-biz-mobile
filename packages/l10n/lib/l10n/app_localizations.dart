@@ -334,6 +334,18 @@ abstract class AppLocalizations {
   /// **'VAT'**
   String get commonVat;
 
+  /// No description provided for @commonIncludeVat.
+  ///
+  /// In en, this message translates to:
+  /// **'Include VAT (15%)'**
+  String get commonIncludeVat;
+
+  /// No description provided for @commonIncludeVatSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add 15% VAT to this order total'**
+  String get commonIncludeVatSubtitle;
+
   /// No description provided for @commonSearchProducts.
   ///
   /// In en, this message translates to:
@@ -2501,12 +2513,21 @@ abstract class AppLocalizations {
   String get biometricNotAvailable;
 
   /// No description provided for @biometricCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication cancelled'**
   String get biometricCancelled;
 
   /// No description provided for @biometricNotEnrolled.
+  ///
+  /// In en, this message translates to:
+  /// **'No fingerprint or Face ID enrolled. Add one in device Settings.'**
   String get biometricNotEnrolled;
 
   /// No description provided for @biometricEnableFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not enable fingerprint login. Please try again.'**
   String get biometricEnableFailed;
 
   /// No description provided for @biometricOptInMessage.

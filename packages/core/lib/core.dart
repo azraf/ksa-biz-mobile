@@ -98,3 +98,4 @@ export 'widgets/customer_diary_panel.dart';
 export 'widgets/customer_metrics_badges.dart';
 export 'widgets/note_capture_sheet.dart';
 export 'widgets/scroll_insets.dart';
+export 'utils/watchlist_media_helper.dart';

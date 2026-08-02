@@ -20,6 +20,7 @@ class ConvertOrderScreen extends ConsumerStatefulWidget {
 class _ConvertOrderScreenState extends ConsumerState<ConvertOrderScreen> {
   ManualOrderRequestModel? _request;
   final _items = <LineItemDraft>[];
+  bool _includeVat = false;
   bool _loading = true;
   bool _submitting = false;
   String? _error;
@@ -54,6 +55,7 @@ class _ConvertOrderScreenState extends ConsumerState<ConvertOrderScreen> {
       final order = await ref.read(manualOrderRepositoryProvider).convert(widget.id, {
         'sales_person_id': salesPersonId,
         'payment_status': 'pending',
+        'include_vat': _includeVat,
         'items': _items.map((e) => e.toJson()).toList(),
       });
       if (mounted) {
@@ -101,8 +103,15 @@ class _ConvertOrderScreenState extends ConsumerState<ConvertOrderScreen> {
           ),
           LineItemsEditor(
             items: _items,
+            includeVat: _includeVat,
             onChanged: () => setState(() {}),
             onRemove: (index) => setState(() => _items.removeAt(index)),
+          ),
+          SwitchListTile(
+            title: Text(l10n.commonIncludeVat),
+            subtitle: Text(l10n.commonIncludeVatSubtitle),
+            value: _includeVat,
+            onChanged: (value) => setState(() => _includeVat = value),
           ),
           const SizedBox(height: 16),
           FilledButton(

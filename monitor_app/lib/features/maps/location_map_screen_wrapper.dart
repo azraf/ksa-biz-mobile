@@ -1,6 +1,7 @@
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:maps_ui/maps_ui.dart';
 
 import '../../providers/repositories.dart';
@@ -45,6 +46,12 @@ class _MonitorLocationMapScreenState extends ConsumerState<MonitorLocationMapScr
     }
   }
 
+  void _onPinTap(MapPin pin) {
+    if (pin.type == MapPinType.watchlist) {
+      context.push('/watchlist/${pin.id}');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_error != null) {
@@ -68,6 +75,7 @@ class _MonitorLocationMapScreenState extends ConsumerState<MonitorLocationMapScr
       pins: [..._shopPins, ..._watchlistPins],
       initialFilter: MapLayerFilter.both,
       loading: _loading,
+      onPinTap: _onPinTap,
     );
   }
 }

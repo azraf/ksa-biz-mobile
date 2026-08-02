@@ -10,6 +10,7 @@ import 'package:record/record.dart';
 import 'package:l10n/l10n.dart';
 
 import 'package:maps_ui/maps_ui.dart';
+import 'package:media/media.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/connectivity_provider.dart';
@@ -166,7 +167,21 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
                                 item.noteText ?? item.gps,
                               ].where((s) => s.isNotEmpty).join(' · '),
                             ),
-                            trailing: const Icon(Icons.chevron_right),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (item.images.length + item.recordings.length > 0)
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 4),
+                                    child: Icon(
+                                      Icons.perm_media,
+                                      size: 18,
+                                      color: Theme.of(context).colorScheme.primary,
+                                    ),
+                                  ),
+                                const Icon(Icons.chevron_right),
+                              ],
+                            ),
                             onTap: () => context.push('/watchlist/${item.id}'),
                           );
                         },
@@ -343,6 +358,7 @@ class WatchlistDetailScreen extends ConsumerStatefulWidget {
 
 class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
   WatchlistItemModel? _item;
+  List<LocalMediaAttachment> _pendingMedia = const [];
   bool _loading = true;
   String? _error;
   bool _working = false;
@@ -379,11 +395,17 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
         item = await ref.read(offlineWatchlistRepositoryProvider).get(widget.id) ??
             (throw Exception('Not found'));
       } else {
-        item = await ref.read(watchlistRepositoryProvider).get(widget.id);
+        item = await ref.read(offlineWatchlistRepositoryProvider).get(widget.id) ??
+            await ref.read(watchlistRepositoryProvider).get(widget.id);
       }
+      final pending = await loadWatchlistPendingMedia(
+        ref.read(offlineStoresProvider).media,
+        item,
+      );
       _nameController.text = item.placeName ?? '';
       setState(() {
         _item = item;
+        _pendingMedia = pending;
         _loading = false;
       });
       _checkProximity(item);
@@ -637,37 +659,12 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
             const SizedBox(height: 12),
             Text(item.noteText!),
           ],
-          if (item.recordings.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(l10n.salesWatchlistVoiceNotes, style: const TextStyle(fontWeight: FontWeight.bold)),
-            ...item.recordings.map(
-              (r) => ListTile(
-                leading: const Icon(Icons.audiotrack),
-                title: Text(r.originalName ?? l10n.commonRecording),
-                onTap: r.url != null ? () => ContactLauncher.openUrl(r.url!) : null,
-              ),
-            ),
-          ],
-          if (item.images.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(l10n.salesWatchlistPhotos, style: const TextStyle(fontWeight: FontWeight.bold)),
-            SizedBox(
-              height: 100,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: item.images.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (_, i) {
-                  final img = item.images[i];
-                  if (img.url == null) return const SizedBox.shrink();
-                  return ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(img.url!, width: 100, height: 100, fit: BoxFit.cover),
-                  );
-                },
-              ),
-            ),
-          ],
+          const SizedBox(height: 12),
+          MediaGallerySection(
+            remoteItems: [...item.images, ...item.recordings],
+            localItems: _pendingMedia,
+            title: l10n.salesWatchlistPhotos,
+          ),
           const SizedBox(height: 12),
           Row(
             children: [

@@ -53,6 +53,8 @@
   "commonPrice": "السعر",
   "commonDiscount": "الخصم",
   "commonVat": "ضريبة القيمة المضافة",
+  "commonIncludeVat": "تضمين ضريبة القيمة المضافة (15%)",
+  "commonIncludeVatSubtitle": "إضافة 15% ضريبة إلى إجمالي الطلب",
   "commonSearchProducts": "البحث عن المنتجات",
   "commonProductPriceCtn": "ر.س {price} / كرتون · {pieces} قطعة",
   "@commonProductPriceCtn": {

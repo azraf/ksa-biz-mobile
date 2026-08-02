@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:isar_community/isar.dart';
 
+import '../../models/local_media_attachment.dart' as local_media;
 import '../../models/media_kind.dart';
 import '../../models/media_target.dart';
 import '../isar/enums.dart';
@@ -135,6 +136,46 @@ class MediaOutboxStore {
     await _isar.writeTxn(() async {
       await _db.localMediaBlobs.delete(id);
     });
+  }
+
+  /// Pending/uploading blobs for a parent entity (e.g. watchlist item).
+  Future<List<local_media.LocalMediaAttachment>> attachmentsForParent({
+    required String parentEntityType,
+    int? parentServerId,
+    int? parentLocalId,
+  }) async {
+    final rows = await _db.localMediaBlobs
+        .filter()
+        .parentEntityTypeEqualTo(parentEntityType)
+        .sortByCreatedAt()
+        .findAll();
+    final matched = rows.where((b) {
+      if (b.status == MediaUploadStatus.done) return false;
+      if (parentServerId != null && parentServerId > 0 && b.parentServerId == parentServerId) {
+        return true;
+      }
+      if (parentLocalId != null && b.parentLocalId == parentLocalId) return true;
+      return false;
+    });
+    return matched
+        .map(
+          (b) => local_media.LocalMediaAttachment(
+            blobId: b.id,
+            path: b.localPath,
+            kind: MediaKind.fromString(b.mediaKind) ?? MediaKind.image,
+            mime: b.mimeType,
+            uploadStatus: _mapUploadStatus(b.status),
+            originalName: b.originalName,
+          ),
+        )
+        .toList();
+  }
+
+  local_media.MediaUploadStatus _mapUploadStatus(MediaUploadStatus status) {
+    return local_media.MediaUploadStatus.values.firstWhere(
+      (s) => s.name == status.name,
+      orElse: () => local_media.MediaUploadStatus.pending,
+    );
   }
 
   MediaBlobRecord _toRecord(LocalMediaBlob blob) {

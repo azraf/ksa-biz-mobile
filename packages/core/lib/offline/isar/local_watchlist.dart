@@ -23,6 +23,9 @@ class LocalWatchlistItem {
   int? customerShopId;
   String? createdAt;
 
+  String? imagesJson;
+  String? recordingsJson;
+
   @Index()
   late bool pendingSync;
 

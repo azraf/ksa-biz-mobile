@@ -130,6 +130,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonVat => 'VAT';
 
   @override
+  String get commonIncludeVat => 'Include VAT (15%)';
+
+  @override
+  String get commonIncludeVatSubtitle => 'Add 15% VAT to this order total';
+
+  @override
   String get commonSearchProducts => 'Search products';
 
   @override

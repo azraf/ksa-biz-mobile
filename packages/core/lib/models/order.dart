@@ -19,6 +19,7 @@ class OrderModel extends Equatable {
     this.totalBill = 0,
     this.grandDiscount = 0,
     this.promotionDiscount = 0,
+    this.includeVat = false,
     this.amountPaid = 0,
     this.amountDue = 0,
     this.paymentStatus = 'pending',
@@ -49,6 +50,7 @@ class OrderModel extends Equatable {
   final double totalBill;
   final double grandDiscount;
   final double promotionDiscount;
+  final bool includeVat;
   final double amountPaid;
   final double amountDue;
   final String paymentStatus;
@@ -84,6 +86,7 @@ class OrderModel extends Equatable {
       totalBill: _toDouble(json['total_bill']),
       grandDiscount: _toDouble(json['grand_discount']),
       promotionDiscount: _toDouble(json['promotion_discount']),
+      includeVat: json['include_vat'] as bool? ?? false,
       amountPaid: _toDouble(json['amount_paid']),
       amountDue: _toDouble(json['amount_due']),
       paymentStatus: json['payment_status'] as String? ?? 'pending',

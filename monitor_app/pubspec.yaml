@@ -18,6 +18,8 @@ dependencies:
     sdk: flutter
   maps_ui:
     path: ../packages/maps_ui
+  media:
+    path: ../packages/media
   flutter_riverpod: ^3.3.2
   go_router: ^17.3.0
   shared_preferences: ^2.2.0

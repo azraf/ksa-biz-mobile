@@ -53,6 +53,8 @@
   "commonPrice": "মূল্য",
   "commonDiscount": "ছাড়",
   "commonVat": "ভ্যাট",
+  "commonIncludeVat": "ভ্যাট অন্তর্ভুক্ত করুন (15%)",
+  "commonIncludeVatSubtitle": "অর্ডারের মোটে 15% ভ্যাট যোগ করুন",
   "commonSearchProducts": "পণ্য খুঁজুন",
   "commonProductPriceCtn": "SAR {price} / CTN · {pieces} পিস",
   "@commonProductPriceCtn": {

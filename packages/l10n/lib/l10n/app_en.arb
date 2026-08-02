@@ -53,6 +53,8 @@
   "commonPrice": "Price",
   "commonDiscount": "Discount",
   "commonVat": "VAT",
+  "commonIncludeVat": "Include VAT (15%)",
+  "commonIncludeVatSubtitle": "Add 15% VAT to this order total",
   "commonSearchProducts": "Search products",
   "commonProductPriceCtn": "SAR {price} / CTN · {pieces} pcs",
   "@commonProductPriceCtn": {

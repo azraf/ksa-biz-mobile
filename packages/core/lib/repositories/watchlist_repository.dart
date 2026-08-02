@@ -1,5 +1,6 @@
 import '../api/api_client.dart';
 import '../models/paginated_response.dart';
+import '../models/media.dart';
 import '../models/watchlist_item.dart';
 
 class WatchlistRepository {
@@ -28,6 +29,18 @@ class WatchlistRepository {
   Future<WatchlistItemModel> get(int id) async {
     final response = await _api.get('/watchlist-items/$id');
     return WatchlistItemModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
+  Future<({List<MediaModel> images, List<MediaModel> recordings})> listAttachments(int id) async {
+    final response = await _api.get('/watchlist-items/$id/attachments');
+    final data = response['data'] as Map<String, dynamic>;
+    final images = (data['images'] as List<dynamic>? ?? [])
+        .map((e) => MediaModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+    final recordings = (data['recordings'] as List<dynamic>? ?? [])
+        .map((e) => MediaModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+    return (images: images, recordings: recordings);
   }
 
   Future<WatchlistItemModel> create({

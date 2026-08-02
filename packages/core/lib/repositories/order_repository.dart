@@ -109,6 +109,11 @@ class OrderRepository {
     return OrderModel.fromJson(response['order'] as Map<String, dynamic>);
   }
 
+  Future<OrderModel> update(int orderId, Map<String, dynamic> body) async {
+    final response = await _api.patch('/orders/$orderId', body: body);
+    return OrderModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
   Future<OrderModel> recordReturn(int orderId, List<Map<String, dynamic>> items) async {
     final response = await _api.post('/orders/$orderId/returns', body: {'items': items});
     return OrderModel.fromJson(response['order'] as Map<String, dynamic>);

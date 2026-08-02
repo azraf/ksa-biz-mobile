@@ -130,6 +130,12 @@ class AppLocalizationsBn extends AppLocalizations {
   String get commonVat => 'ভ্যাট';
 
   @override
+  String get commonIncludeVat => 'ভ্যাট অন্তর্ভুক্ত করুন (15%)';
+
+  @override
+  String get commonIncludeVatSubtitle => 'অর্ডারের মোটে 15% ভ্যাট যোগ করুন';
+
+  @override
   String get commonSearchProducts => 'পণ্য খুঁজুন';
 
   @override

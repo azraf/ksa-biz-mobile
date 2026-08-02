@@ -38,38 +38,48 @@ const LocalWatchlistItemSchema = CollectionSchema(
       name: r'gps',
       type: IsarType.string,
     ),
-    r'noteText': PropertySchema(
+    r'imagesJson': PropertySchema(
       id: 4,
+      name: r'imagesJson',
+      type: IsarType.string,
+    ),
+    r'noteText': PropertySchema(
+      id: 5,
       name: r'noteText',
       type: IsarType.string,
     ),
     r'pendingSync': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'pendingSync',
       type: IsarType.bool,
     ),
     r'placeName': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'placeName',
       type: IsarType.string,
     ),
+    r'recordingsJson': PropertySchema(
+      id: 8,
+      name: r'recordingsJson',
+      type: IsarType.string,
+    ),
     r'salesPersonId': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'salesPersonId',
       type: IsarType.long,
     ),
     r'serverId': PropertySchema(
-      id: 8,
+      id: 10,
       name: r'serverId',
       type: IsarType.long,
     ),
     r'status': PropertySchema(
-      id: 9,
+      id: 11,
       name: r'status',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 10,
+      id: 12,
       name: r'updatedAt',
       type: IsarType.dateTime,
     )
@@ -174,6 +184,12 @@ int _localWatchlistItemEstimateSize(
   }
   bytesCount += 3 + object.gps.length * 3;
   {
+    final value = object.imagesJson;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
     final value = object.noteText;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -181,6 +197,12 @@ int _localWatchlistItemEstimateSize(
   }
   {
     final value = object.placeName;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.recordingsJson;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
     }
@@ -199,13 +221,15 @@ void _localWatchlistItemSerialize(
   writer.writeString(offsets[1], object.createdAt);
   writer.writeLong(offsets[2], object.customerShopId);
   writer.writeString(offsets[3], object.gps);
-  writer.writeString(offsets[4], object.noteText);
-  writer.writeBool(offsets[5], object.pendingSync);
-  writer.writeString(offsets[6], object.placeName);
-  writer.writeLong(offsets[7], object.salesPersonId);
-  writer.writeLong(offsets[8], object.serverId);
-  writer.writeString(offsets[9], object.status);
-  writer.writeDateTime(offsets[10], object.updatedAt);
+  writer.writeString(offsets[4], object.imagesJson);
+  writer.writeString(offsets[5], object.noteText);
+  writer.writeBool(offsets[6], object.pendingSync);
+  writer.writeString(offsets[7], object.placeName);
+  writer.writeString(offsets[8], object.recordingsJson);
+  writer.writeLong(offsets[9], object.salesPersonId);
+  writer.writeLong(offsets[10], object.serverId);
+  writer.writeString(offsets[11], object.status);
+  writer.writeDateTime(offsets[12], object.updatedAt);
 }
 
 LocalWatchlistItem _localWatchlistItemDeserialize(
@@ -219,14 +243,16 @@ LocalWatchlistItem _localWatchlistItemDeserialize(
   object.createdAt = reader.readStringOrNull(offsets[1]);
   object.customerShopId = reader.readLongOrNull(offsets[2]);
   object.gps = reader.readString(offsets[3]);
+  object.imagesJson = reader.readStringOrNull(offsets[4]);
   object.isarId = id;
-  object.noteText = reader.readStringOrNull(offsets[4]);
-  object.pendingSync = reader.readBool(offsets[5]);
-  object.placeName = reader.readStringOrNull(offsets[6]);
-  object.salesPersonId = reader.readLong(offsets[7]);
-  object.serverId = reader.readLong(offsets[8]);
-  object.status = reader.readString(offsets[9]);
-  object.updatedAt = reader.readDateTime(offsets[10]);
+  object.noteText = reader.readStringOrNull(offsets[5]);
+  object.pendingSync = reader.readBool(offsets[6]);
+  object.placeName = reader.readStringOrNull(offsets[7]);
+  object.recordingsJson = reader.readStringOrNull(offsets[8]);
+  object.salesPersonId = reader.readLong(offsets[9]);
+  object.serverId = reader.readLong(offsets[10]);
+  object.status = reader.readString(offsets[11]);
+  object.updatedAt = reader.readDateTime(offsets[12]);
   return object;
 }
 
@@ -248,16 +274,20 @@ P _localWatchlistItemDeserializeProp<P>(
     case 4:
       return (reader.readStringOrNull(offset)) as P;
     case 5:
-      return (reader.readBool(offset)) as P;
-    case 6:
       return (reader.readStringOrNull(offset)) as P;
+    case 6:
+      return (reader.readBool(offset)) as P;
     case 7:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 8:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 9:
-      return (reader.readString(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 10:
+      return (reader.readLong(offset)) as P;
+    case 11:
+      return (reader.readString(offset)) as P;
+    case 12:
       return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1340,6 +1370,160 @@ extension LocalWatchlistItemQueryFilter
   }
 
   QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      imagesJsonIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'imagesJson',
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      imagesJsonIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'imagesJson',
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      imagesJsonEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'imagesJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      imagesJsonGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'imagesJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      imagesJsonLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'imagesJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      imagesJsonBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'imagesJson',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      imagesJsonStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'imagesJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      imagesJsonEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'imagesJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      imagesJsonContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'imagesJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      imagesJsonMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'imagesJson',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      imagesJsonIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'imagesJson',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      imagesJsonIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'imagesJson',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
       isarIdEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1708,6 +1892,160 @@ extension LocalWatchlistItemQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'placeName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      recordingsJsonIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'recordingsJson',
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      recordingsJsonIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'recordingsJson',
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      recordingsJsonEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'recordingsJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      recordingsJsonGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'recordingsJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      recordingsJsonLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'recordingsJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      recordingsJsonBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'recordingsJson',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      recordingsJsonStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'recordingsJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      recordingsJsonEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'recordingsJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      recordingsJsonContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'recordingsJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      recordingsJsonMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'recordingsJson',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      recordingsJsonIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'recordingsJson',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterFilterCondition>
+      recordingsJsonIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'recordingsJson',
         value: '',
       ));
     });
@@ -2083,6 +2421,20 @@ extension LocalWatchlistItemQuerySortBy
   }
 
   QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterSortBy>
+      sortByImagesJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'imagesJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterSortBy>
+      sortByImagesJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'imagesJson', Sort.desc);
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterSortBy>
       sortByNoteText() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'noteText', Sort.asc);
@@ -2121,6 +2473,20 @@ extension LocalWatchlistItemQuerySortBy
       sortByPlaceNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'placeName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterSortBy>
+      sortByRecordingsJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'recordingsJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterSortBy>
+      sortByRecordingsJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'recordingsJson', Sort.desc);
     });
   }
 
@@ -2240,6 +2606,20 @@ extension LocalWatchlistItemQuerySortThenBy
   }
 
   QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterSortBy>
+      thenByImagesJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'imagesJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterSortBy>
+      thenByImagesJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'imagesJson', Sort.desc);
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterSortBy>
       thenByIsarId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isarId', Sort.asc);
@@ -2292,6 +2672,20 @@ extension LocalWatchlistItemQuerySortThenBy
       thenByPlaceNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'placeName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterSortBy>
+      thenByRecordingsJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'recordingsJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QAfterSortBy>
+      thenByRecordingsJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'recordingsJson', Sort.desc);
     });
   }
 
@@ -2384,6 +2778,13 @@ extension LocalWatchlistItemQueryWhereDistinct
   }
 
   QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QDistinct>
+      distinctByImagesJson({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'imagesJson', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QDistinct>
       distinctByNoteText({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'noteText', caseSensitive: caseSensitive);
@@ -2401,6 +2802,14 @@ extension LocalWatchlistItemQueryWhereDistinct
       distinctByPlaceName({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'placeName', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, LocalWatchlistItem, QDistinct>
+      distinctByRecordingsJson({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'recordingsJson',
+          caseSensitive: caseSensitive);
     });
   }
 
@@ -2469,6 +2878,13 @@ extension LocalWatchlistItemQueryProperty
   }
 
   QueryBuilder<LocalWatchlistItem, String?, QQueryOperations>
+      imagesJsonProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'imagesJson');
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, String?, QQueryOperations>
       noteTextProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'noteText');
@@ -2486,6 +2902,13 @@ extension LocalWatchlistItemQueryProperty
       placeNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'placeName');
+    });
+  }
+
+  QueryBuilder<LocalWatchlistItem, String?, QQueryOperations>
+      recordingsJsonProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'recordingsJson');
     });
   }
 

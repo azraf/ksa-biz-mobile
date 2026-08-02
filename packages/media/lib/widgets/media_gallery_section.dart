@@ -28,7 +28,11 @@ class MediaGallerySection extends StatelessWidget {
 
     for (final local in localItems) {
       if (local.kind == MediaKind.image) {
-        images.add(MediaImageTile(localPath: local.path, height: 100));
+        images.add(MediaImageTile(
+          localPath: local.path,
+          height: 100,
+          title: local.originalName,
+        ));
       } else if (local.kind == MediaKind.audio) {
         players.add(ListTile(
           leading: const Icon(Icons.audiotrack),
@@ -46,7 +50,11 @@ class MediaGallerySection extends StatelessWidget {
 
     for (final item in remoteItems) {
       if (item.type == 'gallery' || item.mimeType?.startsWith('image/') == true) {
-        images.add(MediaImageTile(url: item.url, height: 100));
+        images.add(MediaImageTile(
+          url: item.url,
+          height: 100,
+          title: item.originalName,
+        ));
       } else if (item.isAudio && item.url != null) {
         players.add(MediaAudioPlayer(url: item.url!, title: item.originalName ?? item.type));
       } else if (item.isVideo && item.url != null) {

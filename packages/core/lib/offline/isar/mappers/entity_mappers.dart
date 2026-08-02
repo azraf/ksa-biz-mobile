@@ -8,6 +8,7 @@ import '../../../models/order.dart';
 import '../../../models/order_item.dart';
 import '../../../models/payment.dart';
 import '../../../models/product.dart';
+import '../../../models/media.dart';
 import '../../../models/watchlist_item.dart';
 import '../local_customer.dart';
 import '../local_diary.dart';
@@ -30,6 +31,7 @@ class OrderMapper {
       ..totalBill = model.totalBill
       ..grandDiscount = model.grandDiscount
       ..promotionDiscount = model.promotionDiscount
+      ..includeVat = model.includeVat
       ..amountPaid = model.amountPaid
       ..amountDue = model.amountDue
       ..status = model.status
@@ -85,6 +87,7 @@ class OrderMapper {
       totalBill: local.totalBill,
       grandDiscount: local.grandDiscount,
       promotionDiscount: local.promotionDiscount,
+      includeVat: local.includeVat,
       amountPaid: local.amountPaid,
       amountDue: local.amountDue,
       paymentStatus: local.paymentStatus,
@@ -135,6 +138,7 @@ class OrderMapper {
       'customer_van_id': model.customerVanId,
       'customer_importer_id': model.customerImporterId,
       'customer_shop_id': model.customerShopId,
+      'include_vat': model.includeVat,
       'total_bill': model.totalBill,
       'grand_discount': model.grandDiscount,
       'amount_paid': model.amountPaid,
@@ -274,6 +278,26 @@ class CustomerMapper {
 }
 
 class WatchlistMapper {
+  static String? _encodeMediaList(List<MediaModel> items) {
+    if (items.isEmpty) return null;
+    return jsonEncode(items.map((m) => {
+          'id': m.id,
+          'type': m.type,
+          if (m.caption != null) 'caption': m.caption,
+          if (m.originalName != null) 'original_name': m.originalName,
+          if (m.mimeType != null) 'mime_type': m.mimeType,
+          if (m.url != null) 'url': m.url,
+        }).toList());
+  }
+
+  static List<MediaModel> _decodeMediaList(String? jsonStr) {
+    if (jsonStr == null || jsonStr.isEmpty) return const [];
+    final list = jsonDecode(jsonStr) as List<dynamic>;
+    return list
+        .map((e) => MediaModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
   static LocalWatchlistItem fromModel(WatchlistItemModel item, {bool pendingSync = false}) {
     return LocalWatchlistItem()
       ..serverId = item.id
@@ -285,6 +309,8 @@ class WatchlistMapper {
       ..archivedReason = item.archivedReason
       ..customerShopId = item.customerShopId
       ..createdAt = item.createdAt
+      ..imagesJson = _encodeMediaList(item.images)
+      ..recordingsJson = _encodeMediaList(item.recordings)
       ..pendingSync = pendingSync || item.isLocalOnly
       ..updatedAt = DateTime.now();
   }
@@ -302,6 +328,8 @@ class WatchlistMapper {
       customerShopId: local.customerShopId,
       isLocalOnly: local.pendingSync,
       createdAt: local.createdAt,
+      images: _decodeMediaList(local.imagesJson),
+      recordings: _decodeMediaList(local.recordingsJson),
     );
   }
 }

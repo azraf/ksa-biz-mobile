@@ -27,6 +27,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
   final _items = <LineItemDraft>[];
   final _walkInNoteController = TextEditingController();
   bool _walkInMode = false;
+  bool _includeVat = false;
   int? _walkInShopId;
   bool _loadingTypes = true;
   bool _submitting = false;
@@ -146,6 +147,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
       'sales_person_id': salesPersonId,
       'customer_type_id': _selectedType!.id,
       'payment_status': 'pending',
+      'include_vat': _includeVat,
       'items': _items.map((e) => e.toJson()).toList(),
     };
 
@@ -285,8 +287,15 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
         ),
         LineItemsEditor(
           items: _items,
+          includeVat: _includeVat,
           onChanged: () => setState(() {}),
           onRemove: (i) => setState(() => _items.removeAt(i)),
+        ),
+        SwitchListTile(
+          title: Text(l10n.commonIncludeVat),
+          subtitle: Text(l10n.commonIncludeVatSubtitle),
+          value: _includeVat,
+          onChanged: (value) => setState(() => _includeVat = value),
         ),
         const SizedBox(height: 16),
         FilledButton(

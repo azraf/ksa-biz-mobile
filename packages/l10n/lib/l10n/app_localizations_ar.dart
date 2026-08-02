@@ -130,6 +130,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commonVat => 'ضريبة القيمة المضافة';
 
   @override
+  String get commonIncludeVat => 'تضمين ضريبة القيمة المضافة (15%)';
+
+  @override
+  String get commonIncludeVatSubtitle => 'إضافة 15% ضريبة إلى إجمالي الطلب';
+
+  @override
   String get commonSearchProducts => 'البحث عن المنتجات';
 
   @override

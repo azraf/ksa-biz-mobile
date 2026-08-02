@@ -137,14 +137,18 @@ class OfflineWatchlistRepository {
   }
 
   Future<WatchlistItemModel?> get(int id) async {
-    final local = await _watchlist.get(id);
-    if (local != null) return local;
-    if (_isOnline()) {
-      final item = await _remote.get(id);
-      await _watchlist.upsert(item);
-      return item;
+    if (_isOnline() && id > 0) {
+      try {
+        final item = await _remote.get(id);
+        await _watchlist.upsert(item);
+        return item;
+      } catch (_) {
+        final local = await _watchlist.get(id);
+        if (local != null) return local;
+        rethrow;
+      }
     }
-    return null;
+    return _watchlist.get(id);
   }
 
   Future<void> delete(int id) async {
@@ -180,5 +184,21 @@ class OfflineWatchlistRepository {
         'archived_reason': item.archivedReason,
         'customer_shop_id': item.customerShopId,
         'created_at': item.createdAt,
+        'images': item.images.map((m) => {
+              'id': m.id,
+              'type': m.type,
+              if (m.caption != null) 'caption': m.caption,
+              if (m.originalName != null) 'original_name': m.originalName,
+              if (m.mimeType != null) 'mime_type': m.mimeType,
+              if (m.url != null) 'url': m.url,
+            }).toList(),
+        'recordings': item.recordings.map((m) => {
+              'id': m.id,
+              'type': m.type,
+              if (m.caption != null) 'caption': m.caption,
+              if (m.originalName != null) 'original_name': m.originalName,
+              if (m.mimeType != null) 'mime_type': m.mimeType,
+              if (m.url != null) 'url': m.url,
+            }).toList(),
       };
 }

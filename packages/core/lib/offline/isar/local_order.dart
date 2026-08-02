@@ -42,6 +42,7 @@ class LocalOrder {
   late double promotionDiscount;
   late double amountPaid;
   late double amountDue;
+  bool includeVat = false;
 
   @Index()
   late String status;

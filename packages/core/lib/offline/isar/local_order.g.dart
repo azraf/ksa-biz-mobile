@@ -82,80 +82,85 @@ const LocalOrderSchema = CollectionSchema(
       name: r'grandDiscount',
       type: IsarType.double,
     ),
-    r'isOverdue': PropertySchema(
+    r'includeVat': PropertySchema(
       id: 13,
+      name: r'includeVat',
+      type: IsarType.bool,
+    ),
+    r'isOverdue': PropertySchema(
+      id: 14,
       name: r'isOverdue',
       type: IsarType.bool,
     ),
     r'isWalkInCustomer': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'isWalkInCustomer',
       type: IsarType.bool,
     ),
     r'items': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'items',
       type: IsarType.objectList,
       target: r'LocalOrderLine',
     ),
     r'manualOrderRequestId': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'manualOrderRequestId',
       type: IsarType.long,
     ),
     r'paymentStatus': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'paymentStatus',
       type: IsarType.string,
     ),
     r'payments': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'payments',
       type: IsarType.objectList,
       target: r'LocalPayment',
     ),
     r'pendingSync': PropertySchema(
-      id: 19,
+      id: 20,
       name: r'pendingSync',
       type: IsarType.bool,
     ),
     r'promotionDiscount': PropertySchema(
-      id: 20,
+      id: 21,
       name: r'promotionDiscount',
       type: IsarType.double,
     ),
     r'salesPersonId': PropertySchema(
-      id: 21,
+      id: 22,
       name: r'salesPersonId',
       type: IsarType.long,
     ),
     r'serverId': PropertySchema(
-      id: 22,
+      id: 23,
       name: r'serverId',
       type: IsarType.long,
     ),
     r'status': PropertySchema(
-      id: 23,
+      id: 24,
       name: r'status',
       type: IsarType.string,
     ),
     r'subtotal': PropertySchema(
-      id: 24,
+      id: 25,
       name: r'subtotal',
       type: IsarType.double,
     ),
     r'totalBill': PropertySchema(
-      id: 25,
+      id: 26,
       name: r'totalBill',
       type: IsarType.double,
     ),
     r'updatedAt': PropertySchema(
-      id: 26,
+      id: 27,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
     r'vatTotal': PropertySchema(
-      id: 27,
+      id: 28,
       name: r'vatTotal',
       type: IsarType.double,
     )
@@ -320,31 +325,32 @@ void _localOrderSerialize(
   writer.writeLong(offsets[10], object.daysOverdue);
   writer.writeString(offsets[11], object.dueDate);
   writer.writeDouble(offsets[12], object.grandDiscount);
-  writer.writeBool(offsets[13], object.isOverdue);
-  writer.writeBool(offsets[14], object.isWalkInCustomer);
+  writer.writeBool(offsets[13], object.includeVat);
+  writer.writeBool(offsets[14], object.isOverdue);
+  writer.writeBool(offsets[15], object.isWalkInCustomer);
   writer.writeObjectList<LocalOrderLine>(
-    offsets[15],
+    offsets[16],
     allOffsets,
     LocalOrderLineSchema.serialize,
     object.items,
   );
-  writer.writeLong(offsets[16], object.manualOrderRequestId);
-  writer.writeString(offsets[17], object.paymentStatus);
+  writer.writeLong(offsets[17], object.manualOrderRequestId);
+  writer.writeString(offsets[18], object.paymentStatus);
   writer.writeObjectList<LocalPayment>(
-    offsets[18],
+    offsets[19],
     allOffsets,
     LocalPaymentSchema.serialize,
     object.payments,
   );
-  writer.writeBool(offsets[19], object.pendingSync);
-  writer.writeDouble(offsets[20], object.promotionDiscount);
-  writer.writeLong(offsets[21], object.salesPersonId);
-  writer.writeLong(offsets[22], object.serverId);
-  writer.writeString(offsets[23], object.status);
-  writer.writeDouble(offsets[24], object.subtotal);
-  writer.writeDouble(offsets[25], object.totalBill);
-  writer.writeDateTime(offsets[26], object.updatedAt);
-  writer.writeDouble(offsets[27], object.vatTotal);
+  writer.writeBool(offsets[20], object.pendingSync);
+  writer.writeDouble(offsets[21], object.promotionDiscount);
+  writer.writeLong(offsets[22], object.salesPersonId);
+  writer.writeLong(offsets[23], object.serverId);
+  writer.writeString(offsets[24], object.status);
+  writer.writeDouble(offsets[25], object.subtotal);
+  writer.writeDouble(offsets[26], object.totalBill);
+  writer.writeDateTime(offsets[27], object.updatedAt);
+  writer.writeDouble(offsets[28], object.vatTotal);
 }
 
 LocalOrder _localOrderDeserialize(
@@ -367,34 +373,35 @@ LocalOrder _localOrderDeserialize(
   object.daysOverdue = reader.readLong(offsets[10]);
   object.dueDate = reader.readStringOrNull(offsets[11]);
   object.grandDiscount = reader.readDouble(offsets[12]);
-  object.isOverdue = reader.readBool(offsets[13]);
-  object.isWalkInCustomer = reader.readBool(offsets[14]);
+  object.includeVat = reader.readBool(offsets[13]);
+  object.isOverdue = reader.readBool(offsets[14]);
+  object.isWalkInCustomer = reader.readBool(offsets[15]);
   object.isarId = id;
   object.items = reader.readObjectList<LocalOrderLine>(
-        offsets[15],
+        offsets[16],
         LocalOrderLineSchema.deserialize,
         allOffsets,
         LocalOrderLine(),
       ) ??
       [];
-  object.manualOrderRequestId = reader.readLongOrNull(offsets[16]);
-  object.paymentStatus = reader.readString(offsets[17]);
+  object.manualOrderRequestId = reader.readLongOrNull(offsets[17]);
+  object.paymentStatus = reader.readString(offsets[18]);
   object.payments = reader.readObjectList<LocalPayment>(
-        offsets[18],
+        offsets[19],
         LocalPaymentSchema.deserialize,
         allOffsets,
         LocalPayment(),
       ) ??
       [];
-  object.pendingSync = reader.readBool(offsets[19]);
-  object.promotionDiscount = reader.readDouble(offsets[20]);
-  object.salesPersonId = reader.readLongOrNull(offsets[21]);
-  object.serverId = reader.readLong(offsets[22]);
-  object.status = reader.readString(offsets[23]);
-  object.subtotal = reader.readDouble(offsets[24]);
-  object.totalBill = reader.readDouble(offsets[25]);
-  object.updatedAt = reader.readDateTime(offsets[26]);
-  object.vatTotal = reader.readDouble(offsets[27]);
+  object.pendingSync = reader.readBool(offsets[20]);
+  object.promotionDiscount = reader.readDouble(offsets[21]);
+  object.salesPersonId = reader.readLongOrNull(offsets[22]);
+  object.serverId = reader.readLong(offsets[23]);
+  object.status = reader.readString(offsets[24]);
+  object.subtotal = reader.readDouble(offsets[25]);
+  object.totalBill = reader.readDouble(offsets[26]);
+  object.updatedAt = reader.readDateTime(offsets[27]);
+  object.vatTotal = reader.readDouble(offsets[28]);
   return object;
 }
 
@@ -436,6 +443,8 @@ P _localOrderDeserializeProp<P>(
     case 14:
       return (reader.readBool(offset)) as P;
     case 15:
+      return (reader.readBool(offset)) as P;
+    case 16:
       return (reader.readObjectList<LocalOrderLine>(
             offset,
             LocalOrderLineSchema.deserialize,
@@ -443,11 +452,11 @@ P _localOrderDeserializeProp<P>(
             LocalOrderLine(),
           ) ??
           []) as P;
-    case 16:
-      return (reader.readLongOrNull(offset)) as P;
     case 17:
-      return (reader.readString(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 18:
+      return (reader.readString(offset)) as P;
+    case 19:
       return (reader.readObjectList<LocalPayment>(
             offset,
             LocalPaymentSchema.deserialize,
@@ -455,23 +464,23 @@ P _localOrderDeserializeProp<P>(
             LocalPayment(),
           ) ??
           []) as P;
-    case 19:
-      return (reader.readBool(offset)) as P;
     case 20:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 21:
-      return (reader.readLongOrNull(offset)) as P;
-    case 22:
-      return (reader.readLong(offset)) as P;
-    case 23:
-      return (reader.readString(offset)) as P;
-    case 24:
       return (reader.readDouble(offset)) as P;
+    case 22:
+      return (reader.readLongOrNull(offset)) as P;
+    case 23:
+      return (reader.readLong(offset)) as P;
+    case 24:
+      return (reader.readString(offset)) as P;
     case 25:
       return (reader.readDouble(offset)) as P;
     case 26:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 27:
+      return (reader.readDateTime(offset)) as P;
+    case 28:
       return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -2257,6 +2266,16 @@ extension LocalOrderQueryFilter
     });
   }
 
+  QueryBuilder<LocalOrder, LocalOrder, QAfterFilterCondition> includeVatEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'includeVat',
+        value: value,
+      ));
+    });
+  }
+
   QueryBuilder<LocalOrder, LocalOrder, QAfterFilterCondition> isOverdueEqualTo(
       bool value) {
     return QueryBuilder.apply(this, (query) {
@@ -3481,6 +3500,18 @@ extension LocalOrderQuerySortBy
     });
   }
 
+  QueryBuilder<LocalOrder, LocalOrder, QAfterSortBy> sortByIncludeVat() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'includeVat', Sort.asc);
+    });
+  }
+
+  QueryBuilder<LocalOrder, LocalOrder, QAfterSortBy> sortByIncludeVatDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'includeVat', Sort.desc);
+    });
+  }
+
   QueryBuilder<LocalOrder, LocalOrder, QAfterSortBy> sortByIsOverdue() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isOverdue', Sort.asc);
@@ -3807,6 +3838,18 @@ extension LocalOrderQuerySortThenBy
     });
   }
 
+  QueryBuilder<LocalOrder, LocalOrder, QAfterSortBy> thenByIncludeVat() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'includeVat', Sort.asc);
+    });
+  }
+
+  QueryBuilder<LocalOrder, LocalOrder, QAfterSortBy> thenByIncludeVatDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'includeVat', Sort.desc);
+    });
+  }
+
   QueryBuilder<LocalOrder, LocalOrder, QAfterSortBy> thenByIsOverdue() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isOverdue', Sort.asc);
@@ -4068,6 +4111,12 @@ extension LocalOrderQueryWhereDistinct
     });
   }
 
+  QueryBuilder<LocalOrder, LocalOrder, QDistinct> distinctByIncludeVat() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'includeVat');
+    });
+  }
+
   QueryBuilder<LocalOrder, LocalOrder, QDistinct> distinctByIsOverdue() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isOverdue');
@@ -4238,6 +4287,12 @@ extension LocalOrderQueryProperty
   QueryBuilder<LocalOrder, double, QQueryOperations> grandDiscountProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'grandDiscount');
+    });
+  }
+
+  QueryBuilder<LocalOrder, bool, QQueryOperations> includeVatProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'includeVat');
     });
   }
 

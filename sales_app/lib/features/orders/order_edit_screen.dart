@@ -18,6 +18,7 @@ class OrderEditScreen extends ConsumerStatefulWidget {
 class _OrderEditScreenState extends ConsumerState<OrderEditScreen> {
   OrderModel? _order;
   bool _loading = true;
+  bool _updatingVat = false;
   String? _error;
 
   @override
@@ -100,6 +101,18 @@ class _OrderEditScreenState extends ConsumerState<OrderEditScreen> {
     }
   }
 
+  Future<void> _toggleIncludeVat(bool value) async {
+    setState(() => _updatingVat = true);
+    try {
+      await ref.read(orderRepositoryProvider).update(widget.id, {'include_vat': value});
+      await _load();
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    } finally {
+      if (mounted) setState(() => _updatingVat = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -114,6 +127,13 @@ class _OrderEditScreenState extends ConsumerState<OrderEditScreen> {
     return ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          SwitchListTile(
+            title: Text(l10n.commonIncludeVat),
+            subtitle: Text(l10n.commonIncludeVatSubtitle),
+            value: order.includeVat,
+            onChanged: _updatingVat ? null : _toggleIncludeVat,
+          ),
+          const SizedBox(height: 12),
           FilledButton.icon(onPressed: _addItem, icon: const Icon(Icons.add), label: Text(l10n.salesOrderAddProduct)),
           const SizedBox(height: 12),
           for (final item in order.items)
