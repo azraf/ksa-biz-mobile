@@ -17,11 +17,9 @@ class ProfileScreen extends ConsumerWidget {
     final auth = ref.watch(authProvider);
     final actingAs = auth.activeSalesPerson;
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.salesProfile)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
           ListTile(
             leading: const CircleAvatar(child: Icon(Icons.person)),
             title: Text(auth.user?.name ?? l10n.commonUser),
@@ -129,7 +127,6 @@ class ProfileScreen extends ConsumerWidget {
             label: Text(l10n.commonSignOut),
           ),
         ],
-      ),
     );
   }
 }

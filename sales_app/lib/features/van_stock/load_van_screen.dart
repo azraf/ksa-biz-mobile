@@ -136,15 +136,19 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
     if (_loading) return LoadingView(message: l10n.commonLoading);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.salesTitleLoadVan),
-        actions: [
-          TextButton(onPressed: _lines.isEmpty ? null : _selectAll, child: Text(l10n.salesVanLoadSelectAll)),
-        ],
-      ),
       body: _lines.isEmpty
           ? EmptyView(message: l10n.salesVanLoadNoStock)
-          : ListView.builder(
+          : Column(
+              children: [
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: _selectAll,
+                    child: Text(l10n.salesVanLoadSelectAll),
+                  ),
+                ),
+                Expanded(
+                  child: ListView.builder(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.paddingOf(context).bottom + 112,
               ),
@@ -171,6 +175,9 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
                   controlAffinity: ListTileControlAffinity.leading,
                 );
               },
+            ),
+                ),
+              ],
             ),
       bottomNavigationBar: SafeArea(
         child: Padding(

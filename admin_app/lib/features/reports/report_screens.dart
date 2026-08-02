@@ -6,7 +6,6 @@ import 'package:l10n/l10n.dart';
 
 import '../../providers/repositories.dart';
 import '../../providers/screen_providers.dart';
-import '../../widgets/app_drawer.dart';
 
 class SalesReportScreen extends ConsumerStatefulWidget {
   const SalesReportScreen({super.key});
@@ -37,35 +36,47 @@ class _SalesReportScreenState extends ConsumerState<SalesReportScreen> {
     final reportAsync = ref.watch(salesReportProvider(params));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sales Report'),
-        actions: [IconButton(icon: const Icon(Icons.refresh), onPressed: _refresh)],
-      ),
-      drawer: const AppDrawer(),
-      body: reportAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => ErrorView(
-          message: AppErrorMapper.localize(context, e),
-          error: e,
-          onRetry: _refresh,
-        ),
-        data: (result) => ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            if (result.isCached)
-              _cachedBanner(context, l10n, result.fetchedAt),
-            Text('Orders: ${result.data.ordersCount}'),
-            Text('Total: SAR ${result.data.totalBill.toStringAsFixed(2)}'),
-            if (result.fetchedAt != null)
-              Text('Updated: ${result.fetchedAt!.substring(0, 16)}', style: const TextStyle(color: Colors.grey)),
-            const Divider(),
-            const Text('By Product', style: TextStyle(fontWeight: FontWeight.bold)),
-            ...result.data.byProduct.map((p) => ListTile(
-                  title: Text('Product #${p.productId}'),
-                  trailing: Text('${p.qty} — SAR ${p.revenue.toStringAsFixed(2)}'),
-                )),
-          ],
-        ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(icon: const Icon(Icons.refresh), onPressed: _refresh),
+            ],
+          ),
+          Expanded(
+            child: reportAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => ErrorView(
+                message: AppErrorMapper.localize(context, e),
+                error: e,
+                onRetry: _refresh,
+              ),
+              data: (result) => ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  if (result.isCached) _cachedBanner(context, l10n, result.fetchedAt),
+                  Text('Orders: ${result.data.ordersCount}'),
+                  Text('Total: SAR ${result.data.totalBill.toStringAsFixed(2)}'),
+                  if (result.fetchedAt != null)
+                    Text(
+                      'Updated: ${result.fetchedAt!.substring(0, 16)}',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                  const Divider(),
+                  const Text('By Product', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ...result.data.byProduct.map(
+                    (p) => ListTile(
+                      title: Text('Product #${p.productId}'),
+                      trailing: Text('${p.qty} — SAR ${p.revenue.toStringAsFixed(2)}'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -131,10 +142,6 @@ class _ProfitReportScreenState extends ConsumerState<ProfitReportScreen> {
 
     final r = _result!.data;
     return Scaffold(
-      appBar: AppBar(title: const Text('Profit Report'), actions: [
-        IconButton(icon: const Icon(Icons.refresh), onPressed: () => _load(force: true)),
-      ]),
-      drawer: const AppDrawer(),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -198,10 +205,6 @@ class _ExpenseReportScreenState extends ConsumerState<ExpenseReportScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Expense Report'), actions: [
-        IconButton(icon: const Icon(Icons.refresh), onPressed: () => _load(force: true)),
-      ]),
-      drawer: const AppDrawer(),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -246,10 +249,6 @@ class _ExpenseSummaryReportScreenState extends ConsumerState<ExpenseSummaryRepor
     final reportAsync = ref.watch(expenseSummaryReportProvider(params));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Expense Summary'), actions: [
-        IconButton(icon: const Icon(Icons.refresh), onPressed: _refresh),
-      ]),
-      drawer: const AppDrawer(),
       body: reportAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => ErrorView(

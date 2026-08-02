@@ -248,48 +248,60 @@ class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Purchases'),
-        actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _load),
-        ],
-      ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreatePurchaseScreen())).then((_) => _load()),
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CreatePurchaseScreen()),
+        ).then((_) => _load()),
         child: const Icon(Icons.add),
       ),
-      body: _loading
-          ? const LoadingView()
-          : _error != null
-              ? ErrorView(
-                  message: AppErrorMapper.localize(context, _error!),
-                  error: _error,
-                  onRetry: _load,
-                )
-              : ListView.builder(
-                  padding: fabScrollPadding(context, includeBottomNav: true),
-                  itemCount: _purchases.length,
-                  itemBuilder: (_, i) {
-                    final p = _purchases[i];
-                    return ListTile(
-                      title: Text('#${p.id} — ${p.purchaseType ?? 'local'}'),
-                      subtitle: Text('${p.status ?? 'draft'} · SAR ${(p.totalAmount ?? 0).toStringAsFixed(2)}'),
-                      trailing: p.status == 'draft'
-                          ? IconButton(
-                              icon: const Icon(Icons.check_circle_outline),
-                              onPressed: () async {
-                                try {
-                                  await ref.read(purchaseRepositoryProvider).post(p.id);
-                                  _load();
-                                } catch (e) {
-                                  if (mounted) _showOfflineWriteError(context, e);
-                                }
-                              },
-                            )
-                          : null,
-                    );
-                  },
-                ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(icon: const Icon(Icons.refresh), onPressed: _load),
+            ],
+          ),
+          Expanded(
+            child: _loading
+                ? const LoadingView()
+                : _error != null
+                    ? ErrorView(
+                        message: AppErrorMapper.localize(context, _error!),
+                        error: _error,
+                        onRetry: _load,
+                      )
+                    : ListView.builder(
+                        padding: fabScrollPadding(context, includeBottomNav: true),
+                        itemCount: _purchases.length,
+                        itemBuilder: (_, i) {
+                          final p = _purchases[i];
+                          return ListTile(
+                            title: Text('#${p.id} — ${p.purchaseType ?? 'local'}'),
+                            subtitle: Text(
+                              '${p.status ?? 'draft'} · SAR ${(p.totalAmount ?? 0).toStringAsFixed(2)}',
+                            ),
+                            trailing: p.status == 'draft'
+                                ? IconButton(
+                                    icon: const Icon(Icons.check_circle_outline),
+                                    onPressed: () async {
+                                      try {
+                                        await ref.read(purchaseRepositoryProvider).post(p.id);
+                                        _load();
+                                      } catch (e) {
+                                        if (mounted) _showOfflineWriteError(context, e);
+                                      }
+                                    },
+                                  )
+                                : null,
+                          );
+                        },
+                      ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -310,7 +322,6 @@ class _CreatePurchaseScreenState extends ConsumerState<CreatePurchaseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('New Purchase')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

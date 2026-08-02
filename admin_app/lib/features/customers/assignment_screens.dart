@@ -157,16 +157,18 @@ class _CustomerAssignmentsScreenState extends ConsumerState<CustomerAssignmentsS
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Customer assignments'),
-        actions: [
-          IconButton(onPressed: _bulkCover, icon: const Icon(Icons.swap_horiz), tooltip: 'Bulk cover'),
-        ],
-      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    onPressed: _bulkCover,
+                    icon: const Icon(Icons.swap_horiz),
+                    tooltip: 'Bulk cover',
+                  ),
+                ),
                 Padding(
                   padding: const EdgeInsets.all(12),
                   child: DropdownButtonFormField<int?>(
@@ -240,7 +242,6 @@ class _ChurnRiskScreenState extends ConsumerState<ChurnRiskScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Churn risk (90d)')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
@@ -283,7 +284,6 @@ class _UnassignedCustomersScreenState extends ConsumerState<UnassignedCustomersS
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Unassigned customers')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -349,7 +349,6 @@ class _AssignmentCalendarScreenState extends ConsumerState<AssignmentCalendarScr
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Assignment calendar')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : Column(
@@ -434,28 +433,34 @@ class _AssignmentAuditScreenState extends ConsumerState<AssignmentAuditScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Assignment audit log'),
-        actions: [
-          IconButton(onPressed: _logs.isEmpty ? null : _exportCsv, icon: const Icon(Icons.download)),
-          IconButton(onPressed: _load, icon: const Icon(Icons.refresh)),
+      body: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(onPressed: _logs.isEmpty ? null : _exportCsv, icon: const Icon(Icons.download)),
+              IconButton(onPressed: _load, icon: const Icon(Icons.refresh)),
+            ],
+          ),
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.separated(
+                    itemCount: _logs.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (_, i) {
+                      final log = _logs[i];
+                      return ListTile(
+                        title: Text('${log['action']} · ${log['customer_type'] ?? ''}'),
+                        subtitle: Text(
+                          'SP ${log['sales_person_id']} · ${log['created_at'] ?? ''}',
+                        ),
+                      );
+                    },
+                  ),
+          ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.separated(
-              itemCount: _logs.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (_, i) {
-                final log = _logs[i];
-                return ListTile(
-                  title: Text('${log['action']} · ${log['customer_type'] ?? ''}'),
-                  subtitle: Text(
-                    'SP ${log['sales_person_id']} · ${log['created_at'] ?? ''}',
-                  ),
-                );
-              },
-            ),
     );
   }
 }
@@ -522,52 +527,59 @@ class _SalesPersonTerritoryScreenState extends ConsumerState<SalesPersonTerritor
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Salesperson territories'),
-        actions: [
-          IconButton(
-            onPressed: _selectedSp == null ? null : _assignArea,
-            icon: const Icon(Icons.add),
-            tooltip: 'Assign area',
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(
+                onPressed: _selectedSp == null ? null : _assignArea,
+                icon: const Icon(Icons.add),
+                tooltip: 'Assign area',
+              ),
+            ],
+          ),
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: DropdownButtonFormField<int?>(
+                          value: _selectedSp,
+                          decoration: const InputDecoration(labelText: 'Salesperson'),
+                          items: _salesPersons
+                              .map((s) => DropdownMenuItem(value: s.id, child: Text(s.name)))
+                              .toList(),
+                          onChanged: (v) {
+                            setState(() => _selectedSp = v);
+                            _load();
+                          },
+                        ),
+                      ),
+                      Expanded(
+                        child: ListView.separated(
+                          itemCount: _territories.length,
+                          separatorBuilder: (_, __) => const Divider(height: 1),
+                          itemBuilder: (_, i) {
+                            final t = _territories[i];
+                            return ListTile(
+                              title: Text(t.areaName ?? 'Area ${t.areaId}'),
+                              subtitle: Text(t.salesPersonName ?? 'SP ${t.salesPersonId}'),
+                              trailing: Chip(
+                                label: Text(t.active ? 'Active' : 'Ended', style: const TextStyle(fontSize: 10)),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
           ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: DropdownButtonFormField<int?>(
-                    value: _selectedSp,
-                    decoration: const InputDecoration(labelText: 'Salesperson'),
-                    items: _salesPersons
-                        .map((s) => DropdownMenuItem(value: s.id, child: Text(s.name)))
-                        .toList(),
-                    onChanged: (v) {
-                      setState(() => _selectedSp = v);
-                      _load();
-                    },
-                  ),
-                ),
-                Expanded(
-                  child: ListView.separated(
-                    itemCount: _territories.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
-                    itemBuilder: (_, i) {
-                      final t = _territories[i];
-                      return ListTile(
-                        title: Text(t.areaName ?? 'Area ${t.areaId}'),
-                        subtitle: Text(t.salesPersonName ?? 'SP ${t.salesPersonId}'),
-                        trailing: Chip(
-                          label: Text(t.active ? 'Active' : 'Ended', style: const TextStyle(fontSize: 10)),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
     );
   }
 }
@@ -621,7 +633,6 @@ class _SalesPersonDashboardScreenState extends ConsumerState<SalesPersonDashboar
   Widget build(BuildContext context) {
     final byArea = (_stats['by_area'] as List<dynamic>? ?? []);
     return Scaffold(
-      appBar: AppBar(title: const Text('Salesperson dashboard')),
       body: _loading && _salesPersons.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : ListView(

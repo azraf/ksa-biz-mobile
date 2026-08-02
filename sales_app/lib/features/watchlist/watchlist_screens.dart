@@ -103,90 +103,100 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.salesWatchlist),
-        actions: [
-          if (_items.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.map_outlined),
-              tooltip: l10n.salesWatchlistViewMap,
-              onPressed: _openMap,
-            ),
-          IconButton(
-            icon: Icon(_sortByDistance ? Icons.near_me : Icons.near_me_outlined),
-            tooltip: l10n.salesWatchlistSortDistance,
-            onPressed: () {
-              setState(() => _sortByDistance = !_sortByDistance);
-              _load();
-            },
-          ),
-          PopupMenuButton<String>(
-            initialValue: _status,
-            onSelected: (v) {
-              setState(() => _status = v);
-              _load();
-            },
-            itemBuilder: (_) => [
-              PopupMenuItem(value: 'active', child: Text(l10n.salesWatchlistActive)),
-              PopupMenuItem(value: 'archived', child: Text(l10n.salesWatchlistArchived)),
-            ],
-          ),
-        ],
-      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/watchlist/create'),
         icon: const Icon(Icons.add_location_alt),
         label: Text(l10n.salesWatchlistAddLocation),
       ),
-      body: _loading
-          ? LoadingView(message: l10n.salesWatchlistLoading)
-          : _missingSalesPerson
-              ? ErrorView(message: l10n.salesSelectSalespersonFirst, onRetry: _load)
-              : _error != null
-              ? ErrorView(message: _error!, onRetry: _load)
-              : _items.isEmpty
-                  ? EmptyView(message: l10n.salesWatchlistEmpty)
-                  : RefreshIndicator(
-                      onRefresh: _load,
-                      child: ListView.builder(
-                        padding: fabScrollPadding(context, extendedFab: true),
-                        itemCount: _items.length,
-                        itemBuilder: (_, i) {
-                          final item = _items[i];
-                          final dist = _position != null
-                              ? GpsParser.distanceMeters(_position!.latitude, _position!.longitude, item.gps)
-                              : null;
-                          return ListTile(
-                            leading: item.isLocalOnly
-                                ? const Icon(Icons.cloud_off, color: Colors.orange)
-                                : const Icon(Icons.place),
-                            title: Text(item.displayTitle),
-                            subtitle: Text(
-                              [
-                                if (dist != null) '${(dist / 1000).toStringAsFixed(1)} km',
-                                item.noteText ?? item.gps,
-                              ].where((s) => s.isNotEmpty).join(' · '),
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (item.images.length + item.recordings.length > 0)
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 4),
-                                    child: Icon(
-                                      Icons.perm_media,
-                                      size: 18,
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
-                                  ),
-                                const Icon(Icons.chevron_right),
-                              ],
-                            ),
-                            onTap: () => context.push('/watchlist/${item.id}'),
-                          );
-                        },
-                      ),
-                    ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+            child: Row(
+              children: [
+                if (_items.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.map_outlined),
+                    tooltip: l10n.salesWatchlistViewMap,
+                    onPressed: _openMap,
+                  ),
+                IconButton(
+                  icon: Icon(_sortByDistance ? Icons.near_me : Icons.near_me_outlined),
+                  tooltip: l10n.salesWatchlistSortDistance,
+                  onPressed: () {
+                    setState(() => _sortByDistance = !_sortByDistance);
+                    _load();
+                  },
+                ),
+                const Spacer(),
+                PopupMenuButton<String>(
+                  initialValue: _status,
+                  onSelected: (v) {
+                    setState(() => _status = v);
+                    _load();
+                  },
+                  itemBuilder: (_) => [
+                    PopupMenuItem(value: 'active', child: Text(l10n.salesWatchlistActive)),
+                    PopupMenuItem(value: 'archived', child: Text(l10n.salesWatchlistArchived)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _loading
+                ? LoadingView(message: l10n.salesWatchlistLoading)
+                : _missingSalesPerson
+                    ? ErrorView(message: l10n.salesSelectSalespersonFirst, onRetry: _load)
+                    : _error != null
+                        ? ErrorView(message: _error!, onRetry: _load)
+                        : _items.isEmpty
+                            ? EmptyView(message: l10n.salesWatchlistEmpty)
+                            : RefreshIndicator(
+                                onRefresh: _load,
+                                child: ListView.builder(
+                                  padding: fabScrollPadding(context, extendedFab: true),
+                                  itemCount: _items.length,
+                                  itemBuilder: (_, i) {
+                                    final item = _items[i];
+                                    final dist = _position != null
+                                        ? GpsParser.distanceMeters(
+                                            _position!.latitude, _position!.longitude, item.gps)
+                                        : null;
+                                    return ListTile(
+                                      leading: item.isLocalOnly
+                                          ? const Icon(Icons.cloud_off, color: Colors.orange)
+                                          : const Icon(Icons.place),
+                                      title: Text(item.displayTitle),
+                                      subtitle: Text(
+                                        [
+                                          if (dist != null) '${(dist / 1000).toStringAsFixed(1)} km',
+                                          item.noteText ?? item.gps,
+                                        ].where((s) => s.isNotEmpty).join(' · '),
+                                      ),
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          if (item.images.length + item.recordings.length > 0)
+                                            Padding(
+                                              padding: const EdgeInsets.only(right: 4),
+                                              child: Icon(
+                                                Icons.perm_media,
+                                                size: 18,
+                                                color: Theme.of(context).colorScheme.primary,
+                                              ),
+                                            ),
+                                          const Icon(Icons.chevron_right),
+                                        ],
+                                      ),
+                                      onTap: () => context.push('/watchlist/${item.id}'),
+                                    );
+                                  },
+                                ),
+                              ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -206,6 +216,9 @@ class _WatchlistCreateScreenState extends ConsumerState<WatchlistCreateScreen> {
   String? _gps;
   bool _working = false;
   bool _isRecording = false;
+  DateTime? _recordStartedAt;
+  final List<File> _pendingPhotos = [];
+  File? _pendingAudio;
 
   @override
   void initState() {
@@ -233,6 +246,25 @@ class _WatchlistCreateScreenState extends ConsumerState<WatchlistCreateScreen> {
     }
   }
 
+  Future<void> _attachPendingMedia(WatchlistItemModel item) async {
+    final facade = ref.read(mediaCaptureFacadeProvider);
+    final localId = item.isLocalOnly ? item.id : null;
+    for (final photo in _pendingPhotos) {
+      await facade.attachWatchlistGallery(photo, item.id, localId: localId);
+    }
+    if (_pendingAudio != null) {
+      final duration = _recordStartedAt != null
+          ? DateTime.now().difference(_recordStartedAt!).inSeconds.clamp(1, 180)
+          : 1;
+      await facade.attachWatchlistAudio(
+        _pendingAudio!,
+        item.id,
+        localId: localId,
+        durationSeconds: duration,
+      );
+    }
+  }
+
   Future<void> _save() async {
     final spId = requireSalesPersonId(ref.read(authProvider));
     if (spId == null || _gps == null) return;
@@ -245,6 +277,9 @@ class _WatchlistCreateScreenState extends ConsumerState<WatchlistCreateScreen> {
         placeName: _placeController.text.trim().isEmpty ? null : _placeController.text.trim(),
         noteText: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
       );
+      if (_pendingPhotos.isNotEmpty || _pendingAudio != null) {
+        await _attachPendingMedia(item);
+      }
       AppHaptics.success();
       if (mounted) context.go('/watchlist/${item.id}');
     } catch (e) {
@@ -260,89 +295,116 @@ class _WatchlistCreateScreenState extends ConsumerState<WatchlistCreateScreen> {
 
   Future<void> _toggleRecord() async {
     if (_isRecording) {
+      final started = _recordStartedAt;
       final path = await _recorder.stop();
       setState(() => _isRecording = false);
       if (path == null) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).salesWatchlistVoicePending)),
-      );
+      setState(() {
+        _pendingAudio = File(path);
+        _recordStartedAt = started;
+      });
       return;
     }
     if (!await AppPermissions.requestMicrophone()) return;
-    await _recorder.start(const RecordConfig(), path: '${Directory.systemTemp.path}/wl_${DateTime.now().millisecondsSinceEpoch}.m4a');
+    _recordStartedAt = DateTime.now();
+    await _recorder.start(
+      const RecordConfig(),
+      path: '${Directory.systemTemp.path}/wl_${DateTime.now().millisecondsSinceEpoch}.m4a',
+    );
     setState(() => _isRecording = true);
+  }
+
+  Future<void> _pickPhoto() async {
+    if (!await AppPermissions.requestCamera()) return;
+    final photo = await _picker.pickImage(source: ImageSource.camera);
+    if (photo == null) return;
+    setState(() => _pendingPhotos.add(File(photo.path)));
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.salesWatchlistSaveTitle)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          GpsLocationRow(
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        GpsLocationRow(
+          gps: _gps,
+          notCapturedLabel: l10n.commonGpsCapturing,
+          trailing: GpsCaptureActions(
             gps: _gps,
-            notCapturedLabel: l10n.commonGpsCapturing,
-            trailing: GpsCaptureActions(
-              gps: _gps,
-              captureLabel: l10n.commonGpsRefresh,
-              onGpsChanged: (value) async {
-                setState(() => _gps = value);
-                if (value != null) {
-                  final parsed = GpsParser.parseGps(value);
-                  if (parsed != null && ref.read(onlineStatusProvider)) {
-                    final name = await reverseGeocode(parsed.lat, parsed.lng);
-                    if (name != null && mounted) _placeController.text = name;
-                  }
+            captureLabel: l10n.commonGpsRefresh,
+            onGpsChanged: (value) async {
+              setState(() => _gps = value);
+              if (value != null) {
+                final parsed = GpsParser.parseGps(value);
+                if (parsed != null && ref.read(onlineStatusProvider)) {
+                  final name = await reverseGeocode(parsed.lat, parsed.lng);
+                  if (name != null && mounted) _placeController.text = name;
                 }
-              },
+              }
+            },
+          ),
+        ),
+        TextField(
+          controller: _placeController,
+          decoration: InputDecoration(labelText: l10n.salesWatchlistPlaceName, border: const OutlineInputBorder()),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _noteController,
+          maxLines: 3,
+          decoration: InputDecoration(labelText: l10n.salesWatchlistNoteOptional, border: const OutlineInputBorder()),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            OutlinedButton.icon(
+              onPressed: _toggleRecord,
+              icon: Icon(_isRecording ? Icons.stop : Icons.mic),
+              label: Text(_isRecording ? l10n.commonStop : l10n.commonVoice),
             ),
-          ),
-          TextField(
-            controller: _placeController,
-            decoration: InputDecoration(labelText: l10n.salesWatchlistPlaceName, border: const OutlineInputBorder()),
-          ),
+            const SizedBox(width: 8),
+            OutlinedButton.icon(
+              onPressed: _pickPhoto,
+              icon: const Icon(Icons.photo_camera),
+              label: Text(l10n.commonPhoto),
+            ),
+          ],
+        ),
+        if (_pendingAudio != null || _pendingPhotos.isNotEmpty) ...[
           const SizedBox(height: 12),
-          TextField(
-            controller: _noteController,
-            maxLines: 3,
-            decoration: InputDecoration(labelText: l10n.salesWatchlistNoteOptional, border: const OutlineInputBorder()),
-          ),
-          const SizedBox(height: 12),
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              OutlinedButton.icon(
-                onPressed: _toggleRecord,
-                icon: Icon(_isRecording ? Icons.stop : Icons.mic),
-                label: Text(_isRecording ? l10n.commonStop : l10n.commonVoice),
-              ),
-              const SizedBox(width: 8),
-              OutlinedButton.icon(
-                onPressed: () async {
-                  if (!await AppPermissions.requestCamera()) return;
-                  await _picker.pickImage(source: ImageSource.camera);
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.salesWatchlistPhotosAfterSave)),
-                    );
-                  }
-                },
-                icon: const Icon(Icons.photo_camera),
-                label: Text(l10n.commonPhoto),
-              ),
+              if (_pendingAudio != null)
+                Chip(
+                  avatar: const Icon(Icons.mic, size: 18),
+                  label: Text(l10n.salesWatchlistVoiceNotes),
+                  onDeleted: () => setState(() {
+                    _pendingAudio = null;
+                    _recordStartedAt = null;
+                  }),
+                ),
+              ..._pendingPhotos.asMap().entries.map(
+                    (e) => Chip(
+                      avatar: const Icon(Icons.photo, size: 18),
+                      label: Text('${l10n.commonPhoto} ${e.key + 1}'),
+                      onDeleted: () => setState(() => _pendingPhotos.removeAt(e.key)),
+                    ),
+                  ),
             ],
           ),
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: _working || _gps == null ? null : _save,
-            child: _working
-                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : Text(l10n.salesWatchlistSaveLocation),
-          ),
         ],
-      ),
+        const SizedBox(height: 24),
+        FilledButton(
+          onPressed: _working || _gps == null ? null : _save,
+          child: _working
+              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              : Text(l10n.salesWatchlistSaveLocation),
+        ),
+      ],
     );
   }
 }
@@ -547,12 +609,7 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
   }
 
   Future<void> _uploadVoice() async {
-    if (_item == null || _item!.id < 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).salesWatchlistSyncBeforeUpload)),
-      );
-      return;
-    }
+    if (_item == null) return;
     if (_isRecording) {
       final started = _recordStartedAt;
       final path = await _recorder.stop();
@@ -583,12 +640,7 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
   }
 
   Future<void> _uploadPhoto() async {
-    if (_item == null || _item!.id < 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).salesWatchlistSyncBeforeUpload)),
-      );
-      return;
-    }
+    if (_item == null) return;
     if (!await AppPermissions.requestCamera()) return;
     final photo = await _picker.pickImage(source: ImageSource.camera);
     if (photo == null) return;
@@ -610,94 +662,96 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    if (_loading) return Scaffold(body: LoadingView(message: l10n.commonLoading));
-    if (_error != null) return Scaffold(body: ErrorView(message: _error!, onRetry: _load));
+    if (_loading) return LoadingView(message: l10n.commonLoading);
+    if (_error != null) return ErrorView(message: _error!, onRetry: _load);
     final item = _item!;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(item.displayTitle),
-        actions: [
-          IconButton(icon: const Icon(Icons.map_outlined), onPressed: _openMaps),
-          PopupMenuButton<String>(
-            onSelected: (v) {
-              if (v == 'delete') {
-                _delete();
-              } else {
-                _archive(v);
-              }
-            },
-            itemBuilder: (_) => [
-              if (item.isActive) ...[
-                PopupMenuItem(value: 'visited', child: Text(l10n.salesWatchlistMarkVisited)),
-                PopupMenuItem(value: 'dismissed', child: Text(l10n.salesWatchlistDismiss)),
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Row(
+          children: [
+            OutlinedButton.icon(
+              onPressed: _openMaps,
+              icon: const Icon(Icons.map_outlined),
+              label: const Text('Directions'),
+            ),
+            const Spacer(),
+            PopupMenuButton<String>(
+              onSelected: (v) {
+                if (v == 'delete') {
+                  _delete();
+                } else {
+                  _archive(v);
+                }
+              },
+              itemBuilder: (_) => [
+                if (item.isActive) ...[
+                  PopupMenuItem(value: 'visited', child: Text(l10n.salesWatchlistMarkVisited)),
+                  PopupMenuItem(value: 'dismissed', child: Text(l10n.salesWatchlistDismiss)),
+                ],
+                PopupMenuItem(value: 'delete', child: Text(l10n.commonDelete)),
               ],
-              PopupMenuItem(value: 'delete', child: Text(l10n.commonDelete)),
-            ],
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          if (item.isLocalOnly)
-            Card(child: ListTile(leading: const Icon(Icons.cloud_off), title: Text(l10n.salesWatchlistPendingSync))),
-          if (!item.isActive)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Chip(
-                avatar: const Icon(Icons.archive_outlined, size: 18),
-                label: Text(
-                  item.archivedReason != null
-                      ? l10n.salesWatchlistArchivedReason(item.archivedReason!)
-                      : l10n.salesWatchlistArchived,
-                ),
-              ),
-            ),
-          GpsLocationRow(gps: item.gps),
-          if (item.noteText != null) ...[
-            const SizedBox(height: 12),
-            Text(item.noteText!),
-          ],
-          const SizedBox(height: 12),
-          MediaGallerySection(
-            remoteItems: [...item.images, ...item.recordings],
-            localItems: _pendingMedia,
-            title: l10n.salesWatchlistPhotos,
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              OutlinedButton.icon(
-                onPressed: _working ? null : _uploadVoice,
-                icon: Icon(_isRecording ? Icons.stop : Icons.mic),
-                label: Text(_isRecording ? l10n.commonStop : l10n.commonVoice),
-              ),
-              const SizedBox(width: 8),
-              OutlinedButton.icon(
-                onPressed: _working ? null : _uploadPhoto,
-                icon: const Icon(Icons.photo_camera),
-                label: Text(l10n.commonPhoto),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          if (item.isActive)
-            FilledButton(onPressed: _working ? null : _convert, child: Text(l10n.salesWatchlistConvertBtn))
-          else ...[
-            FilledButton(
-              onPressed: _working ? null : _activate,
-              child: Text(l10n.salesWatchlistActivateAgain),
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: _working ? null : _delete,
-              style: OutlinedButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
-              child: Text(l10n.salesWatchlistRemove),
             ),
           ],
+        ),
+        if (item.isLocalOnly)
+          Card(child: ListTile(leading: const Icon(Icons.cloud_off), title: Text(l10n.salesWatchlistPendingSync))),
+        if (!item.isActive)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Chip(
+              avatar: const Icon(Icons.archive_outlined, size: 18),
+              label: Text(
+                item.archivedReason != null
+                    ? l10n.salesWatchlistArchivedReason(item.archivedReason!)
+                    : l10n.salesWatchlistArchived,
+              ),
+            ),
+          ),
+        GpsLocationRow(gps: item.gps),
+        if (item.noteText != null) ...[
+          const SizedBox(height: 12),
+          Text(item.noteText!),
         ],
-      ),
+        const SizedBox(height: 12),
+        MediaGallerySection(
+          remoteItems: [...item.images, ...item.recordings],
+          localItems: _pendingMedia,
+          title: l10n.salesWatchlistPhotos,
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            OutlinedButton.icon(
+              onPressed: _working ? null : _uploadVoice,
+              icon: Icon(_isRecording ? Icons.stop : Icons.mic),
+              label: Text(_isRecording ? l10n.commonStop : l10n.commonVoice),
+            ),
+            const SizedBox(width: 8),
+            OutlinedButton.icon(
+              onPressed: _working ? null : _uploadPhoto,
+              icon: const Icon(Icons.photo_camera),
+              label: Text(l10n.commonPhoto),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        if (item.isActive)
+          FilledButton(onPressed: _working ? null : _convert, child: Text(l10n.salesWatchlistConvertBtn))
+        else ...[
+          FilledButton(
+            onPressed: _working ? null : _activate,
+            child: Text(l10n.salesWatchlistActivateAgain),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            onPressed: _working ? null : _delete,
+            style: OutlinedButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
+            child: Text(l10n.salesWatchlistRemove),
+          ),
+        ],
+      ],
     );
   }
 }

@@ -27,7 +27,6 @@ class CustomerTypesScreen extends ConsumerWidget {
           );
         }
         return Scaffold(
-          appBar: AppBar(title: const Text('Customer Types')),
           body: ListView.builder(
             itemCount: snap.data!.length,
             itemBuilder: (_, i) => ListTile(title: Text(snap.data![i].typeName)),
@@ -75,7 +74,6 @@ class CustomerVansScreen extends ConsumerWidget {
 
   void _openVanDiary(BuildContext context, CustomerVanModel van) {
     Navigator.push(context, MaterialPageRoute(builder: (_) => Scaffold(
-      appBar: AppBar(title: Text('Diary — ${van.name}')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [CustomerDiarySection(customerType: 'customer_van', customerId: van.id)],
@@ -121,7 +119,6 @@ class CustomerImportersScreen extends ConsumerWidget {
 
   void _openImporterDiary(BuildContext context, CustomerImporterModel importer) {
     Navigator.push(context, MaterialPageRoute(builder: (_) => Scaffold(
-      appBar: AppBar(title: Text('Diary — ${importer.name}')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [CustomerDiarySection(customerType: 'customer_importer', customerId: importer.id)],

@@ -17,6 +17,9 @@ import '../providers/auth_provider.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
+bool _hasMonitorRole(List<String> roles) =>
+    roles.map((r) => r.toLowerCase()).contains('monitor');
+
 final routerProvider = Provider<GoRouter>((ref) {
   final auth = ref.watch(authProvider);
 
@@ -29,7 +32,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (auth.isLoading) return null;
       if (!auth.isAuthenticated) return loggingIn ? null : '/login';
       if (loggingIn) return '/';
-      if (!auth.roles.contains('monitor')) return '/login';
+      if (!_hasMonitorRole(auth.roles)) return '/login';
       return null;
     },
     routes: [
@@ -41,13 +44,30 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(path: '/', builder: (context, state) => const DashboardScreen()),
+              GoRoute(
+                path: '/watchlist',
+                builder: (context, state) => const MonitorWatchlistScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    builder: (_, state) => MonitorWatchlistDetailScreen(
+                      id: int.parse(state.pathParameters['id']!),
+                    ),
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: '/profile',
+                builder: (context, state) => const ProfileScreen(),
+              ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/sales',
-                redirect: (_, __) => '/sales/orders',
+                redirect: (context, state) =>
+                    state.uri.path == '/sales' ? '/sales/orders' : null,
                 routes: [
                   GoRoute(
                     path: 'orders',
@@ -68,7 +88,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/inventory',
-                redirect: (_, __) => '/inventory/van',
+                redirect: (context, state) =>
+                    state.uri.path == '/inventory' ? '/inventory/van' : null,
                 routes: [
                   GoRoute(path: 'van', builder: (context, state) => const VanStockScreen()),
                 ],
@@ -100,24 +121,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/watchlist',
-        builder: (context, state) => const MonitorWatchlistScreen(),
-        routes: [
-          GoRoute(
-            path: ':id',
-            builder: (_, state) => MonitorWatchlistDetailScreen(
-              id: int.parse(state.pathParameters['id']!),
-            ),
-          ),
-        ],
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/profile',
-        builder: (context, state) => const ProfileScreen(),
-      ),
     ],
   );
 });
@@ -128,6 +131,7 @@ class MonitorHomeShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   String _titleForLocation(String location) {
+    if (location.contains('/profile')) return 'Profile';
     if (RegExp(r'/watchlist/\d+').hasMatch(location)) return 'Watch-list detail';
     if (location.contains('/watchlist')) return 'Watch-list';
     if (RegExp(r'/sales/orders/\d+').hasMatch(location)) return 'Order detail';
@@ -149,6 +153,8 @@ class MonitorHomeShell extends StatelessWidget {
 
   bool _showBackButton(BuildContext context) => Navigator.of(context).canPop();
 
+  bool _hideProfileAction(String location) => location.contains('/profile');
+
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
@@ -160,10 +166,11 @@ class MonitorHomeShell extends StatelessWidget {
         leading: showBack ? BackButton(onPressed: () => context.pop()) : null,
         title: Text(title),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.person_outline),
-            onPressed: () => context.push('/profile'),
-          ),
+          if (!_hideProfileAction(location))
+            IconButton(
+              icon: const Icon(Icons.person_outline),
+              onPressed: () => context.push('/profile'),
+            ),
         ],
       ),
       body: navigationShell,

@@ -112,7 +112,6 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.shop == null ? 'New Shop' : 'Edit Shop')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

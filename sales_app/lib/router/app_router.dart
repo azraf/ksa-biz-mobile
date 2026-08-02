@@ -70,6 +70,30 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(path: '/', builder: (context, state) => const DashboardScreen()),
+              GoRoute(
+                path: '/notifications',
+                builder: (context, state) => const NotificationsScreen(),
+              ),
+              GoRoute(
+                path: '/profile',
+                builder: (context, state) => const ProfileScreen(),
+              ),
+              GoRoute(
+                path: '/watchlist',
+                builder: (context, state) => const WatchlistListScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'create',
+                    builder: (_, __) => const WatchlistCreateScreen(),
+                  ),
+                  GoRoute(
+                    path: ':id',
+                    builder: (_, state) => WatchlistDetailScreen(
+                      id: int.parse(state.pathParameters['id']!),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
           StatefulShellBranch(
@@ -125,6 +149,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/van-stock',
                 builder: (context, state) => const VanStockScreen(),
+                routes: [
+                  GoRoute(path: 'load', builder: (_, __) => const LoadVanScreen()),
+                  GoRoute(path: 'transfer', builder: (_, __) => const TransferScreen()),
+                  GoRoute(path: 'damage', builder: (_, __) => const DamageReplacementScreen()),
+                  GoRoute(path: 'exchange', builder: (_, __) => const ProductExchangeScreen()),
+                ],
               ),
             ],
           ),
@@ -134,53 +164,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/notifications',
-        builder: (context, state) => const NotificationsScreen(),
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/profile',
-        builder: (context, state) => const ProfileScreen(),
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/watchlist',
-        builder: (context, state) => const WatchlistListScreen(),
-        routes: [
-          GoRoute(
-            path: 'create',
-            builder: (_, __) => const WatchlistCreateScreen(),
-          ),
-          GoRoute(
-            path: ':id',
-            builder: (_, state) => WatchlistDetailScreen(
-              id: int.parse(state.pathParameters['id']!),
-            ),
-          ),
-        ],
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/van-stock/load',
-        builder: (_, __) => const LoadVanScreen(),
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/van-stock/transfer',
-        builder: (_, __) => const TransferScreen(),
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/van-stock/damage',
-        builder: (_, __) => const DamageReplacementScreen(),
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/van-stock/exchange',
-        builder: (_, __) => const ProductExchangeScreen(),
       ),
     ],
   );
@@ -192,6 +175,11 @@ class HomeShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
   String _titleForLocation(String location, AppLocalizations l10n) {
+    if (location.contains('/notifications')) return l10n.salesNotifications;
+    if (location.contains('/profile')) return l10n.salesProfile;
+    if (location.contains('/watchlist/create')) return l10n.salesWatchlistSaveTitle;
+    if (RegExp(r'/watchlist/-?\d+').hasMatch(location)) return l10n.salesWatchlist;
+    if (location.contains('/watchlist')) return l10n.salesWatchlist;
     if (location.contains('/orders/create')) return l10n.salesTitleCreateOrder;
     if (location.contains('/orders/') && location.endsWith('/edit')) return l10n.salesTitleEditOrder;
     final orderDetail = RegExp(r'/orders/(\d+)');
@@ -217,6 +205,10 @@ class HomeShell extends ConsumerWidget {
     return Navigator.of(context).canPop();
   }
 
+  bool _hideProfileAction(String location) {
+    return location.contains('/profile');
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
@@ -231,10 +223,11 @@ class HomeShell extends ConsumerWidget {
             : null,
         title: Text(title),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.person_outline),
-            onPressed: () => context.push('/profile'),
-          ),
+          if (!_hideProfileAction(location))
+            IconButton(
+              icon: const Icon(Icons.person_outline),
+              onPressed: () => context.push('/profile'),
+            ),
         ],
       ),
       body: navigationShell,

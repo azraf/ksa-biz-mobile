@@ -55,7 +55,9 @@ class AuthSession {
       activeSalesPerson: json['active_sales_person'] is Map
           ? SalesPersonModel.fromJson(json['active_sales_person'] as Map<String, dynamic>)
           : null,
-      roles: (json['roles'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
+      roles: (json['roles'] as List<dynamic>? ?? [])
+          .map((e) => e.toString().toLowerCase())
+          .toList(),
       canPickSalesPerson: json['can_pick_sales_person'] as bool? ?? false,
       tokenExpiresAt: _parseDate(json['token_expires_at']),
     );
@@ -281,7 +283,7 @@ class AuthRepository {
         ? SalesPersonModel.fromJson(response['sales_person'] as Map<String, dynamic>)
         : null;
     final roles = (response['roles'] as List<dynamic>? ?? [])
-        .map((e) => e.toString())
+        .map((e) => e.toString().toLowerCase())
         .toList();
     final canPick = response['can_pick_sales_person'] as bool? ?? false;
 

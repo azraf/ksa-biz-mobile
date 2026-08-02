@@ -71,7 +71,6 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
     final currency = NumberFormat.currency(symbol: 'SAR ');
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.salesOrderCollectPaymentTitle(widget.orderId))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

@@ -54,36 +54,50 @@ class _WarehouseStockScreenState extends ConsumerState<WarehouseStockScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Warehouse Stock'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.assessment_outlined),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InventoryValuationScreen())),
-          ),
-          IconButton(
-            icon: const Icon(Icons.history),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StockMovementsScreen())),
-          ),
-        ],
-      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StockAdjustmentScreen())),
         icon: const Icon(Icons.tune),
         label: const Text('Adjust'),
       ),
-      body: ListView.builder(
-        padding: fabScrollPadding(context, extendedFab: true, includeBottomNav: true),
-        itemCount: _stock!.length,
-        itemBuilder: (_, i) {
-          final s = _stock![i];
-          final low = (s.product?.alertQuantity ?? 0) > 0 && s.balance <= (s.product?.alertQuantity ?? 0);
-          return ListTile(
-            title: Text(s.product?.name ?? 'Product #${s.productId}'),
-            subtitle: low ? const Text('Low stock', style: TextStyle(color: Colors.orange)) : null,
-            trailing: Text(s.displayBalance),
-          );
-        },
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.assessment_outlined),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const InventoryValuationScreen()),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.history),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const StockMovementsScreen()),
+                ),
+              ),
+            ],
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: fabScrollPadding(context, extendedFab: true, includeBottomNav: true),
+              itemCount: _stock!.length,
+              itemBuilder: (_, i) {
+                final s = _stock![i];
+                final low = (s.product?.alertQuantity ?? 0) > 0 &&
+                    s.balance <= (s.product?.alertQuantity ?? 0);
+                return ListTile(
+                  title: Text(s.product?.name ?? 'Product #${s.productId}'),
+                  subtitle: low ? const Text('Low stock', style: TextStyle(color: Colors.orange)) : null,
+                  trailing: Text(s.displayBalance),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -118,7 +132,6 @@ class _VanStockScreenState extends ConsumerState<VanStockScreen> {
   Widget build(BuildContext context) {
     return Consumer(builder: (context, ref, _) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Van Stock')),
         body: Column(
           children: [
             Padding(
@@ -304,13 +317,17 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Bulk load van'),
-        actions: [
-          TextButton(onPressed: _lines.isEmpty ? null : _selectAll, child: const Text('Select all')),
-        ],
-      ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(onPressed: _lines.isEmpty ? null : _selectAll, child: const Text('Select all')),
+            ],
+          ),
+          Expanded(
+            child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
@@ -374,6 +391,9 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
             ),
           ),
         ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -394,7 +414,6 @@ class _StockAdjustmentScreenState extends ConsumerState<StockAdjustmentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Stock Adjustment')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -454,7 +473,6 @@ class _DamageWriteoffScreenState extends ConsumerState<DamageWriteoffScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Damage Write-off')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -499,7 +517,6 @@ class StockMovementsScreen extends ConsumerWidget {
       builder: (context, snap) {
         if (!snap.hasData) return const Scaffold(body: Center(child: CircularProgressIndicator()));
         return Scaffold(
-          appBar: AppBar(title: const Text('Stock Movements')),
           body: ListView.builder(
             itemCount: snap.data!.length,
             itemBuilder: (_, i) {
@@ -527,7 +544,6 @@ class InventoryValuationScreen extends ConsumerWidget {
         if (!snap.hasData) return const Scaffold(body: Center(child: CircularProgressIndicator()));
         final data = snap.data!;
         return Scaffold(
-          appBar: AppBar(title: const Text('Inventory Valuation')),
           body: Column(
             children: [
               Padding(

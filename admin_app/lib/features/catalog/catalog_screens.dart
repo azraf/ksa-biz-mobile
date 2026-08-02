@@ -274,7 +274,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       );
     }
     return Scaffold(
-      appBar: AppBar(title: Text(widget.productId == null ? 'New Product' : 'Edit Product')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

@@ -37,7 +37,7 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<bool> _ensureAdminRole(AuthSession session) async {
-    if (session.roles.contains('admin')) return true;
+    if (session.roles.map((r) => r.toLowerCase()).contains('admin')) return true;
     await _authRepository.clearSession();
     state = const AuthState(isLoading: false, error: 'admin_access_required');
     return false;
@@ -119,7 +119,7 @@ class AuthNotifier extends Notifier<AuthState> {
       state = state.copyWith(isLoading: false);
       return false;
     }
-    if (next.isAuthenticated && !next.roles.contains('admin')) {
+    if (next.isAuthenticated && !next.roles.map((r) => r.toLowerCase()).contains('admin')) {
       await _authRepository.clearSession();
       state = const AuthState(isLoading: false, error: 'admin_access_required');
       return false;

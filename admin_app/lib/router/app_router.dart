@@ -67,7 +67,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/sales',
-                redirect: (_, __) => '/sales/orders',
+                redirect: (context, state) =>
+                    state.uri.path == '/sales' ? '/sales/orders' : null,
                 routes: [
                   GoRoute(
                     path: 'orders',
@@ -105,7 +106,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/customers',
-                redirect: (_, __) => '/customers/shops',
+                redirect: (context, state) =>
+                    state.uri.path == '/customers' ? '/customers/shops' : null,
                 routes: [
                   GoRoute(path: 'shops', builder: (_, __) => const CustomerShopsScreen()),
                   GoRoute(path: 'vans', builder: (_, __) => const CustomerVansScreen()),
@@ -119,7 +121,14 @@ final routerProvider = Provider<GoRouter>((ref) {
                   GoRoute(path: 'unassigned', builder: (_, __) => const UnassignedCustomersScreen()),
                   GoRoute(path: 'audit', builder: (_, __) => const AssignmentAuditScreen()),
                   GoRoute(path: 'map', builder: (_, __) => const ShopMapScreen()),
-                  GoRoute(path: 'watchlist', builder: (_, __) => const AdminWatchlistScreen()),
+                  GoRoute(path: 'watchlist', builder: (_, __) => const AdminWatchlistScreen(), routes: [
+                    GoRoute(
+                      path: ':id',
+                      builder: (_, s) => AdminWatchlistDetailScreen(
+                        id: int.parse(s.pathParameters['id']!),
+                      ),
+                    ),
+                  ]),
                   GoRoute(path: 'churn', builder: (_, __) => const ChurnRiskScreen()),
                 ],
               ),
@@ -129,7 +138,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/inventory',
-                redirect: (_, __) => '/inventory/warehouse',
+                redirect: (context, state) =>
+                    state.uri.path == '/inventory' ? '/inventory/warehouse' : null,
                 routes: [
                   GoRoute(path: 'warehouse', builder: (_, __) => const WarehouseStockScreen()),
                   GoRoute(path: 'van', builder: (_, __) => const VanStockScreen()),
@@ -205,9 +215,68 @@ class AdminHomeShell extends ConsumerWidget {
 
   final StatefulNavigationShell navigationShell;
 
-  String _titleForIndex(int index) {
-    return switch (index) {
-      0 => 'Home',
+  String _titleForLocation(String location) {
+    if (location == '/') return 'Dashboard';
+    if (location == '/more') return 'More';
+    if (RegExp(r'/customers/watchlist/\d+').hasMatch(location)) return 'Watch-list detail';
+    if (location.contains('/customers/watchlist')) return 'Watch-list';
+
+    final routes = <String, String>{
+      '/sales/orders/create': 'New order',
+      '/sales/invoices': 'Invoices',
+      '/sales/persons': 'Sales persons',
+      '/sales/manual-orders': 'Manual orders',
+      '/customers/shops': 'Customer shops',
+      '/customers/vans': 'Vans',
+      '/customers/importers': 'Importers',
+      '/customers/types': 'Customer types',
+      '/customers/areas': 'Areas',
+      '/customers/assignments': 'Assignments',
+      '/customers/dashboard': 'SP dashboard',
+      '/customers/territories': 'Territories',
+      '/customers/calendar': 'Assignment calendar',
+      '/customers/unassigned': 'Unassigned',
+      '/customers/audit': 'Assignment audit',
+      '/customers/map': 'Shop map',
+      '/customers/churn': 'Churn risk',
+      '/inventory/warehouse': 'Warehouse stock',
+      '/inventory/van': 'Van stock',
+      '/inventory/load': 'Load van',
+      '/inventory/adjust': 'Stock adjust',
+      '/inventory/damage-writeoff': 'Damage write-off',
+      '/more/reports/sales': 'Sales report',
+      '/more/reports/profit': 'Profit report',
+      '/more/reports/expenses': 'Expense report',
+      '/more/reports/expense-summary': 'Expense summary',
+      '/more/expenses/categories': 'Expense categories',
+      '/more/expenses/list': 'Expenses',
+      '/more/expenses/list/create': 'New expense',
+      '/more/expenses/vehicles': 'Vehicles',
+      '/more/catalog/tags': 'Tags',
+      '/more/catalog/brands': 'Brands',
+      '/more/catalog/units': 'Units',
+      '/more/catalog/categories': 'Categories',
+      '/more/catalog/products': 'Products',
+      '/more/catalog/products/create': 'New product',
+      '/more/catalog/promotions': 'Promotions',
+      '/more/shipping/countries': 'Countries',
+      '/more/shipping/suppliers': 'Suppliers',
+      '/more/shipping/containers': 'Containers',
+      '/more/shipping/purchases': 'Purchases',
+      '/more/approval/discount': 'Discount approval',
+      '/more/users': 'Users',
+    };
+
+    if (routes.containsKey(location)) return routes[location]!;
+
+    if (RegExp(r'/sales/orders/\d+/edit').hasMatch(location)) return 'Edit order';
+    if (RegExp(r'/sales/orders/\d+').hasMatch(location)) return 'Order detail';
+    if (RegExp(r'/sales/manual-orders/\d+').hasMatch(location)) return 'Manual order';
+    if (RegExp(r'/more/expenses/list/\d+').hasMatch(location)) return 'Edit expense';
+    if (RegExp(r'/more/catalog/products/\d+').hasMatch(location)) return 'Edit product';
+
+    return switch (navigationShell.currentIndex) {
+      0 => 'Dashboard',
       1 => 'Sales',
       2 => 'Customers',
       3 => 'Inventory',
@@ -245,10 +314,15 @@ class AdminHomeShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final location = GoRouterState.of(context).matchedLocation;
+    final title = _titleForLocation(location);
+    final showBack = Navigator.of(context).canPop();
+
     return Scaffold(
       drawer: const AppDrawer(),
       appBar: AppBar(
-        title: Text(_titleForIndex(navigationShell.currentIndex)),
+        leading: showBack ? BackButton(onPressed: () => context.pop()) : null,
+        title: Text(title),
         actions: [
           IconButton(
             icon: const Icon(Icons.person_outline),

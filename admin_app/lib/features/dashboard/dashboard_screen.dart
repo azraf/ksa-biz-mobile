@@ -35,7 +35,7 @@ class DashboardScreen extends ConsumerWidget {
               'SAR ${data.sales.totalBill.toStringAsFixed(2)}',
               Icons.receipt_long,
               cachedAt: data.salesFromCache ? data.salesCachedAt : null,
-              onTap: () => context.go('/reports/sales'),
+              onTap: () => context.go('/more/reports/sales'),
             ),
             _kpiCard(
               context,
@@ -44,7 +44,7 @@ class DashboardScreen extends ConsumerWidget {
               '${data.expenseSummary.byPeriod.length} periods',
               Icons.payments,
               cachedAt: data.expenseFromCache ? data.expenseCachedAt : null,
-              onTap: () => context.go('/reports/expense-summary'),
+              onTap: () => context.go('/more/reports/expense-summary'),
             ),
             _kpiCard(
               context,
@@ -62,9 +62,10 @@ class DashboardScreen extends ConsumerWidget {
               runSpacing: 8,
               children: [
                 ActionChip(label: Text(l10n.commonNewOrder), onPressed: () => context.go('/sales/orders/create')),
-                ActionChip(label: const Text('New Expense'), onPressed: () => context.go('/expenses/list/create')),
-                ActionChip(label: const Text('Products'), onPressed: () => context.go('/catalog/products')),
+                ActionChip(label: const Text('New Expense'), onPressed: () => context.go('/more/expenses/list/create')),
+                ActionChip(label: const Text('Products'), onPressed: () => context.go('/more/catalog/products')),
                 ActionChip(label: const Text('Warehouse'), onPressed: () => context.go('/inventory/warehouse')),
+                ActionChip(label: const Text('Watch-list'), onPressed: () => context.go('/customers/watchlist')),
               ],
             ),
           ],

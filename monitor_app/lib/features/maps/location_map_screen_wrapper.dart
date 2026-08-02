@@ -56,7 +56,6 @@ class _MonitorLocationMapScreenState extends ConsumerState<MonitorLocationMapScr
   Widget build(BuildContext context) {
     if (_error != null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Location map')),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

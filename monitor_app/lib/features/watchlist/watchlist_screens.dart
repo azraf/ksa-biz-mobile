@@ -47,11 +47,11 @@ class _MonitorWatchlistScreenState extends ConsumerState<MonitorWatchlistScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Watch-list'),
-        actions: [
-          PopupMenuButton<String>(
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.centerRight,
+          child: PopupMenuButton<String>(
             initialValue: _status,
             onSelected: (v) {
               setState(() => _status = v);
@@ -62,56 +62,58 @@ class _MonitorWatchlistScreenState extends ConsumerState<MonitorWatchlistScreen>
               PopupMenuItem(value: 'archived', child: Text('Archived')),
             ],
           ),
-        ],
-      ),
-      body: _loading
-          ? const LoadingView()
-          : _error != null
-              ? ErrorView(
-                  message: AppErrorMapper.localize(context, _error!),
-                  error: _error,
-                  onRetry: _load,
-                )
-              : RefreshIndicator(
-                  onRefresh: _load,
-                  child: _items.isEmpty
-                      ? ListView(
-                          children: const [
-                            SizedBox(height: 120),
-                            Center(child: Text('No watch-list items.')),
-                          ],
-                        )
-                      : ListView.builder(
-                          itemCount: _items.length,
-                          itemBuilder: (_, i) {
-                            final item = _items[i];
-                            final mediaCount = item.images.length + item.recordings.length;
-                            return ListTile(
-                              leading: const Icon(Icons.place_outlined),
-                              title: Text(item.displayTitle),
-                              subtitle: Text(
-                                '${item.salesPerson?.name ?? 'SP #${item.salesPersonId}'} · ${item.noteText ?? item.gps}',
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (mediaCount > 0)
-                                    Padding(
-                                      padding: const EdgeInsets.only(right: 8),
-                                      child: Chip(
-                                        visualDensity: VisualDensity.compact,
-                                        label: Text('$mediaCount'),
-                                        avatar: const Icon(Icons.perm_media, size: 16),
-                                      ),
-                                    ),
-                                  Text(item.status),
-                                ],
-                              ),
-                              onTap: () => context.push('/watchlist/${item.id}'),
-                            );
-                          },
-                        ),
-                ),
+        ),
+        Expanded(
+          child: _loading
+              ? const LoadingView()
+              : _error != null
+                  ? ErrorView(
+                      message: AppErrorMapper.localize(context, _error!),
+                      error: _error,
+                      onRetry: _load,
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _load,
+                      child: _items.isEmpty
+                          ? ListView(
+                              children: const [
+                                SizedBox(height: 120),
+                                Center(child: Text('No watch-list items.')),
+                              ],
+                            )
+                          : ListView.builder(
+                              itemCount: _items.length,
+                              itemBuilder: (_, i) {
+                                final item = _items[i];
+                                final mediaCount = item.images.length + item.recordings.length;
+                                return ListTile(
+                                  leading: const Icon(Icons.place_outlined),
+                                  title: Text(item.displayTitle),
+                                  subtitle: Text(
+                                    '${item.salesPerson?.name ?? 'SP #${item.salesPersonId}'} · ${item.noteText ?? item.gps}',
+                                  ),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (mediaCount > 0)
+                                        Padding(
+                                          padding: const EdgeInsets.only(right: 8),
+                                          child: Chip(
+                                            visualDensity: VisualDensity.compact,
+                                            label: Text('$mediaCount'),
+                                            avatar: const Icon(Icons.perm_media, size: 16),
+                                          ),
+                                        ),
+                                      Text(item.status),
+                                    ],
+                                  ),
+                                  onTap: () => context.push('/watchlist/${item.id}'),
+                                );
+                              },
+                            ),
+                    ),
+        ),
+      ],
     );
   }
 }
@@ -159,52 +161,46 @@ class _MonitorWatchlistDetailScreenState extends ConsumerState<MonitorWatchlistD
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(body: LoadingView());
+      return const LoadingView();
     }
     if (_error != null || _item == null) {
-      return Scaffold(
-        body: ErrorView(
-          message: AppErrorMapper.localize(context, _error ?? Exception('Not found')),
-          error: _error,
-          onRetry: _load,
-        ),
+      return ErrorView(
+        message: AppErrorMapper.localize(context, _error ?? Exception('Not found')),
+        error: _error,
+        onRetry: _load,
       );
     }
 
     final item = _item!;
     final allMedia = [...item.images, ...item.recordings];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(item.displayTitle),
-        actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _load),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Text('Salesperson: ${item.salesPerson?.name ?? item.salesPersonId}'),
-          GpsLocationRow(gps: item.gps),
-          Text('Status: ${item.status}${item.archivedReason != null ? ' (${item.archivedReason})' : ''}'),
-          if (item.noteText != null) ...[
-            const SizedBox(height: 12),
-            Text(item.noteText!),
-          ],
-          if (item.customerShopId != null)
-            ListTile(
-              title: const Text('Linked shop'),
-              subtitle: Text('Shop #${item.customerShopId}'),
-            ),
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Align(
+          alignment: Alignment.centerRight,
+          child: IconButton(icon: const Icon(Icons.refresh), onPressed: _load),
+        ),
+        Text('Salesperson: ${item.salesPerson?.name ?? item.salesPersonId}'),
+        GpsLocationRow(gps: item.gps),
+        Text('Status: ${item.status}${item.archivedReason != null ? ' (${item.archivedReason})' : ''}'),
+        if (item.noteText != null) ...[
           const SizedBox(height: 12),
-          MediaGallerySection(remoteItems: allMedia, title: 'Media'),
-          if (allMedia.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text('No media attached.', style: TextStyle(color: Colors.grey)),
-            ),
+          Text(item.noteText!),
         ],
-      ),
+        if (item.customerShopId != null)
+          ListTile(
+            title: const Text('Linked shop'),
+            subtitle: Text('Shop #${item.customerShopId}'),
+          ),
+        const SizedBox(height: 12),
+        MediaGallerySection(remoteItems: allMedia, title: 'Media'),
+        if (allMedia.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Text('No media attached.', style: TextStyle(color: Colors.grey)),
+          ),
+      ],
     );
   }
 }

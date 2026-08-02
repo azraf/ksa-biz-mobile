@@ -47,7 +47,7 @@ class AuthState extends Equatable {
   bool get needsSalesPersonSelection =>
       canPickSalesPerson && activeSalesPerson == null;
 
-  bool get isAdmin => roles.contains('admin');
+  bool get isAdmin => roles.map((r) => r.toLowerCase()).contains('admin');
 
   bool get showBiometricLogin =>
       !isAuthenticated &&

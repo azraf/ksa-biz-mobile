@@ -454,7 +454,6 @@ class _InvoicesScreenState extends ConsumerState<InvoicesScreen> {
           );
         }
         return Scaffold(
-          appBar: AppBar(title: const Text('Invoices')),
           body: ListView.builder(
             itemCount: snap.data!.length,
             itemBuilder: (_, i) {

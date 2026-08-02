@@ -83,7 +83,6 @@ class _DiscountApprovalScreenState extends ConsumerState<DiscountApprovalScreen>
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Discount approval')),
       body: _items.isEmpty
           ? const EmptyView(message: 'No pending discount requests')
           : ListView.builder(

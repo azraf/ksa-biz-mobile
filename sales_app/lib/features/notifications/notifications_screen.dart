@@ -51,35 +51,38 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    if (_loading) return Scaffold(body: LoadingView(message: l10n.commonLoading));
+    if (_loading) return LoadingView(message: l10n.commonLoading);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.salesNotifications),
-        actions: [
-          IconButton(
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.centerRight,
+          child: IconButton(
             icon: const Icon(Icons.done_all),
+            tooltip: 'Mark all read',
             onPressed: () async {
               await ref.read(notificationRepositoryProvider).markAllRead();
               await _load();
             },
           ),
-        ],
-      ),
-      body: _items.isEmpty
-          ? EmptyView(message: l10n.salesNotificationsEmpty)
-          : ListView.builder(
-              itemCount: _items.length,
-              itemBuilder: (_, i) {
-                final n = _items[i];
-                return ListTile(
-                  leading: Icon(n.isRead ? Icons.notifications_none : Icons.notifications_active),
-                  title: Text(n.title),
-                  subtitle: Text(n.body ?? ''),
-                  onTap: () => _open(n),
-                );
-              },
-            ),
+        ),
+        Expanded(
+          child: _items.isEmpty
+              ? EmptyView(message: l10n.salesNotificationsEmpty)
+              : ListView.builder(
+                  itemCount: _items.length,
+                  itemBuilder: (_, i) {
+                    final n = _items[i];
+                    return ListTile(
+                      leading: Icon(n.isRead ? Icons.notifications_none : Icons.notifications_active),
+                      title: Text(n.title),
+                      subtitle: Text(n.body ?? ''),
+                      onTap: () => _open(n),
+                    );
+                  },
+                ),
+        ),
+      ],
     );
   }
 }

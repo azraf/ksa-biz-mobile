@@ -94,6 +94,7 @@ class MoreHubScreen extends ConsumerWidget {
           _tile(context, 'Discount approval', Icons.percent, '/more/approval/discount'),
           _tile(context, 'Sales Persons', Icons.people, '/sales/persons'),
           _tile(context, 'Customer Types', Icons.badge, '/customers/types'),
+          _tile(context, 'Watch-list', Icons.bookmark_add_outlined, '/customers/watchlist'),
           _tile(context, 'Users', Icons.manage_accounts, '/more/users'),
         ]),
         if (kDebugMode)

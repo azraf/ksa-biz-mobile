@@ -28,7 +28,6 @@ class ExpenseCategoriesScreen extends ConsumerWidget {
           );
         }
         return Scaffold(
-          appBar: AppBar(title: const Text('Expense Categories')),
           body: ListView(
             children: snap.data!.map((c) => ListTile(
                   title: Text(c.name),
@@ -192,7 +191,6 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.expenseId == null ? 'New Expense' : 'Edit Expense')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

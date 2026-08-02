@@ -141,5 +141,6 @@ final authProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new)
 const customerRoles = ['customer_shop', 'customer_van', 'customer_importer'];
 
 bool isCustomerRole(List<String> roles) {
-  return roles.any(customerRoles.contains);
+  final normalized = roles.map((r) => r.toLowerCase()).toList();
+  return customerRoles.any(normalized.contains);
 }

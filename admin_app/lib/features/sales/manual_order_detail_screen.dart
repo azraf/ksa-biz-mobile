@@ -151,7 +151,6 @@ class _AdminManualOrderDetailScreenState extends ConsumerState<AdminManualOrderD
     final shopPhone = shopContactPhone(request.customerShop);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Manual #${request.id}')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
