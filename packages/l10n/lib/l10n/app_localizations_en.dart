@@ -627,6 +627,275 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get salesOfflineAllSynced => 'All changes synced';
+
+  @override
+  String salesOfflineSyncProgress(int completed, int total) {
+    return 'Syncing $completed of $total…';
+  }
+
+  @override
+  String get salesOfflineServerUnreachable =>
+      'Connected but server is unreachable';
+
+  @override
+  String get salesOfflineRetryUploads => 'Retry uploads';
+
+  @override
+  String salesOfflineUploadFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count uploads failed',
+      one: '1 upload failed',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String salesOfflineUploading(int percent) {
+    return 'Uploading… $percent%';
+  }
+
+  @override
+  String get salesErrorOffline =>
+      'No internet connection. Showing saved data when available.';
+
+  @override
+  String get salesErrorGeneric => 'Something went wrong. Please try again.';
+
+  @override
+  String get salesErrorTimeout =>
+      'The server took too long to respond. Please try again.';
+
+  @override
+  String get salesErrorUnauthorized =>
+      'Your session expired. Please sign in again.';
+
+  @override
+  String get salesErrorPayloadTooLarge =>
+      'File is too large. Try a smaller photo or shorter recording.';
+
+  @override
+  String get salesErrorConflict => 'Server has newer data. Check Sync issues.';
+
+  @override
+  String get salesPendingSync => 'Pending sync';
+
+  @override
+  String get salesSyncExhausted => 'Max retries reached — dismiss or retry all';
+
+  @override
+  String get salesSyncItemOrderCreate => 'Order (create)';
+
+  @override
+  String get salesSyncItemOrderUpdate => 'Order (update)';
+
+  @override
+  String get salesSyncItemExpense => 'Expense';
+
+  @override
+  String get salesSyncItemWatchlist => 'Watch-list entry';
+
+  @override
+  String get salesSyncItemDiary => 'Diary note';
+
+  @override
+  String get salesOrderSearchHint => 'Search by shop or order #';
+
+  @override
+  String get salesOrderFilterToday => 'Today';
+
+  @override
+  String get salesOrderFilterWeek => 'This week';
+
+  @override
+  String get salesOrderFilterPendingSync => 'Pending sync';
+
+  @override
+  String get salesOrderFilterUnpaid => 'Unpaid';
+
+  @override
+  String get salesManualEmptyOpenPool => 'No open manual order requests';
+
+  @override
+  String get salesManualEmptyAssigned => 'No assigned manual orders';
+
+  @override
+  String get salesManualEmptyInReview => 'No orders in review';
+
+  @override
+  String get salesManualEmptyConverted => 'No converted manual orders';
+
+  @override
+  String get salesEmptyOrdersCta => 'Create your first order';
+
+  @override
+  String get salesEmptyCustomersOnline =>
+      'Go online to refresh your assigned customers';
+
+  @override
+  String get salesEmptyDuesHint =>
+      'Outstanding dues appear after delivered orders';
+
+  @override
+  String get salesVanOfflineBanner =>
+      'Van stock changes require an internet connection';
+
+  @override
+  String get salesVanActionsTitle => 'Van stock actions';
+
+  @override
+  String get salesOfflineHelpTitle => 'Offline mode';
+
+  @override
+  String get salesOfflineHelpWorks =>
+      'Works offline: create orders, watch-list, diary text, browse cached customers and products.';
+
+  @override
+  String get salesOfflineHelpNeedsInternet =>
+      'Needs internet: manual orders, van stock, diary voice upload, quick-create customer, payments on unsynced orders.';
+
+  @override
+  String get salesPaymentSyncFirst =>
+      'Sync this order before collecting payment';
+
+  @override
+  String get salesStorageLowContinue => 'Continue anyway';
+
+  @override
+  String get salesQuickLinks => 'Quick links';
+
+  @override
+  String get salesDuesCollect => 'Collect';
+
+  @override
+  String get salesOrderRepeatLast => 'Repeat last order';
+
+  @override
+  String get salesDarkMode => 'Dark mode';
+
+  @override
+  String get salesFirstRunTipDashboard =>
+      'Dashboard shows dues, van stock, and quick links';
+
+  @override
+  String get salesFirstRunTipOrder =>
+      'Tap New Order to sell — works offline when catalog is cached';
+
+  @override
+  String get salesFirstRunTipOffline =>
+      'The banner shows sync status; tap it for sync issues';
+
+  @override
+  String get salesFirstRunGotIt => 'Got it';
+
+  @override
+  String get orderHomeRecent => 'Recent orders';
+
+  @override
+  String get orderHomeThisMonth => 'This month';
+
+  @override
+  String get orderHomeOutstanding => 'Outstanding balance';
+
+  @override
+  String get orderContextError =>
+      'Could not match your account to a shop. Contact support.';
+
+  @override
+  String get adminProfileTitle => 'Profile';
+
+  @override
+  String get adminCustomersHubTitle => 'Customers hub';
+
+  @override
+  String get adminNavAssignments => 'Assignments';
+
+  @override
+  String get adminOfflineWriteBlocked =>
+      'This action requires an internet connection.';
+
+  @override
+  String get salesSyncIssuesTitle => 'Sync issues';
+
+  @override
+  String get salesSyncIssuesEmpty => 'No sync issues';
+
+  @override
+  String salesSyncRetries(int count) {
+    return 'Retries: $count';
+  }
+
+  @override
+  String get salesSyncDismiss => 'Dismiss';
+
+  @override
+  String get salesSyncRetry => 'Retry';
+
+  @override
+  String get salesSyncRetryAll => 'Retry all';
+
+  @override
+  String salesLastSyncedAt(String time) {
+    return 'Last synced $time';
+  }
+
+  @override
+  String get salesCardCustomers => 'Customers';
+
+  @override
+  String get salesCardCustomersValue => 'My customers';
+
+  @override
+  String get salesCardCustomersSubtitle =>
+      'Shops, vans, importers — diary & media';
+
+  @override
+  String get salesCustomersTitle => 'Customers';
+
+  @override
+  String get salesCustomersShops => 'Shops';
+
+  @override
+  String get salesCustomersVans => 'Vans';
+
+  @override
+  String get salesCustomersImporters => 'Importers';
+
+  @override
+  String get salesCustomersEmpty => 'No assigned customers';
+
+  @override
+  String get salesCustomersAssignedOnly => 'Showing customers assigned to you';
+
+  @override
+  String get salesCustomersNearby => 'Nearby map';
+
+  @override
+  String get salesStorageLowWarning => 'Low storage — capture may fail';
+
+  @override
+  String get salesCustomerDetail => 'Customer detail';
+
+  @override
+  String get salesCustomerActivity => 'Activity';
+
+  @override
+  String get salesCustomerMedia => 'Photos';
+
+  @override
+  String get salesCustomerDiary => 'Diary';
+
+  @override
+  String get salesOrderEditOfflineBlocked =>
+      'Order editing requires an internet connection.';
+
+  @override
+  String get salesOrderEditPendingSync =>
+      'This order is still syncing. Edit after sync completes.';
+
+  @override
   String get salesManualTabOpenPool => 'Open pool';
 
   @override
@@ -765,6 +1034,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get salesOrderRecordPayment => 'Record payment';
+
+  @override
+  String get paymentVoidPayment => 'Void payment';
+
+  @override
+  String get paymentVoidReason => 'Reason for voiding';
+
+  @override
+  String get paymentVoided => 'Payment voided';
+
+  @override
+  String get paymentVoidedLabel => 'voided';
 
   @override
   String get salesOrderEnterValidAmount => 'Enter a valid amount';

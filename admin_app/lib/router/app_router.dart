@@ -7,6 +7,7 @@ import '../features/approval/discount_approval_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/catalog/catalog_screens.dart';
 import '../features/customers/assignment_screens.dart';
+import '../features/customers/customers_hub_screen.dart';
 import '../features/customers/customer_screens.dart';
 import '../features/customers/watchlist_screens.dart';
 import '../features/dashboard/dashboard_screen.dart';
@@ -18,6 +19,7 @@ import '../features/sales/manual_order_detail_screen.dart';
 import '../features/sales/order_edit_screen.dart';
 import '../features/sales/sales_screens.dart';
 import '../features/shipping/shipping_screens.dart';
+import '../features/profile/profile_screen.dart';
 import '../features/users/user_screens.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/app_drawer.dart';
@@ -105,9 +107,15 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/customers',
-                redirect: (_, __) => '/customers/shops',
+                redirect: (_, __) => '/customers/hub',
                 routes: [
-                  GoRoute(path: 'shops', builder: (_, __) => const CustomerShopsScreen()),
+                  GoRoute(path: 'hub', builder: (_, __) => const CustomersHubScreen()),
+                  GoRoute(path: 'shops', builder: (_, __) => const CustomerShopsScreen(), routes: [
+                    GoRoute(
+                      path: ':id',
+                      builder: (_, s) => ShopDetailScreen(shopId: int.parse(s.pathParameters['id']!)),
+                    ),
+                  ]),
                   GoRoute(path: 'vans', builder: (_, __) => const CustomerVansScreen()),
                   GoRoute(path: 'importers', builder: (_, __) => const CustomerImportersScreen()),
                   GoRoute(path: 'types', builder: (_, __) => const CustomerTypesScreen()),
@@ -190,6 +198,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   GoRoute(path: 'shipping/purchases', builder: (_, __) => const PurchasesScreen()),
                   GoRoute(path: 'approval/discount', builder: (_, __) => const DiscountApprovalScreen()),
                   GoRoute(path: 'users', builder: (_, __) => const UsersScreen()),
+                  GoRoute(path: 'profile', builder: (_, __) => const AdminProfileScreen()),
                 ],
               ),
             ],

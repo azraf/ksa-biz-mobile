@@ -6,6 +6,7 @@ import 'package:l10n/l10n.dart';
 
 import '../features/auth/login_screen.dart';
 import '../features/auth/select_sales_person_screen.dart';
+import '../features/customers/customer_screens.dart';
 import '../features/dashboard/dashboard_screen.dart';
 import '../features/dues/dues_screen.dart';
 import '../features/manual_orders/convert_order_screen.dart';
@@ -165,6 +166,46 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (_, state) => WatchlistDetailScreen(
               id: int.parse(state.pathParameters['id']!),
             ),
+          ),
+        ],
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/customers',
+        builder: (context, state) => const CustomersHubScreen(),
+        routes: [
+          GoRoute(
+            path: 'shop/:id',
+            builder: (_, state) {
+              final args = state.extra as CustomerDetailRouteArgs?;
+              return CustomerDetailScreen(
+                customerType: 'customer_shop',
+                customerId: int.parse(state.pathParameters['id']!),
+                initialCustomer: args?.customer,
+              );
+            },
+          ),
+          GoRoute(
+            path: 'van/:id',
+            builder: (_, state) {
+              final args = state.extra as CustomerDetailRouteArgs?;
+              return CustomerDetailScreen(
+                customerType: 'customer_van',
+                customerId: int.parse(state.pathParameters['id']!),
+                initialCustomer: args?.customer,
+              );
+            },
+          ),
+          GoRoute(
+            path: 'importer/:id',
+            builder: (_, state) {
+              final args = state.extra as CustomerDetailRouteArgs?;
+              return CustomerDetailScreen(
+                customerType: 'customer_importer',
+                customerId: int.parse(state.pathParameters['id']!),
+                initialCustomer: args?.customer,
+              );
+            },
           ),
         ],
       ),

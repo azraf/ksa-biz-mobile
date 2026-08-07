@@ -1,6 +1,24 @@
+import 'dart:convert';
+
 import 'package:equatable/equatable.dart';
 
 import 'media_kind.dart';
+
+Map<String, String> _parseExtraFields(dynamic raw) {
+  if (raw is String && raw.isNotEmpty) {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map) {
+        return decoded.map((k, v) => MapEntry(k.toString(), v.toString()));
+      }
+    } catch (_) {}
+    return {};
+  }
+  if (raw is Map) {
+    return raw.map((k, v) => MapEntry(k.toString(), v.toString()));
+  }
+  return {};
+}
 
 class MediaTarget extends Equatable {
   const MediaTarget({
@@ -84,13 +102,7 @@ class MediaBlobRecord extends Equatable {
       parentServerId: map['parent_server_id'] as int?,
       uploadEndpoint: map['upload_endpoint'] as String,
       uploadField: map['upload_field'] as String? ?? 'file',
-      extraFields: Map<String, String>.from(
-        map['extra_fields'] is String
-            ? {}
-            : (map['extra_fields'] as Map<String, dynamic>? ?? {}).map(
-                (k, v) => MapEntry(k.toString(), v.toString()),
-              ),
-      ),
+      extraFields: _parseExtraFields(map['extra_fields']),
       originalName: map['original_name'] as String?,
       sizeBytes: map['size_bytes'] as int? ?? 0,
       status: map['status'] as String? ?? 'pending',

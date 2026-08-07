@@ -44,8 +44,8 @@ class _AdminOrderEditScreenState extends ConsumerState<AdminOrderEditScreen> {
     final product = await pickProduct(context, ref);
     if (product == null || _order == null) return;
     try {
-      await ref.read(orderRepositoryProvider).addItem(widget.orderId, LineItemDraft(product: product).toJson());
-      await _load();
+      final order = await ref.read(orderRepositoryProvider).addItem(widget.orderId, LineItemDraft(product: product).toJson());
+      setState(() => _order = order);
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     }

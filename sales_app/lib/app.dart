@@ -15,33 +15,45 @@ class SalesApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     final locale = ref.watch(localeNotifierProvider);
+    final themeMode = ref.watch(themeModeNotifierProvider);
     final auth = ref.watch(authProvider);
     final authRepo = ref.watch(authRepositoryProvider);
+    final syncService = ref.watch(syncServiceProvider);
 
-    return MaterialApp.router(
-      title: 'ARM Sales(M)',
-      theme: AppTheme.light(),
-      locale: locale,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      routerConfig: router,
-      debugShowCheckedModeBanner: false,
-      builder: (context, child) {
-        final l10n = AppLocalizations.of(context);
-        return BiometricAppShell(
-          auth: auth,
-          authRepository: authRepo,
-          onAppLocked: () => ref.read(authProvider.notifier).lockApp(),
-          onUnlock: (reason) => ref.read(authProvider.notifier).unlockApp(
-                reason,
-                sessionExpiredMessage: l10n.sessionExpired,
-              ),
-          child: AppRootBuilder(
-            offlineBanner: const OfflineBanner(),
-            child: child ?? const SizedBox.shrink(),
-          ),
-        );
+    return SyncLifecycle(
+      syncService: syncService,
+      onSyncComplete: () {
+        ref.invalidate(pendingSyncCountProvider);
+        ref.invalidate(failedMediaCountProvider);
+        ref.invalidate(lastSyncAtProvider);
       },
+      child: MaterialApp.router(
+        title: 'ARM Sales(M)',
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        themeMode: themeMode,
+        locale: locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        routerConfig: router,
+        debugShowCheckedModeBanner: false,
+        builder: (context, child) {
+          final l10n = AppLocalizations.of(context);
+          return BiometricAppShell(
+            auth: auth,
+            authRepository: authRepo,
+            onAppLocked: () => ref.read(authProvider.notifier).lockApp(),
+            onUnlock: (reason) => ref.read(authProvider.notifier).unlockApp(
+                  reason,
+                  sessionExpiredMessage: l10n.sessionExpired,
+                ),
+            child: AppRootBuilder(
+              offlineBanner: const OfflineBanner(),
+              child: child ?? const SizedBox.shrink(),
+            ),
+          );
+        },
+      ),
     );
   }
 }

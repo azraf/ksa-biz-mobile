@@ -48,7 +48,7 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
       });
     } catch (e) {
       setState(() => _loading = false);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     }
   }
 
@@ -70,7 +70,7 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
       }
     } catch (e) {
       setState(() => _submitting = false);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     }
   }
 

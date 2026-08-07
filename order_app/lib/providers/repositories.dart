@@ -6,6 +6,7 @@ export 'package:core/core.dart' show sharedPreferencesProvider;
 
 import '../repositories/product_price_repository.dart';
 import 'auth_provider.dart';
+import 'connectivity_provider.dart';
 
 final apiClientProvider = Provider<ApiClient>((ref) {
   final client = ApiClient();
@@ -22,8 +23,19 @@ final connectivityServiceProvider = Provider<ConnectivityService>((ref) {
   return service;
 });
 
+final apiReachabilityServiceProvider = Provider<ApiReachabilityService>((ref) {
+  final service = ApiReachabilityService();
+  ref.onDispose(service.dispose);
+  return service;
+});
+
 final isOnlineProvider = Provider<bool>((ref) {
   return ref.watch(connectivityServiceProvider).isOnline;
+});
+
+final serverReachableProvider = FutureProvider<bool>((ref) async {
+  if (!ref.watch(onlineStatusProvider)) return false;
+  return ref.watch(apiReachabilityServiceProvider).check();
 });
 
 final localDatabaseProvider = Provider<LocalDatabase>((ref) => LocalDatabase.instance);
@@ -71,13 +83,30 @@ final mediaCaptureFacadeProvider = Provider<MediaCaptureFacade>((ref) {
 });
 
 final syncServiceProvider = Provider<SyncService>((ref) {
-  return SyncService(
+  final service = SyncService(
     db: ref.watch(localDatabaseProvider),
     connectivity: ref.watch(connectivityServiceProvider),
     orderRepository: ref.watch(orderRepositoryProvider),
     expenseRepository: ExpenseRepository(ref.watch(apiClientProvider)),
     mediaUploadRepository: ref.watch(mediaUploadRepositoryProvider),
+    apiReachability: ref.watch(apiReachabilityServiceProvider),
   );
+  ref.onDispose(service.dispose);
+  return service;
+});
+
+final syncProgressProvider = StreamProvider<SyncProgress>((ref) {
+  return ref.watch(syncServiceProvider).progressStream;
+});
+
+final mediaUploadProgressProvider = StreamProvider<double?>((ref) {
+  final repo = ref.watch(mediaUploadRepositoryProvider);
+  return repo.statusStream.map((e) => e.progress);
+});
+
+final lastSyncAtProvider = FutureProvider<DateTime?>((ref) async {
+  ref.watch(syncServiceProvider);
+  return ref.watch(localDatabaseProvider).getLastSyncAt();
 });
 
 final pendingSyncCountProvider = FutureProvider<int>((ref) async {
@@ -85,4 +114,8 @@ final pendingSyncCountProvider = FutureProvider<int>((ref) async {
   final queue = await db.pendingCount();
   final media = await db.pendingMediaCount();
   return queue + media;
+});
+
+final failedMediaCountProvider = FutureProvider<int>((ref) async {
+  return ref.watch(localDatabaseProvider).failedMediaCount();
 });

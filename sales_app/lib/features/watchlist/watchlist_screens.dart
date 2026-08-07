@@ -231,7 +231,7 @@ class _WatchlistCreateScreenState extends ConsumerState<WatchlistCreateScreen> {
       );
       if (mounted) context.go('/watchlist/${item.id}');
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     } finally {
       if (mounted) setState(() => _working = false);
     }
@@ -424,7 +424,7 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
         );
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     } finally {
       if (mounted) setState(() => _working = false);
     }
@@ -440,7 +440,7 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
       });
       if (mounted) context.pop();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     } finally {
       if (mounted) setState(() => _working = false);
     }
@@ -513,7 +513,7 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
         context.pop();
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     } finally {
       if (mounted) setState(() => _working = false);
     }

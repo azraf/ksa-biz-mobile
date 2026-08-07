@@ -6,6 +6,7 @@ import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/customer_context_provider.dart';
+import '../../providers/repositories.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -32,6 +33,31 @@ class ProfileScreen extends ConsumerWidget {
           ),
         ],
         const Divider(),
+        ListTile(
+          leading: const Icon(Icons.sync_problem_outlined),
+          title: Text(l10n.salesSyncIssuesTitle),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => SyncStatusScreen(
+                  syncService: ref.read(syncServiceProvider),
+                  loadItems: () => ref.read(syncServiceProvider).actionableItems(),
+                ),
+              ),
+            );
+          },
+        ),
+        ref.watch(lastSyncAtProvider).when(
+          data: (at) => at == null
+              ? const SizedBox.shrink()
+              : ListTile(
+                  leading: const Icon(Icons.history),
+                  title: Text(l10n.salesLastSyncedAt(formatFetchedAt(at.toIso8601String()))),
+                ),
+          loading: () => const SizedBox.shrink(),
+          error: (_, __) => const SizedBox.shrink(),
+        ),
+        const Divider(),
         const LanguagePickerTile(),
         const Divider(),
         BiometricSettingsTile(
@@ -50,7 +76,7 @@ class ProfileScreen extends ConsumerWidget {
         else if (customer.error != null)
           ListTile(
             title: Text(l10n.orderProfileCustomer),
-            subtitle: Text(customer.error!),
+            subtitle: Text(l10n.orderContextError),
             trailing: IconButton(
               icon: const Icon(Icons.refresh),
               onPressed: () => ref.read(customerContextProvider.notifier).load(),

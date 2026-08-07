@@ -12,6 +12,7 @@ class SyncQueueItem extends Equatable {
     this.retryCount = 0,
     this.errorMessage,
     this.createdAt,
+    this.nextRetryAt,
   });
 
   final int id;
@@ -24,6 +25,7 @@ class SyncQueueItem extends Equatable {
   final int retryCount;
   final String? errorMessage;
   final String? createdAt;
+  final DateTime? nextRetryAt;
 
   bool get isPending => status == 'pending' || status == 'failed';
 
@@ -42,6 +44,9 @@ class SyncQueueItem extends Equatable {
         retryCount: map['retry_count'] as int? ?? 0,
         errorMessage: map['error_message'] as String?,
         createdAt: map['created_at'] as String?,
+        nextRetryAt: map['next_retry_at'] != null
+            ? DateTime.tryParse(map['next_retry_at'] as String)
+            : null,
       );
 
   @override

@@ -4,7 +4,9 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:l10n/l10n.dart';
 import 'package:maps_ui/maps_ui.dart';
+import 'package:media/media.dart';
 
 import '../../providers/repositories.dart';
 import 'customer_diary_section.dart';
@@ -48,6 +50,7 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
   }
 
   Future<void> _takeShopPhoto() async {
+    if (!await ensureStorageForCapture(context)) return;
     if (!await AppPermissions.requestCamera()) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -158,6 +161,12 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
           ],
           const SizedBox(height: 24),
           if (widget.shop != null) ...[
+            const SizedBox(height: 16),
+            MediaGallerySection(
+              remoteItems: widget.shop!.images,
+              title: AppLocalizations.of(context).salesCustomerMedia,
+            ),
+            const SizedBox(height: 12),
             CustomerRatingSection(
               priorityRating: _priorityRating,
               paymentOverride: _paymentOverride,

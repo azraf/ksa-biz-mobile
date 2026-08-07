@@ -66,9 +66,22 @@ class _ManualOrderListScreenState extends ConsumerState<ManualOrderListScreen> w
       });
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = AppErrorMapper.localize(context, e);
         _loading[index] = false;
       });
+    }
+  }
+
+  String _emptyMessage(int index, AppLocalizations l10n) {
+    switch (index) {
+      case 0:
+        return l10n.salesManualEmptyOpenPool;
+      case 1:
+        return l10n.salesManualEmptyAssigned;
+      case 2:
+        return l10n.salesManualEmptyInReview;
+      default:
+        return l10n.salesManualEmptyConverted;
     }
   }
 
@@ -92,10 +105,15 @@ class _ManualOrderListScreenState extends ConsumerState<ManualOrderListScreen> w
           child: TabBarView(
             controller: _tabs,
             children: List.generate(4, (index) {
-              if (_loading[index] == true) return LoadingView(message: l10n.commonLoading);
+              if (_loading[index] == true) {
+                return ListView.builder(
+                  itemCount: 5,
+                  itemBuilder: (_, __) => const SkeletonListTile(),
+                );
+              }
               if (_error != null) return ErrorView(message: _error!, onRetry: () => _loadTab(index));
               final items = _lists[index] ?? [];
-              if (items.isEmpty) return EmptyView(message: l10n.salesManualEmpty);
+              if (items.isEmpty) return EmptyView(message: _emptyMessage(index, l10n));
               return RefreshIndicator(
                 onRefresh: () => _loadTab(index),
                 child: ListView.builder(

@@ -182,6 +182,21 @@ class CustomerRepository {
     return CustomerImporterModel.fromJson(response['data'] as Map<String, dynamic>);
   }
 
+  Future<CustomerShopModel> getShop(int id) async {
+    final response = await _api.get('/customer-shops/$id');
+    return CustomerShopModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
+  Future<CustomerVanModel> getVan(int id) async {
+    final response = await _api.get('/customer-vans/$id');
+    return CustomerVanModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
+  Future<CustomerImporterModel> getImporter(int id) async {
+    final response = await _api.get('/customer-importers/$id');
+    return CustomerImporterModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
   Future<CustomerShopModel> updateShopGps(int shopId, String gps) async {
     final response = await _api.patch('/customer-shops/$shopId', body: {'gps': gps});
     return CustomerShopModel.fromJson(response['data'] as Map<String, dynamic>);

@@ -36,12 +36,14 @@ class CustomerDiaryRepository {
     required String noteType,
     String? body,
     int? salesPersonId,
+    String? clientRequestId,
   }) async {
     final payload = <String, dynamic>{
       'customer_type': customerType,
       'note_type': noteType,
       if (body != null) 'body': body,
       if (salesPersonId != null) 'sales_person_id': salesPersonId,
+      if (clientRequestId != null) 'client_request_id': clientRequestId,
     };
     switch (customerType) {
       case 'customer_shop':

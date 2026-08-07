@@ -43,9 +43,12 @@ class AuthNotifier extends Notifier<AuthState> {
     unawaited(() async {
       try {
         await ref.read(syncServiceProvider).syncIfOnline();
-        await ref.read(referenceDataPrefetcherProvider).prefetch(
-              salesPersonId: state.effectiveSalesPersonId,
-            );
+        final hasCatalog = await ref.read(referenceDataPrefetcherProvider).hasCachedCatalog();
+        if (!hasCatalog) {
+          await ref.read(referenceDataPrefetcherProvider).prefetch(
+                salesPersonId: state.effectiveSalesPersonId,
+              );
+        }
         ref.invalidate(pendingSyncCountProvider);
       } catch (_) {}
     }());
@@ -162,7 +165,3 @@ class AuthNotifier extends Notifier<AuthState> {
 final authProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
 
 int? requireSalesPersonId(AuthState auth) => auth.effectiveSalesPersonId;
-
-String formatOrderId(int id) => id < 0 ? 'L${-id}' : '$id';
-
-bool isPendingSyncOrder(int id) => id < 0;

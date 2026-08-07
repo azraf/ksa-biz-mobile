@@ -7,6 +7,7 @@ import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/repositories.dart';
+import '../../widgets/first_run_tips.dart';
 import '../watchlist/watchlist_screens.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -65,10 +66,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         forceRefresh: force,
         onRevalidate: _applyDuesRevalidate,
       );
-      final openPool = await manualRepo.list(openPool: true);
-      final assigned = await manualRepo.list(assignedSalesPersonId: salesPersonId, status: 'assigned');
-      final inReview = await manualRepo.list(assignedSalesPersonId: salesPersonId, status: 'in_review');
-      final vanStock = await inventoryRepo.vanStock(salesPersonId);
+      final results = await Future.wait([
+        manualRepo.list(openPool: true),
+        manualRepo.list(assignedSalesPersonId: salesPersonId, status: 'assigned'),
+        manualRepo.list(assignedSalesPersonId: salesPersonId, status: 'in_review'),
+        inventoryRepo.vanStock(salesPersonId),
+      ]);
+      final openPool = results[0] as PaginatedResponse<ManualOrderRequestModel>;
+      final assigned = results[1] as PaginatedResponse<ManualOrderRequestModel>;
+      final inReview = results[2] as PaginatedResponse<ManualOrderRequestModel>;
+      final vanStock = results[3] as List<InventoryStockModel>;
 
       setState(() {
         _totalDue = due.data.totalDue;
@@ -132,7 +139,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       );
     }
 
-    return RefreshIndicator(
+    return Stack(
+      children: [
+        RefreshIndicator(
       onRefresh: _refresh,
       child: ListView(
         padding: const EdgeInsets.all(16),
@@ -198,6 +207,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             onTap: () => context.go('/orders'),
           ),
           _SummaryCard(
+            title: l10n.salesCardCustomers,
+            value: l10n.salesCardCustomersValue,
+            subtitle: l10n.salesCardCustomersSubtitle,
+            icon: Icons.people_outline,
+            onTap: () => context.push('/customers'),
+          ),
+          _SummaryCard(
             title: l10n.salesCardWatchlist,
             value: l10n.salesCardWatchlistValue,
             subtitle: l10n.salesCardWatchlistSubtitle,
@@ -212,6 +228,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
         ],
       ),
+        ),
+        FirstRunTips(prefs: ref.watch(sharedPreferencesProvider)),
+      ],
     );
   }
 }

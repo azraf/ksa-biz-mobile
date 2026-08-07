@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:l10n/l10n.dart';
 
+import '../../providers/connectivity_provider.dart';
+import '../../providers/connectivity_provider.dart';
 import '../../providers/repositories.dart';
 import '../../widgets/line_items_editor.dart';
 
@@ -45,28 +47,28 @@ class _OrderEditScreenState extends ConsumerState<OrderEditScreen> {
     final product = await pickProduct(context, ref);
     if (product == null || _order == null) return;
     try {
-      await ref.read(orderRepositoryProvider).addItem(widget.id, LineItemDraft(product: product).toJson());
-      await _load();
+      final order = await ref.read(orderRepositoryProvider).addItem(widget.id, LineItemDraft(product: product).toJson());
+      setState(() => _order = order);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     }
   }
 
   Future<void> _updateQty(OrderItemModel item, int qty) async {
     try {
-      await ref.read(orderRepositoryProvider).updateItem(widget.id, item.id, {'quantity': qty});
-      await _load();
+      final order = await ref.read(orderRepositoryProvider).updateItem(widget.id, item.id, {'quantity': qty});
+      setState(() => _order = order);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     }
   }
 
   Future<void> _removeItem(OrderItemModel item) async {
     try {
-      await ref.read(orderRepositoryProvider).removeItem(widget.id, item.id);
-      await _load();
+      final order = await ref.read(orderRepositoryProvider).removeItem(widget.id, item.id);
+      setState(() => _order = order);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     }
   }
 
@@ -94,15 +96,42 @@ class _OrderEditScreenState extends ConsumerState<OrderEditScreen> {
       await ref.read(orderRepositoryProvider).recordReturn(widget.id, [
         {'product_id': item.productId, 'quantity': qty},
       ]);
-      await _load();
+      final order = await ref.read(orderRepositoryProvider).get(widget.id);
+      setState(() => _order = order);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final offline = !ref.watch(onlineStatusProvider);
+    final pendingLocal = widget.id < 0;
+
+    if (offline || pendingLocal) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.commonEditOrder)),
+        body: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Icon(
+                offline ? Icons.cloud_off : Icons.cloud_upload_outlined,
+                size: 48,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                pendingLocal ? l10n.salesOrderEditPendingSync : l10n.salesOrderEditOfflineBlocked,
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     if (_loading) return LoadingView(message: l10n.commonLoading);
     if (_error != null) return ErrorView(message: _error!, onRetry: _load);

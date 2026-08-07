@@ -14,6 +14,7 @@ import '../features/manual_orders/manual_order_list_screen.dart';
 import '../features/orders/create_order_screen.dart';
 import '../features/orders/order_detail_screen.dart';
 import '../features/orders/order_list_screen.dart';
+import '../features/home/order_home_screen.dart';
 import '../features/profile/profile_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -23,7 +24,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: '/catalog',
+    initialLocation: '/home',
     refreshListenable: _RouterRefresh(ref),
     redirect: (context, state) {
       final location = state.matchedLocation;
@@ -31,7 +32,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       if (auth.isLoading) return null;
       if (!auth.isAuthenticated) return loggingIn ? null : '/login';
-      if (loggingIn) return '/catalog';
+      if (loggingIn) return '/home';
       if (!isCustomerRole(auth.roles)) return '/login';
       return null;
     },
@@ -41,6 +42,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state, navigationShell) =>
             HomeShell(navigationShell: navigationShell),
         branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                builder: (context, state) => const OrderHomeScreen(),
+              ),
+            ],
+          ),
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -115,10 +124,11 @@ class HomeShell extends ConsumerWidget {
     if (RegExp(r'/manual-orders/\d+').hasMatch(location)) return l10n.orderTitleRequestDetail;
 
     return switch (navigationShell.currentIndex) {
-      0 => l10n.orderTitleCatalog,
-      1 => l10n.orderNavOrders,
-      2 => l10n.orderTitleManualOrders,
-      3 => l10n.orderNavProfile,
+      0 => l10n.orderAppName,
+      1 => l10n.orderTitleCatalog,
+      2 => l10n.orderNavOrders,
+      3 => l10n.orderTitleManualOrders,
+      4 => l10n.orderNavProfile,
       _ => l10n.orderAppName,
     };
   }
@@ -135,7 +145,7 @@ class HomeShell extends ConsumerWidget {
         leading: showBack ? BackButton(onPressed: () => context.pop()) : null,
         title: Text(title),
         actions: [
-          if (navigationShell.currentIndex != 3)
+          if (navigationShell.currentIndex != 4)
             IconButton(
               icon: const Icon(Icons.person_outline),
               onPressed: () => context.go('/profile'),
@@ -152,6 +162,11 @@ class HomeShell extends ConsumerWidget {
           );
         },
         destinations: [
+          NavigationDestination(
+            icon: const Icon(Icons.home_outlined),
+            selectedIcon: const Icon(Icons.home),
+            label: l10n.orderAppName,
+          ),
           NavigationDestination(
             icon: const Icon(Icons.storefront_outlined),
             selectedIcon: const Icon(Icons.storefront),

@@ -24,6 +24,9 @@ class OfflineDiaryRepository {
     if (_isOnline()) {
       try {
         final result = await _remote.list(customerType: customerType, customerId: customerId, page: page);
+        for (final note in result.items) {
+          await _cacheNote(customerType, customerId, note);
+        }
         return result.items;
       } catch (_) {}
     }

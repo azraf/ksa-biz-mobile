@@ -30,20 +30,30 @@ class OfflineProductRepository {
           brandId: brandId,
           page: page,
         );
-        for (final product in result.items) {
-          await _db.cacheEntity(
-            entityType: 'product',
-            entityId: product.id,
-            data: {
-              'id': product.id,
-              'name': product.name,
-              'price': product.price,
-              'wholesale_price': product.wholesalePrice,
-              'alert_quantity': product.alertQuantity,
-              if (product.description != null) 'description': product.description,
-            },
-          );
-        }
+        await _db.cacheEntitiesBatch(
+          entityType: 'product',
+          entities: result.items
+              .map(
+                (product) => (
+                  entityId: product.id,
+                  data: {
+                    'id': product.id,
+                    'name': product.name,
+                    'price': product.price,
+                    'wholesale_price': product.wholesalePrice,
+                    'alert_quantity': product.alertQuantity,
+                    if (product.description != null) 'description': product.description,
+                    'allow_break_pack': product.allowBreakPack,
+                    'pieces_per_carton': product.piecesPerCarton,
+                    'piece_price': product.piecePrice,
+                    if (product.pcsUnitId != null) 'pcs_unit_id': product.pcsUnitId,
+                    if (product.cartonUnitId != null) 'carton_unit_id': product.cartonUnitId,
+                    if (product.unitId != null) 'unit_id': product.unitId,
+                  },
+                ),
+              )
+              .toList(),
+        );
         return result;
       } catch (_) {
         return _cachedList(search: search);

@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import 'media.dart';
+
 import 'customer.dart';
 import 'customer_assignment_models.dart';
 import 'customer_metrics.dart';
@@ -68,6 +70,7 @@ class CustomerShopModel extends Equatable {
     this.isInactive = false,
     this.distanceKm,
     this.metrics = const CustomerMetricsFields(),
+    this.images = const [],
   });
 
   final int id;
@@ -83,6 +86,7 @@ class CustomerShopModel extends Equatable {
   final bool isInactive;
   final double? distanceKm;
   final CustomerMetricsFields metrics;
+  final List<MediaModel> images;
 
   factory CustomerShopModel.fromJson(Map<String, dynamic> json) =>
       CustomerShopModel(
@@ -104,6 +108,9 @@ class CustomerShopModel extends Equatable {
         isInactive: json['is_inactive'] as bool? ?? false,
         distanceKm: (json['distance_km'] as num?)?.toDouble(),
         metrics: CustomerMetricsFields.fromJson(json),
+        images: (json['images'] as List<dynamic>? ?? [])
+            .map((e) => MediaModel.fromJson(e as Map<String, dynamic>))
+            .toList(),
       );
 
   Map<String, dynamic> toJson() => {

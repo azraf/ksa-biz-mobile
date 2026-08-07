@@ -79,7 +79,7 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
       }
     } catch (e) {
       setState(() => _working = false);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     }
   }
 
@@ -104,7 +104,7 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
       }
       await _load();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     }
   }
 
@@ -131,7 +131,7 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
         );
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     } finally {
       if (mounted) setState(() => _working = false);
     }
@@ -205,7 +205,7 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
     } catch (e) {
       setState(() => _working = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+        showAppErrorSnackBar(context, e);
       }
     }
   }

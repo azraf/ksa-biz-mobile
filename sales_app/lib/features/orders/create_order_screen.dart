@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -166,6 +168,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(AppLocalizations.of(context).salesOrderSavedLocally)),
           );
+          AppHaptics.light();
         }
         final type = _selectedType!.typeName;
         final customer = _selectedCustomer!;
@@ -175,20 +178,31 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
           _ => (customer as CustomerImporterModel).id,
         };
         final customerName = _customerLabel(AppLocalizations.of(context));
+        setState(() => _submitting = false);
         if (online) {
-          await promptPostOrderDiaryNote(
-            context,
-            ref,
-            customerType: type,
-            customerId: customerId,
-            customerName: customerName,
-          );
+          final customerType = type;
+          final customerIdForDiary = customerId;
+          final customerNameForDiary = customerName;
+          if (mounted) context.go('/orders/${order.id}');
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            unawaited(
+              promptPostOrderDiaryNote(
+                context,
+                ref,
+                customerType: customerType,
+                customerId: customerIdForDiary,
+                customerName: customerNameForDiary,
+              ),
+            );
+          });
+        } else if (mounted) {
+          context.go('/orders/${order.id}');
         }
-        if (mounted) context.go('/orders/${order.id}');
       }
     } catch (e) {
       setState(() => _submitting = false);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     }
   }
 

@@ -4,11 +4,13 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../providers/repositories.dart';
 import '../../widgets/crud_screens.dart';
 import '../../widgets/field_config.dart';
 import '../../widgets/line_items_editor.dart';
+import 'collect_payment_screen.dart';
 import 'manual_order_detail_screen.dart';
 import 'order_edit_screen.dart';
 
@@ -67,62 +69,207 @@ class OrdersScreen extends ConsumerWidget {
   }
 }
 
-class OrderDetailScreen extends ConsumerWidget {
+class OrderDetailScreen extends ConsumerStatefulWidget {
   const OrderDetailScreen({super.key, required this.orderId});
   final int orderId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return FutureBuilder<OrderModel>(
-      future: ref.read(offlineOrderRepositoryProvider).get(orderId),
-      builder: (context, snap) {
-        if (!snap.hasData) return const Center(child: CircularProgressIndicator());
-        final order = snap.data!;
-        return ListView(
-          padding: const EdgeInsets.all(16),
+  ConsumerState<OrderDetailScreen> createState() => _OrderDetailScreenState();
+}
+
+class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
+  OrderModel? _order;
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final order = await ref.read(offlineOrderRepositoryProvider).get(widget.orderId);
+      setState(() {
+        _order = order;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _collectPayment() async {
+    final order = _order!;
+    final due = order.amountDue > 0 ? order.amountDue : order.totalBill - order.amountPaid;
+    final ok = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AdminCollectPaymentScreen(orderId: order.id, amountDue: due),
+      ),
+    );
+    if (ok == true) await _load();
+  }
+
+  Future<void> _voidPayment(PaymentModel payment) async {
+    final reason = await _prompt(context, 'Void payment reason');
+    if (reason == null || reason.trim().isEmpty) return;
+
+    try {
+      await ref.read(orderRepositoryProvider).voidPayment(payment.id, reason: reason.trim());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment voided')));
+        await _load();
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            if (order.id < 0)
-              const Card(
-                color: Colors.orange,
-                child: ListTile(
-                  leading: Icon(Icons.sync),
-                  title: Text('Pending sync'),
-                  subtitle: Text('This order will upload when online'),
+            Text(_error!),
+            const SizedBox(height: 12),
+            FilledButton(onPressed: _load, child: const Text('Retry')),
+          ],
+        ),
+      );
+    }
+
+    final order = _order!;
+    final currency = NumberFormat.currency(symbol: 'SAR ');
+    final pending = order.id < 0;
+    final canEdit = order.isEditable && !pending;
+    final due = order.amountDue > 0 ? order.amountDue : order.totalBill - order.amountPaid;
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        if (pending)
+          const Card(
+            color: Colors.orange,
+            child: ListTile(
+              leading: Icon(Icons.sync),
+              title: Text('Pending sync'),
+              subtitle: Text('This order will upload when online'),
+            ),
+          ),
+        if (canEdit)
+          Align(
+            alignment: Alignment.centerRight,
+            child: IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () => context.push('/sales/orders/${order.id}/edit'),
+            ),
+          ),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Order #${order.id}', style: Theme.of(context).textTheme.titleMedium),
+                    StatusChip(label: order.paymentStatus),
+                  ],
                 ),
-              ),
-            if (order.isEditable && order.id > 0)
-              Align(
-                alignment: Alignment.centerRight,
-                child: IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () => context.push('/sales/orders/${order.id}/edit'),
-                ),
-              ),
-            Text('Status: ${order.status}'),
-              Text('Payment: ${order.paymentStatus}'),
-              Text('Total: SAR ${order.totalBill.toStringAsFixed(2)}'),
-              const Divider(),
-              const Text('Items', style: TextStyle(fontWeight: FontWeight.bold)),
-              ...order.items.map((i) => ListTile(
-                    title: Text('Product #${i.productId}'),
-                    trailing: Text('${i.quantity} x ${i.productPrice}'),
-                  )),
-              if (order.isEditable) ...[
-                const SizedBox(height: 16),
-                OutlinedButton(
-                  onPressed: () async {
-                    final reason = await _prompt(context, 'Cancellation reason');
-                    if (reason == null) return;
-                    await ref.read(offlineOrderRepositoryProvider).cancel(order.id, reason);
-                    ref.invalidate(pendingSyncCountProvider);
-                    if (context.mounted) Navigator.pop(context);
-                  },
-                  child: const Text('Cancel Order'),
-                ),
+                Text('Status: ${order.status}'),
+                Text(currency.format(order.totalBill), style: Theme.of(context).textTheme.headlineSmall),
+                const Divider(),
+                _row('Paid', currency.format(order.amountPaid)),
+                _row('Due', currency.format(due), bold: true),
               ],
-            ],
-        );
-      },
+            ),
+          ),
+        ),
+        if (canEdit && due > 0) ...[
+          FilledButton.icon(
+            onPressed: _collectPayment,
+            icon: const Icon(Icons.payments),
+            label: const Text('Collect payment'),
+          ),
+          const SizedBox(height: 16),
+        ],
+        const Text('Items', style: TextStyle(fontWeight: FontWeight.bold)),
+        ...order.items.map((i) => ListTile(
+              title: Text(i.product?.name ?? 'Product #${i.productId}'),
+              trailing: Text('${i.quantity} x ${i.productPrice}'),
+            )),
+        if (order.payments.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          const Text('Payments', style: TextStyle(fontWeight: FontWeight.bold)),
+          for (final p in order.payments)
+            ListTile(
+              title: Text(
+                p.paymentReference ?? 'Payment #${p.id}',
+                style: p.isVoided ? const TextStyle(decoration: TextDecoration.lineThrough) : null,
+              ),
+              subtitle: Text(
+                [
+                  if (p.isVoided) 'voided',
+                  if (p.paymentMethod != null) p.paymentMethod!,
+                  if (p.paidAt != null) p.paidAt!,
+                ].join(' · '),
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(currency.format(p.amount)),
+                  if (canEdit && !p.isVoided) ...[
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.undo),
+                      tooltip: 'Void payment',
+                      onPressed: () => _voidPayment(p),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+        ],
+        if (canEdit) ...[
+          const SizedBox(height: 16),
+          OutlinedButton(
+            onPressed: () async {
+              final reason = await _prompt(context, 'Cancellation reason');
+              if (reason == null) return;
+              await ref.read(offlineOrderRepositoryProvider).cancel(order.id, reason);
+              ref.invalidate(pendingSyncCountProvider);
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('Cancel Order'),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _row(String label, String value, {bool bold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label),
+          Text(value, style: bold ? const TextStyle(fontWeight: FontWeight.bold) : null),
+        ],
+      ),
     );
   }
 }

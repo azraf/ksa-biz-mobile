@@ -72,7 +72,7 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
       });
     } catch (e) {
       setState(() => _loading = false);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     }
   }
 
@@ -125,7 +125,7 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
       }
     } catch (e) {
       setState(() => _submitting = false);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     }
   }
 

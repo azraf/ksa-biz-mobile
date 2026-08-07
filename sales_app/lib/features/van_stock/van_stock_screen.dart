@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../providers/connectivity_provider.dart';
 import '../../providers/repositories.dart';
 
 class VanStockScreen extends ConsumerStatefulWidget {
@@ -39,7 +40,7 @@ class _VanStockScreenState extends ConsumerState<VanStockScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = AppErrorMapper.localize(context, e);
         _loading = false;
       });
     }
@@ -80,82 +81,126 @@ class _VanStockScreenState extends ConsumerState<VanStockScreen> {
             quantity: int.tryParse(qtyController.text) ?? 1,
             salesPersonId: salesPersonId,
           );
+      AppHaptics.light();
       await _load();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     }
+  }
+
+  void _showActions() {
+    final l10n = AppLocalizations.of(context);
+  showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.download_outlined),
+              title: Text(l10n.salesVanLoad),
+              onTap: () {
+                Navigator.pop(ctx);
+                context.push('/van-stock/load');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.swap_horiz),
+              title: Text(l10n.salesVanTransfer),
+              onTap: () {
+                Navigator.pop(ctx);
+                context.push('/van-stock/transfer');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.swap_horiz),
+              title: Text(l10n.salesVanExchange),
+              onTap: () {
+                Navigator.pop(ctx);
+                context.push('/van-stock/exchange');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.build_outlined),
+              title: Text(l10n.salesVanDamage),
+              onTap: () {
+                Navigator.pop(ctx);
+                context.push('/van-stock/damage');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final offline = !ref.watch(onlineStatusProvider);
 
     return Scaffold(
-      body: _loading
-          ? LoadingView(message: l10n.commonLoading)
-          : _error != null
-              ? ErrorView(message: _error!, onRetry: _load)
-              : _stock.isEmpty
-                  ? EmptyView(message: l10n.salesVanEmpty)
-                  : RefreshIndicator(
-                      onRefresh: _load,
-                      child: ListView.builder(
-                        itemCount: _stock.length,
-                        itemBuilder: (_, i) {
-                          final item = _stock[i];
-                          final low = (item.product?.alertQuantity ?? 0) > 0 &&
-                              item.balance <= (item.product?.alertQuantity ?? 0);
-                          return ListTile(
-                            title: Text(item.product?.name ?? l10n.commonProductFallback(item.productId)),
-                            subtitle: low
-                                ? Text(l10n.salesVanLowStock, style: const TextStyle(color: Colors.orange))
-                                : null,
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(item.displayBalance),
-                                IconButton(
-                                  icon: const Icon(Icons.undo_outlined),
-                                  tooltip: l10n.salesVanUnloadBtn,
-                                  onPressed: () => _unloadProduct(item),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
+      body: Column(
         children: [
-          FloatingActionButton.extended(
-            heroTag: 'exchange',
-            onPressed: () => context.push('/van-stock/exchange'),
-            icon: const Icon(Icons.swap_horiz),
-            label: Text(l10n.salesVanExchange),
-          ),
-          const SizedBox(height: 8),
-          FloatingActionButton.extended(
-            heroTag: 'damage',
-            onPressed: () => context.push('/van-stock/damage'),
-            icon: const Icon(Icons.build_outlined),
-            label: Text(l10n.salesVanDamage),
-          ),
-          const SizedBox(height: 8),
-          FloatingActionButton.extended(
-            heroTag: 'transfer',
-            onPressed: () => context.push('/van-stock/transfer'),
-            icon: const Icon(Icons.swap_horiz),
-            label: Text(l10n.salesVanTransfer),
-          ),
-          const SizedBox(height: 8),
-          FloatingActionButton.extended(
-            heroTag: 'load',
-            onPressed: () => context.push('/van-stock/load'),
-            icon: const Icon(Icons.download_outlined),
-            label: Text(l10n.salesVanLoad),
+          if (offline)
+            Material(
+              color: Theme.of(context).colorScheme.errorContainer,
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Row(
+                  children: [
+                    const Icon(Icons.cloud_off, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(l10n.salesVanOfflineBanner, style: const TextStyle(fontSize: 13))),
+                  ],
+                ),
+              ),
+            ),
+          Expanded(
+            child: _loading
+                ? ListView.builder(
+                    itemCount: 6,
+                    itemBuilder: (_, __) => const SkeletonListTile(),
+                  )
+                : _error != null
+                    ? ErrorView(message: _error!, onRetry: _load)
+                    : _stock.isEmpty
+                        ? EmptyView(message: l10n.salesVanEmpty)
+                        : RefreshIndicator(
+                            onRefresh: _load,
+                            child: ListView.builder(
+                              itemCount: _stock.length,
+                              itemBuilder: (_, i) {
+                                final item = _stock[i];
+                                final low = (item.product?.alertQuantity ?? 0) > 0 &&
+                                    item.balance <= (item.product?.alertQuantity ?? 0);
+                                return ListTile(
+                                  title: Text(item.product?.name ?? l10n.commonProductFallback(item.productId)),
+                                  subtitle: low
+                                      ? Text(l10n.salesVanLowStock, style: const TextStyle(color: Colors.orange))
+                                      : null,
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(item.displayBalance),
+                                      IconButton(
+                                        icon: const Icon(Icons.undo_outlined),
+                                        tooltip: l10n.salesVanUnloadBtn,
+                                        onPressed: () => _unloadProduct(item),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _showActions,
+        icon: const Icon(Icons.add),
+        label: Text(l10n.salesVanActionsTitle),
       ),
     );
   }

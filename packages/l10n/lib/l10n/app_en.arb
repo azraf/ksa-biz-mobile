@@ -365,6 +365,110 @@
       }
     }
   },
+  "salesOfflineAllSynced": "All changes synced",
+  "salesOfflineSyncProgress": "Syncing {completed} of {total}…",
+  "@salesOfflineSyncProgress": {
+    "placeholders": {
+      "completed": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "salesOfflineServerUnreachable": "Connected but server is unreachable",
+  "salesOfflineRetryUploads": "Retry uploads",
+  "salesOfflineUploadFailed": "{count, plural, =1{1 upload failed} other{{count} uploads failed}}",
+  "@salesOfflineUploadFailed": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "salesOfflineUploading": "Uploading… {percent}%",
+  "@salesOfflineUploading": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "salesErrorOffline": "No internet connection. Showing saved data when available.",
+  "salesErrorGeneric": "Something went wrong. Please try again.",
+  "salesErrorTimeout": "The server took too long to respond. Please try again.",
+  "salesErrorUnauthorized": "Your session expired. Please sign in again.",
+  "salesErrorPayloadTooLarge": "File is too large. Try a smaller photo or shorter recording.",
+  "salesErrorConflict": "Server has newer data. Check Sync issues.",
+  "salesPendingSync": "Pending sync",
+  "salesSyncExhausted": "Max retries reached — dismiss or retry all",
+  "salesSyncItemOrderCreate": "Order (create)",
+  "salesSyncItemOrderUpdate": "Order (update)",
+  "salesSyncItemExpense": "Expense",
+  "salesSyncItemWatchlist": "Watch-list entry",
+  "salesSyncItemDiary": "Diary note",
+  "salesOrderSearchHint": "Search by shop or order #",
+  "salesOrderFilterToday": "Today",
+  "salesOrderFilterWeek": "This week",
+  "salesOrderFilterPendingSync": "Pending sync",
+  "salesOrderFilterUnpaid": "Unpaid",
+  "salesManualEmptyOpenPool": "No open manual order requests",
+  "salesManualEmptyAssigned": "No assigned manual orders",
+  "salesManualEmptyInReview": "No orders in review",
+  "salesManualEmptyConverted": "No converted manual orders",
+  "salesEmptyOrdersCta": "Create your first order",
+  "salesEmptyCustomersOnline": "Go online to refresh your assigned customers",
+  "salesEmptyDuesHint": "Outstanding dues appear after delivered orders",
+  "salesVanOfflineBanner": "Van stock changes require an internet connection",
+  "salesVanActionsTitle": "Van stock actions",
+  "salesOfflineHelpTitle": "Offline mode",
+  "salesOfflineHelpWorks": "Works offline: create orders, watch-list, diary text, browse cached customers and products.",
+  "salesOfflineHelpNeedsInternet": "Needs internet: manual orders, van stock, diary voice upload, quick-create customer, payments on unsynced orders.",
+  "salesPaymentSyncFirst": "Sync this order before collecting payment",
+  "salesStorageLowContinue": "Continue anyway",
+  "salesQuickLinks": "Quick links",
+  "salesDuesCollect": "Collect",
+  "salesOrderRepeatLast": "Repeat last order",
+  "salesDarkMode": "Dark mode",
+  "salesFirstRunTipDashboard": "Dashboard shows dues, van stock, and quick links",
+  "salesFirstRunTipOrder": "Tap New Order to sell — works offline when catalog is cached",
+  "salesFirstRunTipOffline": "The banner shows sync status; tap it for sync issues",
+  "salesFirstRunGotIt": "Got it",
+  "orderHomeRecent": "Recent orders",
+  "orderHomeThisMonth": "This month",
+  "orderHomeOutstanding": "Outstanding balance",
+  "orderContextError": "Could not match your account to a shop. Contact support.",
+  "adminProfileTitle": "Profile",
+  "adminCustomersHubTitle": "Customers hub",
+  "adminNavAssignments": "Assignments",
+  "adminOfflineWriteBlocked": "This action requires an internet connection.",
+  "salesSyncIssuesTitle": "Sync issues",
+  "salesSyncIssuesEmpty": "No sync issues",
+  "salesSyncRetries": "Retries: {count}",
+  "@salesSyncRetries": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "salesSyncDismiss": "Dismiss",
+  "salesSyncRetry": "Retry",
+  "salesSyncRetryAll": "Retry all",
+  "salesLastSyncedAt": "Last synced {time}",
+  "@salesLastSyncedAt": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "salesCardCustomers": "Customers",
+  "salesCardCustomersValue": "My customers",
+  "salesCardCustomersSubtitle": "Shops, vans, importers — diary & media",
+  "salesCustomersTitle": "Customers",
+  "salesCustomersShops": "Shops",
+  "salesCustomersVans": "Vans",
+  "salesCustomersImporters": "Importers",
+  "salesCustomersEmpty": "No assigned customers",
+  "salesCustomersAssignedOnly": "Showing customers assigned to you",
+  "salesCustomersNearby": "Nearby map",
+  "salesStorageLowWarning": "Low storage — capture may fail",
+  "salesCustomerDetail": "Customer detail",
+  "salesCustomerActivity": "Activity",
+  "salesCustomerMedia": "Photos",
+  "salesCustomerDiary": "Diary",
+  "salesOrderEditOfflineBlocked": "Order editing requires an internet connection.",
+  "salesOrderEditPendingSync": "This order is still syncing. Edit after sync completes.",
   "salesManualTabOpenPool": "Open pool",
   "salesManualTabAssigned": "Assigned",
   "salesManualTabInReview": "In review",
@@ -423,6 +527,10 @@
   "salesOrderAmountCollected": "Amount collected",
   "salesOrderPaymentMethod": "Payment method",
   "salesOrderRecordPayment": "Record payment",
+  "paymentVoidPayment": "Void payment",
+  "paymentVoidReason": "Reason for voiding",
+  "paymentVoided": "Payment voided",
+  "paymentVoidedLabel": "voided",
   "salesOrderEnterValidAmount": "Enter a valid amount",
   "salesOrderRequestDiscount": "Request discount",
   "salesOrderRequestGrandDiscount": "Request grand discount",

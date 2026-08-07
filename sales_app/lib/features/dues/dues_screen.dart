@@ -116,7 +116,7 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
               trailing: Text(currency.format(report.totalDue), style: Theme.of(context).textTheme.titleLarge),
             ),
           ),
-          if (report.orders.isEmpty) EmptyView(message: l10n.salesDuesNone),
+          if (report.orders.isEmpty) EmptyView(message: l10n.salesEmptyDuesHint),
           for (final raw in report.orders)
             Builder(
               builder: (_) {
@@ -128,9 +128,18 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
                     subtitle: Text(
                       '${localizedStatusLabel(context, order.paymentStatus)} · ${l10n.commonDue} ${currency.format(due)}',
                     ),
-                    trailing: Text(currency.format(order.totalBill)),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(currency.format(order.totalBill)),
+                        IconButton(
+                          icon: const Icon(Icons.payments_outlined),
+                          tooltip: l10n.salesDuesCollect,
+                          onPressed: () => _collectPayment(order),
+                        ),
+                      ],
+                    ),
                     onTap: () => context.push('/orders/${order.id}'),
-                    onLongPress: () => _collectPayment(order),
                   ),
                 );
               },

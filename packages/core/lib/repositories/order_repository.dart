@@ -2,9 +2,9 @@ import '../api/api_client.dart';
 import '../models/customer.dart';
 import '../models/discount_approval_request.dart';
 import '../models/order.dart';
-import '../models/order_item.dart';
 import '../models/paginated_response.dart';
 import '../models/payment.dart';
+import '../utils/client_request_id.dart';
 
 class OrderRepository {
   OrderRepository(this._api);
@@ -17,7 +17,7 @@ class OrderRepository {
     String? paymentStatus,
     int page = 1,
   }) async {
-    final query = <String, String>{'page': '$page', 'per_page': '20'};
+    final query = <String, String>{'page': '$page', 'per_page': '20', 'view': 'list'};
     if (salesPersonId != null) query['sales_person_id'] = '$salesPersonId';
     if (status != null) query['status'] = status;
     if (paymentStatus != null) query['payment_status'] = paymentStatus;
@@ -32,7 +32,9 @@ class OrderRepository {
   }
 
   Future<OrderModel> create(Map<String, dynamic> body) async {
-    final response = await _api.post('/orders', body: body);
+    final payload = Map<String, dynamic>.from(body);
+    payload.putIfAbsent('client_request_id', () => _clientRequestId());
+    final response = await _api.post('/orders', body: payload);
     return OrderModel.fromJson(response['data'] as Map<String, dynamic>);
   }
 
@@ -94,9 +96,9 @@ class OrderRepository {
     return data.map((e) => DiscountApprovalRequestModel.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  Future<OrderItemModel> addItem(int orderId, Map<String, dynamic> item) async {
+  Future<OrderModel> addItem(int orderId, Map<String, dynamic> item) async {
     final response = await _api.post('/orders/$orderId/items', body: item);
-    return OrderItemModel.fromJson(response['data'] as Map<String, dynamic>);
+    return OrderModel.fromJson(response['order'] as Map<String, dynamic>);
   }
 
   Future<OrderModel> updateItem(int orderId, int itemId, Map<String, dynamic> item) async {
@@ -119,10 +121,17 @@ class OrderRepository {
     return OrderModel.fromJson(response['data'] as Map<String, dynamic>);
   }
 
+  Future<PaymentModel> voidPayment(int paymentId, {required String reason}) async {
+    final response = await _api.post('/payments/$paymentId/void', body: {'reason': reason});
+    return PaymentModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
   Future<List<OrderModificationModel>> modifications(int orderId) async {
     final response = await _api.get('/orders/$orderId/modifications');
     return (response['data'] as List<dynamic>)
         .map((e) => OrderModificationModel.fromJson(e as Map<String, dynamic>))
         .toList();
   }
+
+  String _clientRequestId() => generateClientRequestId();
 }

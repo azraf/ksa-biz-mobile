@@ -2,6 +2,8 @@ import '../models/order.dart';
 import '../models/paginated_response.dart';
 import '../offline/local_database.dart';
 import '../offline/sync_queue_item.dart';
+import '../offline/sync_service.dart';
+import '../utils/client_request_id.dart';
 import 'order_repository.dart';
 
 class OfflineOrderRepository {
@@ -31,13 +33,12 @@ class OfflineOrderRepository {
           paymentStatus: paymentStatus,
           page: page,
         );
-        for (final order in result.items) {
-          await _db.cacheEntity(
-            entityType: 'order',
-            entityId: order.id,
-            data: _toCache(order),
-          );
-        }
+        await _db.cacheEntitiesBatch(
+          entityType: 'order',
+          entities: result.items
+              .map((order) => (entityId: order.id, data: _toCache(order)))
+              .toList(),
+        );
         final pending = await _pendingOrders();
         if (page == 1 && pending.isNotEmpty) {
           return PaginatedResponse(
@@ -92,23 +93,26 @@ class OfflineOrderRepository {
   }
 
   Future<OrderModel> create(Map<String, dynamic> body) async {
+    final payload = Map<String, dynamic>.from(body);
+    payload.putIfAbsent('client_request_id', generateClientRequestId);
+
     if (_isOnline()) {
-      final order = await _remote.create(body);
+      final order = await _remote.create(payload);
       await _db.cacheEntity(entityType: 'order', entityId: order.id, data: _toCache(order));
       return order;
     }
 
     final localId = await _db.nextLocalId();
-    final normalizedItems = _normalizeCreateItems(body['items'] as List<dynamic>? ?? []);
+    final normalizedItems = _normalizeCreateItems(payload['items'] as List<dynamic>? ?? []);
     final totalBill = normalizedItems.fold<double>(
       0,
       (sum, item) => sum + (item['bill'] as num).toDouble(),
     );
     final pending = {
-      ...body,
+      ...payload,
       'id': localId,
       'status': 'confirmed',
-      'payment_status': body['payment_status'] ?? 'pending',
+      'payment_status': payload['payment_status'] ?? 'pending',
       'total_bill': totalBill,
       'items': normalizedItems,
       '_pending_sync': true,
@@ -120,8 +124,9 @@ class OfflineOrderRepository {
       entityType: 'order',
       operation: 'create',
       localId: localId,
-      payload: body,
+      payload: payload,
     ));
+    notifyOfflineEnqueue();
     return OrderModel.fromJson(pending);
   }
 
@@ -149,6 +154,7 @@ class OfflineOrderRepository {
       serverId: orderId,
       payload: {'reason': reason},
     ));
+    notifyOfflineEnqueue();
     final cached = await _db.getCachedEntity('order', orderId);
     if (cached != null) {
       final updated = {...cached, 'status': 'cancelled', 'cancellation_reason': reason};
@@ -175,6 +181,10 @@ class OfflineOrderRepository {
       return order;
     }
 
+    if (orderId < 0) {
+      throw Exception('Payment cannot be recorded until the order is synced to the server');
+    }
+
     await _db.enqueue(SyncQueueItem(
       id: 0,
       entityType: 'order',
@@ -186,6 +196,7 @@ class OfflineOrderRepository {
         if (notes != null) 'notes': notes,
       },
     ));
+    notifyOfflineEnqueue();
     final cached = await _db.getCachedEntity('order', orderId);
     if (cached != null) {
       final paid = _toDouble(cached['amount_paid']) + amount;

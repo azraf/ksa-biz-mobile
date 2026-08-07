@@ -112,7 +112,7 @@ if [[ -z "$DEVICE_ID" ]]; then
   exit 1
 fi
 
-"$SCRIPT_DIR/ensure_android_gradle_compat.sh"
+"$SCRIPT_DIR/prepare_android_toolchain.sh"
 flutter pub get
 "$SCRIPT_DIR/patch_wakelock_plus.sh"
 

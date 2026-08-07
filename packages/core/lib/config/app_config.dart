@@ -22,7 +22,8 @@ class AppConfig {
   static const googleMapsApiKey =
       String.fromEnvironment('GOOGLE_MAPS_API_KEY', defaultValue: '');
 
-  static bool get hasGoogleMapsApiKey => googleMapsApiKey.isNotEmpty;
+  /// Log API request durations in debug builds.
+  static bool get logApiTiming => kDebugMode;
 
   /// Editable API URL field is shown only in debug builds.
   static bool get showApiBaseUrlField => kDebugMode;

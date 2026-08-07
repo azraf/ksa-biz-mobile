@@ -64,7 +64,7 @@ import 'app_localizations_en.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -87,17 +87,17 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('ar'),
     Locale('bn'),
-    Locale('en')
+    Locale('en'),
   ];
 
   /// No description provided for @commonRetry.
@@ -1198,6 +1198,474 @@ abstract class AppLocalizations {
   /// **'Offline — {count, plural, =1{1 change saved locally} other{{count} changes saved locally}}'**
   String salesOfflineSaved(int count);
 
+  /// No description provided for @salesOfflineAllSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'All changes synced'**
+  String get salesOfflineAllSynced;
+
+  /// No description provided for @salesOfflineSyncProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing {completed} of {total}…'**
+  String salesOfflineSyncProgress(int completed, int total);
+
+  /// No description provided for @salesOfflineServerUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected but server is unreachable'**
+  String get salesOfflineServerUnreachable;
+
+  /// No description provided for @salesOfflineRetryUploads.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry uploads'**
+  String get salesOfflineRetryUploads;
+
+  /// No description provided for @salesOfflineUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 upload failed} other{{count} uploads failed}}'**
+  String salesOfflineUploadFailed(int count);
+
+  /// No description provided for @salesOfflineUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading… {percent}%'**
+  String salesOfflineUploading(int percent);
+
+  /// No description provided for @salesErrorOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection. Showing saved data when available.'**
+  String get salesErrorOffline;
+
+  /// No description provided for @salesErrorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get salesErrorGeneric;
+
+  /// No description provided for @salesErrorTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'The server took too long to respond. Please try again.'**
+  String get salesErrorTimeout;
+
+  /// No description provided for @salesErrorUnauthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session expired. Please sign in again.'**
+  String get salesErrorUnauthorized;
+
+  /// No description provided for @salesErrorPayloadTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'File is too large. Try a smaller photo or shorter recording.'**
+  String get salesErrorPayloadTooLarge;
+
+  /// No description provided for @salesErrorConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Server has newer data. Check Sync issues.'**
+  String get salesErrorConflict;
+
+  /// No description provided for @salesPendingSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending sync'**
+  String get salesPendingSync;
+
+  /// No description provided for @salesSyncExhausted.
+  ///
+  /// In en, this message translates to:
+  /// **'Max retries reached — dismiss or retry all'**
+  String get salesSyncExhausted;
+
+  /// No description provided for @salesSyncItemOrderCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Order (create)'**
+  String get salesSyncItemOrderCreate;
+
+  /// No description provided for @salesSyncItemOrderUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Order (update)'**
+  String get salesSyncItemOrderUpdate;
+
+  /// No description provided for @salesSyncItemExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense'**
+  String get salesSyncItemExpense;
+
+  /// No description provided for @salesSyncItemWatchlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch-list entry'**
+  String get salesSyncItemWatchlist;
+
+  /// No description provided for @salesSyncItemDiary.
+  ///
+  /// In en, this message translates to:
+  /// **'Diary note'**
+  String get salesSyncItemDiary;
+
+  /// No description provided for @salesOrderSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by shop or order #'**
+  String get salesOrderSearchHint;
+
+  /// No description provided for @salesOrderFilterToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get salesOrderFilterToday;
+
+  /// No description provided for @salesOrderFilterWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get salesOrderFilterWeek;
+
+  /// No description provided for @salesOrderFilterPendingSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending sync'**
+  String get salesOrderFilterPendingSync;
+
+  /// No description provided for @salesOrderFilterUnpaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpaid'**
+  String get salesOrderFilterUnpaid;
+
+  /// No description provided for @salesManualEmptyOpenPool.
+  ///
+  /// In en, this message translates to:
+  /// **'No open manual order requests'**
+  String get salesManualEmptyOpenPool;
+
+  /// No description provided for @salesManualEmptyAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'No assigned manual orders'**
+  String get salesManualEmptyAssigned;
+
+  /// No description provided for @salesManualEmptyInReview.
+  ///
+  /// In en, this message translates to:
+  /// **'No orders in review'**
+  String get salesManualEmptyInReview;
+
+  /// No description provided for @salesManualEmptyConverted.
+  ///
+  /// In en, this message translates to:
+  /// **'No converted manual orders'**
+  String get salesManualEmptyConverted;
+
+  /// No description provided for @salesEmptyOrdersCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first order'**
+  String get salesEmptyOrdersCta;
+
+  /// No description provided for @salesEmptyCustomersOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Go online to refresh your assigned customers'**
+  String get salesEmptyCustomersOnline;
+
+  /// No description provided for @salesEmptyDuesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Outstanding dues appear after delivered orders'**
+  String get salesEmptyDuesHint;
+
+  /// No description provided for @salesVanOfflineBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Van stock changes require an internet connection'**
+  String get salesVanOfflineBanner;
+
+  /// No description provided for @salesVanActionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Van stock actions'**
+  String get salesVanActionsTitle;
+
+  /// No description provided for @salesOfflineHelpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline mode'**
+  String get salesOfflineHelpTitle;
+
+  /// No description provided for @salesOfflineHelpWorks.
+  ///
+  /// In en, this message translates to:
+  /// **'Works offline: create orders, watch-list, diary text, browse cached customers and products.'**
+  String get salesOfflineHelpWorks;
+
+  /// No description provided for @salesOfflineHelpNeedsInternet.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs internet: manual orders, van stock, diary voice upload, quick-create customer, payments on unsynced orders.'**
+  String get salesOfflineHelpNeedsInternet;
+
+  /// No description provided for @salesPaymentSyncFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync this order before collecting payment'**
+  String get salesPaymentSyncFirst;
+
+  /// No description provided for @salesStorageLowContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue anyway'**
+  String get salesStorageLowContinue;
+
+  /// No description provided for @salesQuickLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick links'**
+  String get salesQuickLinks;
+
+  /// No description provided for @salesDuesCollect.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect'**
+  String get salesDuesCollect;
+
+  /// No description provided for @salesOrderRepeatLast.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat last order'**
+  String get salesOrderRepeatLast;
+
+  /// No description provided for @salesDarkMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark mode'**
+  String get salesDarkMode;
+
+  /// No description provided for @salesFirstRunTipDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard shows dues, van stock, and quick links'**
+  String get salesFirstRunTipDashboard;
+
+  /// No description provided for @salesFirstRunTipOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap New Order to sell — works offline when catalog is cached'**
+  String get salesFirstRunTipOrder;
+
+  /// No description provided for @salesFirstRunTipOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'The banner shows sync status; tap it for sync issues'**
+  String get salesFirstRunTipOffline;
+
+  /// No description provided for @salesFirstRunGotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get salesFirstRunGotIt;
+
+  /// No description provided for @orderHomeRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent orders'**
+  String get orderHomeRecent;
+
+  /// No description provided for @orderHomeThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get orderHomeThisMonth;
+
+  /// No description provided for @orderHomeOutstanding.
+  ///
+  /// In en, this message translates to:
+  /// **'Outstanding balance'**
+  String get orderHomeOutstanding;
+
+  /// No description provided for @orderContextError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not match your account to a shop. Contact support.'**
+  String get orderContextError;
+
+  /// No description provided for @adminProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get adminProfileTitle;
+
+  /// No description provided for @adminCustomersHubTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customers hub'**
+  String get adminCustomersHubTitle;
+
+  /// No description provided for @adminNavAssignments.
+  ///
+  /// In en, this message translates to:
+  /// **'Assignments'**
+  String get adminNavAssignments;
+
+  /// No description provided for @adminOfflineWriteBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'This action requires an internet connection.'**
+  String get adminOfflineWriteBlocked;
+
+  /// No description provided for @salesSyncIssuesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync issues'**
+  String get salesSyncIssuesTitle;
+
+  /// No description provided for @salesSyncIssuesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No sync issues'**
+  String get salesSyncIssuesEmpty;
+
+  /// No description provided for @salesSyncRetries.
+  ///
+  /// In en, this message translates to:
+  /// **'Retries: {count}'**
+  String salesSyncRetries(int count);
+
+  /// No description provided for @salesSyncDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get salesSyncDismiss;
+
+  /// No description provided for @salesSyncRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get salesSyncRetry;
+
+  /// No description provided for @salesSyncRetryAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry all'**
+  String get salesSyncRetryAll;
+
+  /// No description provided for @salesLastSyncedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Last synced {time}'**
+  String salesLastSyncedAt(String time);
+
+  /// No description provided for @salesCardCustomers.
+  ///
+  /// In en, this message translates to:
+  /// **'Customers'**
+  String get salesCardCustomers;
+
+  /// No description provided for @salesCardCustomersValue.
+  ///
+  /// In en, this message translates to:
+  /// **'My customers'**
+  String get salesCardCustomersValue;
+
+  /// No description provided for @salesCardCustomersSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shops, vans, importers — diary & media'**
+  String get salesCardCustomersSubtitle;
+
+  /// No description provided for @salesCustomersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customers'**
+  String get salesCustomersTitle;
+
+  /// No description provided for @salesCustomersShops.
+  ///
+  /// In en, this message translates to:
+  /// **'Shops'**
+  String get salesCustomersShops;
+
+  /// No description provided for @salesCustomersVans.
+  ///
+  /// In en, this message translates to:
+  /// **'Vans'**
+  String get salesCustomersVans;
+
+  /// No description provided for @salesCustomersImporters.
+  ///
+  /// In en, this message translates to:
+  /// **'Importers'**
+  String get salesCustomersImporters;
+
+  /// No description provided for @salesCustomersEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No assigned customers'**
+  String get salesCustomersEmpty;
+
+  /// No description provided for @salesCustomersAssignedOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing customers assigned to you'**
+  String get salesCustomersAssignedOnly;
+
+  /// No description provided for @salesCustomersNearby.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby map'**
+  String get salesCustomersNearby;
+
+  /// No description provided for @salesStorageLowWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Low storage — capture may fail'**
+  String get salesStorageLowWarning;
+
+  /// No description provided for @salesCustomerDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer detail'**
+  String get salesCustomerDetail;
+
+  /// No description provided for @salesCustomerActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get salesCustomerActivity;
+
+  /// No description provided for @salesCustomerMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get salesCustomerMedia;
+
+  /// No description provided for @salesCustomerDiary.
+  ///
+  /// In en, this message translates to:
+  /// **'Diary'**
+  String get salesCustomerDiary;
+
+  /// No description provided for @salesOrderEditOfflineBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Order editing requires an internet connection.'**
+  String get salesOrderEditOfflineBlocked;
+
+  /// No description provided for @salesOrderEditPendingSync.
+  ///
+  /// In en, this message translates to:
+  /// **'This order is still syncing. Edit after sync completes.'**
+  String get salesOrderEditPendingSync;
+
   /// No description provided for @salesManualTabOpenPool.
   ///
   /// In en, this message translates to:
@@ -1461,6 +1929,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Record payment'**
   String get salesOrderRecordPayment;
+
+  /// No description provided for @paymentVoidPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Void payment'**
+  String get paymentVoidPayment;
+
+  /// No description provided for @paymentVoidReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason for voiding'**
+  String get paymentVoidReason;
+
+  /// No description provided for @paymentVoided.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment voided'**
+  String get paymentVoided;
+
+  /// No description provided for @paymentVoidedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'voided'**
+  String get paymentVoidedLabel;
 
   /// No description provided for @salesOrderEnterValidAmount.
   ///
@@ -2470,8 +2962,9 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
 }

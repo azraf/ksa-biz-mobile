@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../providers/repositories.dart';
+import 'offline_help_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -32,6 +34,63 @@ class ProfileScreen extends ConsumerWidget {
               subtitle: Text(auth.roles.join(', ')),
             ),
           ],
+          const Divider(),
+          Text(l10n.salesQuickLinks, style: Theme.of(context).textTheme.titleSmall),
+          ListTile(
+            leading: const Icon(Icons.people_outline),
+            title: Text(l10n.salesCardCustomers),
+            onTap: () => context.push('/customers'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.bookmark_outline),
+            title: Text(l10n.salesCardWatchlist),
+            onTap: () => context.push('/watchlist'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.notifications_outlined),
+            title: Text(l10n.salesNotifications),
+            onTap: () => context.push('/notifications'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.cloud_off_outlined),
+            title: Text(l10n.salesOfflineHelpTitle),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const OfflineHelpScreen()),
+              );
+            },
+          ),
+          SwitchListTile(
+            secondary: const Icon(Icons.dark_mode_outlined),
+            title: Text(l10n.salesDarkMode),
+            value: ref.watch(themeModeNotifierProvider) == ThemeMode.dark,
+            onChanged: (v) => ref.read(themeModeNotifierProvider.notifier).setDark(v),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.sync_problem_outlined),
+            title: Text(l10n.salesSyncIssuesTitle),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => SyncStatusScreen(
+                    syncService: ref.read(syncServiceProvider),
+                    loadItems: () => ref.read(syncServiceProvider).actionableItems(),
+                  ),
+                ),
+              );
+            },
+          ),
+          ref.watch(lastSyncAtProvider).when(
+            data: (at) => at == null
+                ? const SizedBox.shrink()
+                : ListTile(
+                    leading: const Icon(Icons.history),
+                    title: Text(l10n.salesLastSyncedAt(formatFetchedAt(at.toIso8601String()))),
+                  ),
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
           const Divider(),
           const LanguagePickerTile(),
           const Divider(),

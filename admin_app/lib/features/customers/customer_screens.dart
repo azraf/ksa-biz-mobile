@@ -8,6 +8,31 @@ import '../../widgets/field_config.dart';
 import 'customer_diary_section.dart';
 import 'shop_edit_screen.dart';
 
+class ShopDetailScreen extends ConsumerWidget {
+  const ShopDetailScreen({super.key, required this.shopId});
+
+  final int shopId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return FutureBuilder<CustomerShopModel>(
+      future: ref.read(customerRepositoryProvider).getShop(shopId),
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        if (snap.hasError || snap.data == null) {
+          return Scaffold(
+            appBar: AppBar(),
+            body: Center(child: Text(snap.error?.toString() ?? 'Shop not found')),
+          );
+        }
+        return ShopEditScreen(shop: snap.data);
+      },
+    );
+  }
+}
+
 class CustomerTypesScreen extends ConsumerWidget {
   const CustomerTypesScreen({super.key});
   @override

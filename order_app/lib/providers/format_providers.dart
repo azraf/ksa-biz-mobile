@@ -1,0 +1,8 @@
+import 'package:core/core.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+
+final currencyFormatProvider = Provider<NumberFormat>((ref) {
+  final locale = ref.watch(localeNotifierProvider);
+  return NumberFormat.currency(locale: locale.languageCode, symbol: 'SAR ');
+});

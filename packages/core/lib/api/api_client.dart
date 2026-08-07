@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../config/app_config.dart';
@@ -33,12 +34,14 @@ class ApiClient {
     Map<String, String>? query,
     Duration? timeout,
   }) async {
-    final uri = _uri(path, query);
-    final response = await _withTimeout(
-      _client.get(uri, headers: _headers()),
-      timeout,
-    );
-    return _handleResponse(response);
+    return _timed('GET', path, () async {
+      final uri = _uri(path, query);
+      final response = await _withTimeout(
+        _client.get(uri, headers: _headers()),
+        timeout,
+      );
+      return _handleResponse(response);
+    });
   }
 
   Future<Map<String, dynamic>> post(
@@ -47,16 +50,18 @@ class ApiClient {
     Map<String, String>? query,
     Duration? timeout,
   }) async {
-    final uri = _uri(path, query);
-    final response = await _withTimeout(
-      _client.post(
-        uri,
-        headers: _headers(),
-        body: body == null ? null : jsonEncode(body),
-      ),
-      timeout,
-    );
-    return _handleResponse(response);
+    return _timed('POST', path, () async {
+      final uri = _uri(path, query);
+      final response = await _withTimeout(
+        _client.post(
+          uri,
+          headers: _headers(),
+          body: body == null ? null : jsonEncode(body),
+        ),
+        timeout,
+      );
+      return _handleResponse(response);
+    });
   }
 
   Future<Map<String, dynamic>> patch(
@@ -64,16 +69,18 @@ class ApiClient {
     Map<String, dynamic>? body,
     Duration? timeout,
   }) async {
-    final uri = _uri(path);
-    final response = await _withTimeout(
-      _client.patch(
-        uri,
-        headers: _headers(),
-        body: body == null ? null : jsonEncode(body),
-      ),
-      timeout,
-    );
-    return _handleResponse(response);
+    return _timed('PATCH', path, () async {
+      final uri = _uri(path);
+      final response = await _withTimeout(
+        _client.patch(
+          uri,
+          headers: _headers(),
+          body: body == null ? null : jsonEncode(body),
+        ),
+        timeout,
+      );
+      return _handleResponse(response);
+    });
   }
 
   Future<Map<String, dynamic>> put(
@@ -81,30 +88,36 @@ class ApiClient {
     Map<String, dynamic>? body,
     Duration? timeout,
   }) async {
-    final uri = _uri(path);
-    final response = await _withTimeout(
-      _client.put(
-        uri,
-        headers: _headers(),
-        body: body == null ? null : jsonEncode(body),
-      ),
-      timeout,
-    );
-    return _handleResponse(response);
+    return _timed('PUT', path, () async {
+      final uri = _uri(path);
+      final response = await _withTimeout(
+        _client.put(
+          uri,
+          headers: _headers(),
+          body: body == null ? null : jsonEncode(body),
+        ),
+        timeout,
+      );
+      return _handleResponse(response);
+    });
   }
 
   Future<void> delete(String path, {Duration? timeout}) async {
-    final uri = _uri(path);
-    final response = await _withTimeout(_client.delete(uri, headers: _headers()), timeout);
-    if (response.statusCode == 204) return;
-    _handleResponse(response);
+    return _timed('DELETE', path, () async {
+      final uri = _uri(path);
+      final response = await _withTimeout(_client.delete(uri, headers: _headers()), timeout);
+      if (response.statusCode == 204) return;
+      _handleResponse(response);
+    });
   }
 
   Future<Map<String, dynamic>> deleteJson(String path, {Duration? timeout}) async {
-    final uri = _uri(path);
-    final response = await _withTimeout(_client.delete(uri, headers: _headers()), timeout);
-    if (response.statusCode == 204) return {};
-    return _handleResponse(response);
+    return _timed('DELETE', path, () async {
+      final uri = _uri(path);
+      final response = await _withTimeout(_client.delete(uri, headers: _headers()), timeout);
+      if (response.statusCode == 204) return {};
+      return _handleResponse(response);
+    });
   }
 
   Future<Map<String, dynamic>> uploadMultipart(
@@ -135,6 +148,20 @@ class ApiClient {
       timeout ?? defaultTimeout,
       onTimeout: () => throw ApiException('Request timed out', statusCode: 408),
     );
+  }
+
+  Future<T> _timed<T>(String method, String path, Future<T> Function() action) async {
+    if (!AppConfig.logApiTiming) {
+      return action();
+    }
+
+    final stopwatch = Stopwatch()..start();
+    try {
+      return await action();
+    } finally {
+      stopwatch.stop();
+      debugPrint('[ApiClient] $method $path ${stopwatch.elapsedMilliseconds}ms');
+    }
   }
 
   Uri _uri(String path, [Map<String, String>? query]) {

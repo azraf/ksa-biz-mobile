@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -84,7 +85,7 @@ class _QuickShopCreateSheetState extends ConsumerState<QuickShopCreateSheet> {
       }
       if (mounted) Navigator.pop(context, shop);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -205,7 +206,7 @@ class _QuickVanCreateSheetState extends ConsumerState<QuickVanCreateSheet> {
       }
       if (mounted) Navigator.pop(context, van);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -300,7 +301,7 @@ class _QuickImporterCreateSheetState extends ConsumerState<QuickImporterCreateSh
           );
       if (mounted) Navigator.pop(context, importer);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     } finally {
       if (mounted) setState(() => _saving = false);
     }

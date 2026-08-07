@@ -63,7 +63,7 @@ class _ConvertOrderScreenState extends ConsumerState<ConvertOrderScreen> {
       }
     } catch (e) {
       setState(() => _submitting = false);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     }
   }
 

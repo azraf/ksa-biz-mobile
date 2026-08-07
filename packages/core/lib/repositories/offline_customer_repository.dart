@@ -22,13 +22,12 @@ class OfflineCustomerRepository {
     if (_isOnline()) {
       try {
         final types = await _remote.customerTypes();
-        for (final type in types) {
-          await _db.cacheEntity(
-            entityType: 'customer_type',
-            entityId: type.id,
-            data: {'id': type.id, 'type_name': type.typeName},
-          );
-        }
+        await _db.cacheEntitiesBatch(
+          entityType: 'customer_type',
+          entities: types
+              .map((type) => (entityId: type.id, data: {'id': type.id, 'type_name': type.typeName}))
+              .toList(),
+        );
         return types;
       } catch (_) {
         return _cachedCustomerTypes();
@@ -71,9 +70,7 @@ class OfflineCustomerRepository {
     if (_isOnline()) {
       try {
         final result = await _remote.shops(query: query);
-        for (final shop in result.items) {
-          await _cacheShop(shop);
-        }
+        await _cacheShopsBatch(result.items);
         return result;
       } catch (_) {
         return _cachedShopsPage(search: search, page: page, perPage: perPage);
@@ -105,9 +102,7 @@ class OfflineCustomerRepository {
     if (_isOnline()) {
       try {
         final result = await _remote.vans(query: query);
-        for (final van in result.items) {
-          await _cacheVan(van);
-        }
+        await _cacheVansBatch(result.items);
         return result;
       } catch (_) {
         return _cachedVansPage(search: search, page: page, perPage: perPage);
@@ -139,9 +134,7 @@ class OfflineCustomerRepository {
     if (_isOnline()) {
       try {
         final result = await _remote.importers(query: query);
-        for (final importer in result.items) {
-          await _cacheImporter(importer);
-        }
+        await _cacheImportersBatch(result.items);
         return result;
       } catch (_) {
         return _cachedImportersPage(search: search, page: page, perPage: perPage);
@@ -169,7 +162,7 @@ class OfflineCustomerRepository {
       (page) => importers(salesPersonId: salesPersonId, scoped: true, page: page),
     ]) {
       var page = 1;
-      while (page <= 50) {
+      while (page <= 3) {
         final result = await fetch(page);
         if (!result.hasMore) break;
         page++;
@@ -246,11 +239,14 @@ class OfflineCustomerRepository {
     return false;
   }
 
-  Future<void> _cacheShop(CustomerShopModel shop) async {
-    await _db.cacheEntity(
+  Future<void> _cacheShopsBatch(List<CustomerShopModel> shops) async {
+    await _db.cacheEntitiesBatch(
       entityType: 'customer_shop',
-      entityId: shop.id,
-      data: {
+      entities: shops.map((shop) => (entityId: shop.id, data: _shopData(shop))).toList(),
+    );
+  }
+
+  Map<String, dynamic> _shopData(CustomerShopModel shop) => {
         'id': shop.id,
         'name': shop.name,
         if (shop.gps != null) 'gps': shop.gps,
@@ -263,35 +259,35 @@ class OfflineCustomerRepository {
         },
         if (shop.lastOrderAt != null) 'last_order_at': shop.lastOrderAt,
         'is_inactive': shop.isInactive,
-      },
+      };
+
+  Future<void> _cacheVansBatch(List<CustomerVanModel> vans) async {
+    await _db.cacheEntitiesBatch(
+      entityType: 'customer_van',
+      entities: vans.map((van) => (entityId: van.id, data: _vanData(van))).toList(),
     );
   }
 
-  Future<void> _cacheVan(CustomerVanModel van) async {
-    await _db.cacheEntity(
-      entityType: 'customer_van',
-      entityId: van.id,
-      data: {
+  Map<String, dynamic> _vanData(CustomerVanModel van) => {
         'id': van.id,
         'name': van.name,
         if (van.mobile != null) 'mobile': van.mobile,
         if (van.areaId != null) 'area_id': van.areaId,
         if (van.isInactive) 'is_inactive': true,
-      },
+      };
+
+  Future<void> _cacheImportersBatch(List<CustomerImporterModel> importers) async {
+    await _db.cacheEntitiesBatch(
+      entityType: 'customer_importer',
+      entities: importers.map((importer) => (entityId: importer.id, data: _importerData(importer))).toList(),
     );
   }
 
-  Future<void> _cacheImporter(CustomerImporterModel importer) async {
-    await _db.cacheEntity(
-      entityType: 'customer_importer',
-      entityId: importer.id,
-      data: {
+  Map<String, dynamic> _importerData(CustomerImporterModel importer) => {
         'id': importer.id,
         'name': importer.name,
         if (importer.mobile != null) 'mobile': importer.mobile,
-      },
-    );
-  }
+      };
 
   Future<bool> hasCachedCatalog() async {
     final types = await _db.getCachedEntities('customer_type');
@@ -310,12 +306,7 @@ class OfflineCustomerRepository {
       await _db.cacheEntity(
         entityType: 'customer_shop',
         entityId: shop.id,
-        data: {
-          'id': shop.id,
-          'name': shop.name,
-          'is_system': true,
-          if (shop.gps != null) 'gps': shop.gps,
-        },
+        data: _shopData(shop),
       );
       await _db.cacheEntity(
         entityType: 'mobile_config',
@@ -323,6 +314,49 @@ class OfflineCustomerRepository {
         data: {'walk_in_shop_id': shop.id},
       );
     } catch (_) {}
+  }
+
+  Future<CustomerShopModel> getShop(int id) async {
+    if (_isOnline()) {
+      try {
+        final shop = await _remote.getShop(id);
+        await _db.cacheEntity(entityType: 'customer_shop', entityId: shop.id, data: _shopData(shop));
+        return shop;
+      } catch (_) {}
+    }
+    final cached = await _db.getCachedEntity('customer_shop', id);
+    if (cached != null) return CustomerShopModel.fromJson(cached);
+    throw Exception('Shop not available offline');
+  }
+
+  Future<CustomerVanModel> getVan(int id) async {
+    if (_isOnline()) {
+      try {
+        final van = await _remote.getVan(id);
+        await _db.cacheEntity(entityType: 'customer_van', entityId: van.id, data: _vanData(van));
+        return van;
+      } catch (_) {}
+    }
+    final cached = await _db.getCachedEntity('customer_van', id);
+    if (cached != null) return CustomerVanModel.fromJson(cached);
+    throw Exception('Van not available offline');
+  }
+
+  Future<CustomerImporterModel> getImporter(int id) async {
+    if (_isOnline()) {
+      try {
+        final importer = await _remote.getImporter(id);
+        await _db.cacheEntity(
+          entityType: 'customer_importer',
+          entityId: importer.id,
+          data: _importerData(importer),
+        );
+        return importer;
+      } catch (_) {}
+    }
+    final cached = await _db.getCachedEntity('customer_importer', id);
+    if (cached != null) return CustomerImporterModel.fromJson(cached);
+    throw Exception('Importer not available offline');
   }
 
   Future<int?> walkInShopId() async {

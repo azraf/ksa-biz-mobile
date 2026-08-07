@@ -111,7 +111,38 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         await _load();
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
+    }
+  }
+
+  Future<void> _voidPayment(PaymentModel payment) async {
+    final l10n = AppLocalizations.of(context);
+    final reasonController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.paymentVoidPayment),
+        content: TextField(
+          controller: reasonController,
+          decoration: InputDecoration(labelText: l10n.paymentVoidReason),
+          maxLines: 2,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.paymentVoidPayment)),
+        ],
+      ),
+    );
+    if (confirmed != true || reasonController.text.trim().isEmpty) return;
+
+    try {
+      await ref.read(orderRepositoryProvider).voidPayment(payment.id, reason: reasonController.text.trim());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.paymentVoided)));
+        await _load();
+      }
+    } catch (e) {
+      if (mounted) showAppErrorSnackBar(context, e);
     }
   }
 
@@ -142,7 +173,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         await _load();
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) showAppErrorSnackBar(context, e);
     }
   }
 
@@ -174,12 +205,16 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         if (pending)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: StatusChip(label: 'pending sync'),
+            child: Chip(
+              label: Text(l10n.salesPendingSync),
+              backgroundColor: Colors.blue.shade100,
+              visualDensity: VisualDensity.compact,
+            ),
           ),
         if (order.hasPendingDiscount)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: StatusChip(label: 'discount pending approval'),
+            child: StatusChip(label: 'in_review'),
           ),
         Card(
           child: Padding(
@@ -215,7 +250,12 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
               onPressed: () => _openDiary(order),
             ),
           ),
-        if (canEdit && due > 0) ...[
+        if (pending && due > 0)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(l10n.salesPaymentSyncFirst, style: Theme.of(context).textTheme.bodySmall),
+          ),
+        if (canEdit && due > 0 && !pending) ...[
           FilledButton.icon(
             onPressed: _collectPayment,
             icon: const Icon(Icons.payments),
@@ -244,11 +284,28 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
               title: Text(p.paymentReference ?? 'Payment #${p.id}'),
               subtitle: Text(
                 [
+                  if (p.isVoided) l10n.paymentVoidedLabel,
                   if (p.paymentMethod != null) localizedPaymentMethodLabel(context, p.paymentMethod!),
                   if (p.paidAt != null) p.paidAt!,
                 ].join(' ').trim(),
               ),
-              trailing: Text(currency.format(p.amount)),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    currency.format(p.amount),
+                    style: p.isVoided ? const TextStyle(decoration: TextDecoration.lineThrough) : null,
+                  ),
+                  if (canEdit && !p.isVoided) ...[
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.undo),
+                      tooltip: l10n.paymentVoidPayment,
+                      onPressed: () => _voidPayment(p),
+                    ),
+                  ],
+                ],
+              ),
             ),
         ],
         if (canEdit)

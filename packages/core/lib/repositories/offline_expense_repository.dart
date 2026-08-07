@@ -33,13 +33,17 @@ class OfflineExpenseRepository {
           toDate: toDate,
           page: page,
         );
-        for (final expense in result.items) {
-          await _db.cacheEntity(
-            entityType: 'expense',
-            entityId: expense.id,
-            data: {...expense.toJson(), 'id': expense.id, '_pending_sync': false},
-          );
-        }
+        await _db.cacheEntitiesBatch(
+          entityType: 'expense',
+          entities: result.items
+              .map(
+                (expense) => (
+                  entityId: expense.id,
+                  data: {...expense.toJson(), 'id': expense.id, '_pending_sync': false},
+                ),
+              )
+              .toList(),
+        );
         if (page == 1) {
           final pending = await _pendingExpenses();
           if (pending.isNotEmpty) {

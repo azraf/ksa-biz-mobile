@@ -6,11 +6,17 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../models/media_target.dart';
+import 'offline_sync_trigger.dart';
 import 'sync_queue_item.dart';
 
 class LocalDatabase {
   LocalDatabase._();
   static final LocalDatabase instance = LocalDatabase._();
+
+  static const maxRetries = 5;
+  static const entityCacheTtlDays = 30;
+  static const maxEntityCacheRows = 15000;
+  static const purgeDoneOlderThanDays = 7;
 
   Database? _db;
 
@@ -21,12 +27,13 @@ class LocalDatabase {
 
   Future<Database> _open() async {
     final path = join(await getDatabasesPath(), 'ksa_biz_offline.db');
-    return openDatabase(
+    final db = await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await _createSchema(db);
         await _createMediaBlobsTable(db);
+        await _createAppConfigTable(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         for (var v = oldVersion + 1; v <= newVersion; v++) {
@@ -34,6 +41,10 @@ class LocalDatabase {
         }
       },
     );
+    await db.execute('PRAGMA journal_mode=WAL');
+    await db.execute('PRAGMA synchronous=NORMAL');
+    await _resetStuckStatuses(db);
+    return db;
   }
 
   Future<void> _createSchema(Database db) async {
@@ -57,6 +68,7 @@ class LocalDatabase {
             status TEXT NOT NULL DEFAULT 'pending',
             retry_count INTEGER NOT NULL DEFAULT 0,
             error_message TEXT,
+            next_retry_at TEXT,
             created_at TEXT NOT NULL
           )
         ''');
@@ -84,9 +96,29 @@ class LocalDatabase {
         await db.update('sync_queue', {'status': 'pending'}, where: "status = 'syncing'");
         await db.update('media_blobs', {'status': 'pending'}, where: "status = 'uploading'");
         break;
+      case 3:
+        await _createAppConfigTable(db);
+        try {
+          await db.execute('ALTER TABLE sync_queue ADD COLUMN next_retry_at TEXT');
+        } catch (_) {}
+        break;
       default:
         break;
     }
+  }
+
+  Future<void> _createAppConfigTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS app_config (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      )
+    ''');
+  }
+
+  Future<void> _resetStuckStatuses(Database db) async {
+    await db.update('sync_queue', {'status': 'pending'}, where: "status = 'syncing'");
+    await db.update('media_blobs', {'status': 'pending'}, where: "status = 'uploading'");
   }
 
   Future<void> _createMediaBlobsTable(Database db) async {
@@ -139,6 +171,34 @@ class LocalDatabase {
     );
   }
 
+  Future<void> cacheEntitiesBatch({
+    required String entityType,
+    required List<({int entityId, Map<String, dynamic> data})> entities,
+  }) async {
+    if (entities.isEmpty) return;
+
+    final db = await database;
+    final batch = db.batch();
+    final updatedAt = DateTime.now().toIso8601String();
+
+    for (final entity in entities) {
+      final key = '${entityType}_${entity.entityId}';
+      batch.insert(
+        'entity_cache',
+        {
+          'cache_key': key,
+          'entity_type': entityType,
+          'entity_id': entity.entityId,
+          'data': jsonEncode(entity.data),
+          'updated_at': updatedAt,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+
+    await batch.commit(noResult: true);
+  }
+
   Future<List<Map<String, dynamic>>> getCachedEntities(String entityType) async {
     final db = await database;
     final rows = await db.query(
@@ -187,7 +247,7 @@ class LocalDatabase {
 
   Future<int> enqueue(SyncQueueItem item) async {
     final db = await database;
-    return db.insert('sync_queue', {
+    final id = await db.insert('sync_queue', {
       'entity_type': item.entityType,
       'operation': item.operation,
       'local_id': item.localId,
@@ -196,15 +256,168 @@ class LocalDatabase {
       'status': item.status,
       'retry_count': item.retryCount,
       'error_message': item.errorMessage,
+      'next_retry_at': item.nextRetryAt?.toIso8601String(),
       'created_at': DateTime.now().toIso8601String(),
     });
+    OfflineSyncTrigger.requestSync();
+    return id;
+  }
+
+  Future<List<SyncQueueItem>> allQueueItems() async {
+    final db = await database;
+    final rows = await db.query('sync_queue', orderBy: 'id ASC');
+    return rows.map(_rowToQueueItem).toList();
+  }
+
+  Future<void> retryFailedItems() async {
+    final db = await database;
+    await db.update(
+      'sync_queue',
+      {
+        'status': 'pending',
+        'retry_count': 0,
+        'error_message': null,
+        'next_retry_at': null,
+      },
+      where: "status = 'failed'",
+    );
+    await db.update(
+      'media_blobs',
+      {
+        'status': 'pending',
+        'retry_count': 0,
+        'error_message': null,
+      },
+      where: "status = 'failed'",
+    );
+  }
+
+  Future<void> retryQueueItem(int id) async {
+    final db = await database;
+    await db.update(
+      'sync_queue',
+      {
+        'status': 'pending',
+        'retry_count': 0,
+        'error_message': null,
+        'next_retry_at': null,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> purgeDoneQueue({Duration olderThan = const Duration(days: 7)}) async {
+    final db = await database;
+    final cutoff = DateTime.now().subtract(olderThan).toIso8601String();
+    await db.delete(
+      'sync_queue',
+      where: "status = 'done' AND created_at < ?",
+      whereArgs: [cutoff],
+    );
+  }
+
+  Future<void> purgeDoneMedia({Duration olderThan = const Duration(days: 7)}) async {
+    final db = await database;
+    final cutoff = DateTime.now().subtract(olderThan).toIso8601String();
+    await db.delete(
+      'media_blobs',
+      where: "status = 'done' AND created_at < ?",
+      whereArgs: [cutoff],
+    );
+  }
+
+  Future<void> evictStaleEntityCache() async {
+    final db = await database;
+    final cutoff = DateTime.now()
+        .subtract(const Duration(days: entityCacheTtlDays))
+        .toIso8601String();
+    await db.delete('entity_cache', where: 'updated_at < ?', whereArgs: [cutoff]);
+
+    final countResult = await db.rawQuery('SELECT COUNT(*) as c FROM entity_cache');
+    final count = Sqflite.firstIntValue(countResult) ?? 0;
+    if (count > maxEntityCacheRows) {
+      final excess = count - maxEntityCacheRows;
+      await db.rawDelete(
+        'DELETE FROM entity_cache WHERE cache_key IN ('
+        'SELECT cache_key FROM entity_cache ORDER BY updated_at ASC LIMIT ?)',
+        [excess],
+      );
+    }
+  }
+
+  Future<String?> getConfig(String key) async {
+    final db = await database;
+    final rows = await db.query('app_config', where: 'key = ?', whereArgs: [key], limit: 1);
+    if (rows.isEmpty) return null;
+    return rows.first['value'] as String?;
+  }
+
+  Future<void> setConfig(String key, String value) async {
+    final db = await database;
+    await db.insert(
+      'app_config',
+      {'key': key, 'value': value},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<DateTime?> getLastSyncAt() async {
+    final raw = await getConfig('last_sync_at');
+    if (raw == null) return null;
+    return DateTime.tryParse(raw);
+  }
+
+  Future<void> setLastSyncAt(DateTime at) async {
+    await setConfig('last_sync_at', at.toIso8601String());
+  }
+
+  Future<Map<String, dynamic>> exportRecoveryData() async {
+    final queue = await allQueueItems();
+    final media = await pendingMediaBlobs();
+    return {
+      'exported_at': DateTime.now().toIso8601String(),
+      'sync_queue': queue.map((q) => {
+            'id': q.id,
+            'entity_type': q.entityType,
+            'operation': q.operation,
+            'local_id': q.localId,
+            'server_id': q.serverId,
+            'payload': q.payload,
+            'status': q.status,
+            'retry_count': q.retryCount,
+            'error_message': q.errorMessage,
+          }).toList(),
+      'media_blobs': media.map((m) => {
+            'id': m.id,
+            'local_path': m.localPath,
+            'parent_entity_type': m.parentEntityType,
+            'parent_local_id': m.parentLocalId,
+            'parent_server_id': m.parentServerId,
+            'status': m.status,
+            'error_message': m.errorMessage,
+          }).toList(),
+    };
   }
 
   Future<List<SyncQueueItem>> pendingQueue() async {
     final db = await database;
+    final now = DateTime.now().toIso8601String();
     final rows = await db.query(
       'sync_queue',
-      where: "status IN ('pending', 'failed')",
+      where: "status IN ('pending', 'failed') AND retry_count < ? AND (next_retry_at IS NULL OR next_retry_at <= ?)",
+      whereArgs: [maxRetries, now],
+      orderBy: 'id ASC',
+    );
+    return rows.map(_rowToQueueItem).toList();
+  }
+
+  /// Pending, failed, and exhausted-retry items for Sync issues UI.
+  Future<List<SyncQueueItem>> actionableSyncItems() async {
+    final db = await database;
+    final rows = await db.query(
+      'sync_queue',
+      where: "status IN ('pending', 'failed', 'syncing')",
       orderBy: 'id ASC',
     );
     return rows.map(_rowToQueueItem).toList();
@@ -224,16 +437,24 @@ class LocalDatabase {
     int? serverId,
     String? errorMessage,
     int? retryCount,
+    DateTime? nextRetryAt,
+    bool clearNextRetryAt = false,
   }) async {
     final db = await database;
+    final updates = <String, Object?>{
+      'status': status,
+      if (serverId != null) 'server_id': serverId,
+      if (errorMessage != null) 'error_message': errorMessage,
+      if (retryCount != null) 'retry_count': retryCount,
+    };
+    if (clearNextRetryAt) {
+      updates['next_retry_at'] = null;
+    } else if (nextRetryAt != null) {
+      updates['next_retry_at'] = nextRetryAt.toIso8601String();
+    }
     await db.update(
       'sync_queue',
-      {
-        'status': status,
-        if (serverId != null) 'server_id': serverId,
-        if (errorMessage != null) 'error_message': errorMessage,
-        if (retryCount != null) 'retry_count': retryCount,
-      },
+      updates,
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -326,10 +547,23 @@ class LocalDatabase {
     return rows.map((r) => MediaBlobRecord.fromMap(r)).toList();
   }
 
+  Future<void> deleteQueueItem(int id) async {
+    final db = await database;
+    await db.delete('sync_queue', where: 'id = ?', whereArgs: [id]);
+  }
+
   Future<int> pendingMediaCount() async {
     final db = await database;
     final result = await db.rawQuery(
       "SELECT COUNT(*) as c FROM media_blobs WHERE status IN ('pending', 'failed', 'uploading')",
+    );
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
+  Future<int> failedMediaCount() async {
+    final db = await database;
+    final result = await db.rawQuery(
+      "SELECT COUNT(*) as c FROM media_blobs WHERE status = 'failed'",
     );
     return Sqflite.firstIntValue(result) ?? 0;
   }
@@ -402,6 +636,9 @@ class LocalDatabase {
       retryCount: row['retry_count'] as int? ?? 0,
       errorMessage: row['error_message'] as String?,
       createdAt: row['created_at'] as String?,
+      nextRetryAt: row['next_retry_at'] != null
+          ? DateTime.tryParse(row['next_retry_at'] as String)
+          : null,
     );
   }
 }

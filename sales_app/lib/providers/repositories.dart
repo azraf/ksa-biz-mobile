@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:core/core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media/media.dart';
@@ -21,8 +24,19 @@ final connectivityServiceProvider = Provider<ConnectivityService>((ref) {
   return service;
 });
 
+final apiReachabilityServiceProvider = Provider<ApiReachabilityService>((ref) {
+  final service = ApiReachabilityService();
+  ref.onDispose(service.dispose);
+  return service;
+});
+
 final isOnlineProvider = Provider<bool>((ref) {
   return ref.watch(connectivityServiceProvider).isOnline;
+});
+
+final serverReachableProvider = FutureProvider<bool>((ref) async {
+  if (!ref.watch(isOnlineProvider)) return false;
+  return ref.watch(apiReachabilityServiceProvider).check();
 });
 
 final localDatabaseProvider = Provider<LocalDatabase>((ref) => LocalDatabase.instance);
@@ -138,16 +152,33 @@ final mediaCaptureFacadeProvider = Provider<MediaCaptureFacade>((ref) {
   return MediaCaptureFacade(uploadRepository: ref.watch(mediaUploadRepositoryProvider));
 });
 
+final syncRepositoryProvider = Provider<SyncRepository>((ref) {
+  return SyncRepository(ref.watch(apiClientProvider));
+});
+
 final syncServiceProvider = Provider<SyncService>((ref) {
-  return SyncService(
+  final service = SyncService(
     db: ref.watch(localDatabaseProvider),
     connectivity: ref.watch(connectivityServiceProvider),
     orderRepository: ref.watch(orderRepositoryProvider),
     expenseRepository: ref.watch(expenseRepositoryProvider),
+    syncRepository: ref.watch(syncRepositoryProvider),
     watchlistRepository: ref.watch(watchlistRepositoryProvider),
     diaryRepository: ref.watch(customerDiaryRepositoryProvider),
     mediaUploadRepository: ref.watch(mediaUploadRepositoryProvider),
+    apiReachability: ref.watch(apiReachabilityServiceProvider),
   );
+  ref.onDispose(service.dispose);
+  return service;
+});
+
+final syncProgressProvider = StreamProvider<SyncProgress>((ref) {
+  return ref.watch(syncServiceProvider).progressStream;
+});
+
+final mediaUploadProgressProvider = StreamProvider<double?>((ref) {
+  final repo = ref.watch(mediaUploadRepositoryProvider);
+  return repo.statusStream.map((e) => e.progress);
 });
 
 final referenceDataPrefetcherProvider = Provider<ReferenceDataPrefetcher>((ref) {
@@ -157,9 +188,18 @@ final referenceDataPrefetcherProvider = Provider<ReferenceDataPrefetcher>((ref) 
   );
 });
 
+final lastSyncAtProvider = FutureProvider<DateTime?>((ref) async {
+  ref.watch(syncServiceProvider);
+  return ref.watch(localDatabaseProvider).getLastSyncAt();
+});
+
 final pendingSyncCountProvider = FutureProvider<int>((ref) async {
   final db = ref.watch(localDatabaseProvider);
   final queue = await db.pendingCount();
   final media = await db.pendingMediaCount();
   return queue + media;
+});
+
+final failedMediaCountProvider = FutureProvider<int>((ref) async {
+  return ref.watch(localDatabaseProvider).failedMediaCount();
 });
