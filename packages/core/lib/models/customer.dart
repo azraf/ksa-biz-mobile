@@ -26,45 +26,60 @@ class CustomerVanModel extends Equatable {
     required this.id,
     required this.name,
     this.mobile,
+    this.email,
     this.areaId,
     this.areaName,
     this.primaryContact,
     this.lastOrderAt,
+    this.createdAt,
     this.isInactive = false,
     this.distanceKm,
+    this.salesPersonName,
     this.metrics = const CustomerMetricsFields(),
+    this.user,
   });
 
   final int id;
   final String name;
   final String? mobile;
+  final String? email;
   final int? areaId;
   final String? areaName;
   final PrimaryContactModel? primaryContact;
   final String? lastOrderAt;
+  final String? createdAt;
   final bool isInactive;
   final double? distanceKm;
+  final String? salesPersonName;
   final CustomerMetricsFields metrics;
+  final CustomerLinkedUserModel? user;
 
   factory CustomerVanModel.fromJson(Map<String, dynamic> json) {
     return CustomerVanModel(
       id: json['id'] as int,
       name: json['name'] as String? ?? '',
       mobile: json['mobile'] as String?,
+      email: json['email'] as String?,
       areaId: json['area_id'] as int?,
       areaName: json['area'] is Map ? (json['area'] as Map)['name'] as String? : null,
       primaryContact: json['primary_contact'] is Map
           ? PrimaryContactModel.fromJson(json['primary_contact'] as Map<String, dynamic>)
           : null,
       lastOrderAt: json['last_order_at']?.toString(),
+      createdAt: json['created_at']?.toString(),
       isInactive: json['is_inactive'] as bool? ?? false,
       distanceKm: (json['distance_km'] as num?)?.toDouble(),
+      salesPersonName: json['sales_person_name'] as String? ??
+          (json['sales_person'] is Map
+              ? (json['sales_person'] as Map)['name'] as String?
+              : null),
       metrics: CustomerMetricsFields.fromJson(json),
+      user: parseCustomerLinkedUser(json['user']),
     );
   }
 
   @override
-  List<Object?> get props => [id, name];
+  List<Object?> get props => [id, name, mobile, email, user];
 }
 
 class CustomerImporterModel extends Equatable {
@@ -72,42 +87,57 @@ class CustomerImporterModel extends Equatable {
     required this.id,
     required this.name,
     this.mobile,
+    this.email,
     this.areaId,
     this.areaName,
     this.primaryContact,
     this.lastOrderAt,
+    this.createdAt,
     this.isInactive = false,
+    this.salesPersonName,
     this.metrics = const CustomerMetricsFields(),
+    this.user,
   });
 
   final int id;
   final String name;
   final String? mobile;
+  final String? email;
   final int? areaId;
   final String? areaName;
   final PrimaryContactModel? primaryContact;
   final String? lastOrderAt;
+  final String? createdAt;
   final bool isInactive;
+  final String? salesPersonName;
   final CustomerMetricsFields metrics;
+  final CustomerLinkedUserModel? user;
 
   factory CustomerImporterModel.fromJson(Map<String, dynamic> json) {
     return CustomerImporterModel(
       id: json['id'] as int,
       name: json['name'] as String? ?? '',
       mobile: json['mobile'] as String?,
+      email: json['email'] as String?,
       areaId: json['area_id'] as int?,
       areaName: json['area'] is Map ? (json['area'] as Map)['name'] as String? : null,
       primaryContact: json['primary_contact'] is Map
           ? PrimaryContactModel.fromJson(json['primary_contact'] as Map<String, dynamic>)
           : null,
       lastOrderAt: json['last_order_at']?.toString(),
+      createdAt: json['created_at']?.toString(),
       isInactive: json['is_inactive'] as bool? ?? false,
+      salesPersonName: json['sales_person_name'] as String? ??
+          (json['sales_person'] is Map
+              ? (json['sales_person'] as Map)['name'] as String?
+              : null),
       metrics: CustomerMetricsFields.fromJson(json),
+      user: parseCustomerLinkedUser(json['user']),
     );
   }
 
   @override
-  List<Object?> get props => [id, name];
+  List<Object?> get props => [id, name, mobile, email, user];
 }
 
 class OrderModificationModel extends Equatable {

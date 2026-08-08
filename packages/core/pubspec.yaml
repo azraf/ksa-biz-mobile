@@ -24,8 +24,11 @@ dependencies:
   url_launcher: ^6.3.2
   geocoding: ^3.0.0
   local_auth: ^2.3.0
-  disk_space: ^0.2.1
+  disk_capacity: ^1.2.0
   flutter_secure_storage: ^9.2.4
+  image_picker: ^1.1.2
+  maps_ui:
+    path: ../maps_ui
 
 dev_dependencies:
   flutter_test:

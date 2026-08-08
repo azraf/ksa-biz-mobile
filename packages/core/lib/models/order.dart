@@ -23,6 +23,7 @@ class OrderModel extends Equatable {
     this.amountDue = 0,
     this.paymentStatus = 'pending',
     this.status = 'confirmed',
+    this.fulfillmentSource,
     this.dueDate,
     this.isOverdue = false,
     this.daysOverdue = 0,
@@ -34,6 +35,7 @@ class OrderModel extends Equatable {
     this.discountRequests = const [],
     this.salesPerson,
     this.customerShopName,
+    this.customerShopAreaName,
     this.createdAt,
   });
 
@@ -53,6 +55,7 @@ class OrderModel extends Equatable {
   final double amountDue;
   final String paymentStatus;
   final String status;
+  final String? fulfillmentSource;
   final String? dueDate;
   final bool isOverdue;
   final int daysOverdue;
@@ -64,9 +67,11 @@ class OrderModel extends Equatable {
   final List<DiscountApprovalRequestModel> discountRequests;
   final SalesPersonModel? salesPerson;
   final String? customerShopName;
+  final String? customerShopAreaName;
   final String? createdAt;
 
   bool get isCancelled => status == 'cancelled';
+  bool get isPending => status == 'pending';
   bool get isEditable => !isCancelled;
   bool get hasPendingDiscount => discountRequests.any((r) => r.status == 'pending');
 
@@ -88,6 +93,7 @@ class OrderModel extends Equatable {
       amountDue: _toDouble(json['amount_due']),
       paymentStatus: json['payment_status'] as String? ?? 'pending',
       status: json['status'] as String? ?? 'confirmed',
+      fulfillmentSource: json['fulfillment_source'] as String?,
       dueDate: json['due_date'] as String?,
       isOverdue: json['is_overdue'] as bool? ?? false,
       daysOverdue: json['days_overdue'] as int? ?? 0,
@@ -109,6 +115,7 @@ class OrderModel extends Equatable {
       customerShopName: json['customer_shop'] is Map
           ? (json['customer_shop'] as Map)['name'] as String?
           : null,
+      customerShopAreaName: _customerShopAreaName(json['customer_shop']),
       createdAt: json['created_at']?.toString(),
     );
   }
@@ -117,6 +124,17 @@ class OrderModel extends Equatable {
     if (value == null) return 0;
     if (value is num) return value.toDouble();
     return double.tryParse(value.toString()) ?? 0;
+  }
+
+  static String? _customerShopAreaName(dynamic shopJson) {
+    if (shopJson is! Map) return null;
+    final shop = shopJson;
+    final direct = shop['area_name'] as String?;
+    if (direct != null && direct.isNotEmpty) return direct;
+    if (shop['area'] is Map) {
+      return (shop['area'] as Map)['name'] as String?;
+    }
+    return null;
   }
 
   @override

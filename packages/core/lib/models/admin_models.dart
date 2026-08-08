@@ -7,6 +7,7 @@ import 'customer_assignment_models.dart';
 import 'customer_metrics.dart';
 import 'order.dart';
 import 'product.dart';
+import 'user.dart';
 
 class InvoiceModel extends Equatable {
   const InvoiceModel({
@@ -67,10 +68,13 @@ class CustomerShopModel extends Equatable {
     this.areaName,
     this.primaryContact,
     this.lastOrderAt,
+    this.createdAt,
     this.isInactive = false,
     this.distanceKm,
+    this.salesPersonName,
     this.metrics = const CustomerMetricsFields(),
     this.images = const [],
+    this.user,
   });
 
   final int id;
@@ -83,10 +87,13 @@ class CustomerShopModel extends Equatable {
   final String? areaName;
   final PrimaryContactModel? primaryContact;
   final String? lastOrderAt;
+  final String? createdAt;
   final bool isInactive;
   final double? distanceKm;
+  final String? salesPersonName;
   final CustomerMetricsFields metrics;
   final List<MediaModel> images;
+  final CustomerLinkedUserModel? user;
 
   factory CustomerShopModel.fromJson(Map<String, dynamic> json) =>
       CustomerShopModel(
@@ -105,12 +112,18 @@ class CustomerShopModel extends Equatable {
             ? PrimaryContactModel.fromJson(json['primary_contact'] as Map<String, dynamic>)
             : null,
         lastOrderAt: json['last_order_at']?.toString(),
+        createdAt: json['created_at']?.toString(),
         isInactive: json['is_inactive'] as bool? ?? false,
         distanceKm: (json['distance_km'] as num?)?.toDouble(),
+        salesPersonName: json['sales_person_name'] as String? ??
+            (json['sales_person'] is Map
+                ? (json['sales_person'] as Map)['name'] as String?
+                : null),
         metrics: CustomerMetricsFields.fromJson(json),
         images: (json['images'] as List<dynamic>? ?? [])
             .map((e) => MediaModel.fromJson(e as Map<String, dynamic>))
             .toList(),
+        user: parseCustomerLinkedUser(json['user']),
       );
 
   Map<String, dynamic> toJson() => {
@@ -120,7 +133,7 @@ class CustomerShopModel extends Equatable {
       };
 
   @override
-  List<Object?> get props => [id, name, isSystem];
+  List<Object?> get props => [id, name, isSystem, user];
 }
 
 class CustomerShopContactModel extends Equatable {

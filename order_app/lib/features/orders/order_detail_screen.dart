@@ -67,6 +67,15 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             style: Theme.of(context).textTheme.titleLarge,
           ),
         ),
+        if (order.isPending)
+          Card(
+            color: Colors.orange.shade50,
+            child: ListTile(
+              leading: const Icon(Icons.hourglass_top),
+              title: Text(l10n.statusPending),
+              subtitle: const Text('Your order is awaiting salesperson approval.'),
+            ),
+          ),
         const Divider(),
         Text(l10n.commonItems, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),

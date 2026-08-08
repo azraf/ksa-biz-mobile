@@ -47,6 +47,7 @@ class AppDrawer extends ConsumerWidget {
           _tile(context, 'Units', Icons.straighten, '/catalog/units'),
           _tile(context, 'Promotions', Icons.local_offer, '/catalog/promotions'),
           _section('Customers'),
+          _tile(context, 'Customers hub', Icons.hub_outlined, '/customers/hub'),
           _tile(context, 'Customer Types', Icons.badge, '/customers/types'),
           _tile(context, 'Vans', Icons.local_shipping, '/customers/vans'),
           _tile(context, 'Importers', Icons.business, '/customers/importers'),

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:core/core.dart';
+import 'package:core/core.dart' hide sharedPreferencesProvider;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -47,21 +47,60 @@ class SalesPersonsScreen extends ConsumerWidget {
   }
 }
 
-class OrdersScreen extends ConsumerWidget {
+class OrdersScreen extends ConsumerStatefulWidget {
   const OrdersScreen({super.key});
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OrdersScreen> createState() => _OrdersScreenState();
+}
+
+class _OrdersScreenState extends ConsumerState<OrdersScreen> {
+  static const _listKey = 'admin_orders';
+  int _reloadToken = 0;
+  late ListSortMode _sortMode;
+
+  @override
+  void initState() {
+    super.initState();
+    _sortMode = ListSortPreference(ref.read(sharedPreferencesProvider))
+        .read(_listKey, defaultMode: ListSortMode.date);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final repo = ref.watch(offlineOrderRepositoryProvider);
     return CrudListScreen<OrderModel>(
+      key: ValueKey('$_reloadToken-$_sortMode'),
       title: 'Orders',
       loadItems: () async {
         unawaited(ref.read(syncServiceProvider).syncIfOnline().timeout(
               const Duration(seconds: 30),
               onTimeout: () {},
             ));
-        return (await repo.list()).items;
+        return (await repo.list(sort: _sortMode.orderApiSortParam())).items;
       },
-      itemTitle: (o) => '#${o.id} — SAR ${o.totalBill.toStringAsFixed(2)} (${o.paymentStatus})',
+      itemTitle: (o) => '#${o.id} — ${o.customerShopName ?? ''} — SAR ${o.totalBill.toStringAsFixed(2)}',
+      itemSubtitle: (o) => orderListSubtitle(o, showSalesPerson: true, showCreatedAt: true),
+      sortModes: [
+        ListSortMode.date,
+        ListSortMode.name,
+        ListSortMode.area,
+        ListSortMode.salesPerson,
+      ],
+      initialSortMode: _sortMode,
+      onSortChanged: (mode) async {
+        _sortMode = mode;
+        await ListSortPreference(ref.read(sharedPreferencesProvider)).write(_listKey, mode);
+        setState(() => _reloadToken++);
+      },
+      sortItems: (items, mode) => sortByListMode(
+        items,
+        mode,
+        dateIso: (o) => o.createdAt,
+        name: (o) => o.customerShopName ?? '',
+        area: (o) => o.customerShopAreaName,
+        salesPerson: (o) => o.salesPerson?.name,
+      ),
       isPending: (o) => o.id < 0,
       onTap: (o) => context.push('/sales/orders/${o.id}'),
       onAdd: () => context.push('/sales/orders/create'),
@@ -104,6 +143,85 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         _error = e.toString();
         _loading = false;
       });
+    }
+  }
+
+  Future<void> _confirmPendingOrder() async {
+    final salesPersons = (await ref.read(customerRepositoryProvider).salesPersons()).items;
+    var inventorySource = 'van';
+    SalesPersonModel? selectedSp = salesPersons.isNotEmpty ? salesPersons.first : null;
+
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            final needsSp = inventorySource == 'van' || inventorySource == 'warehouse_deliver';
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: 16 + MediaQuery.of(ctx).viewInsets.bottom,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('Confirm order', style: Theme.of(ctx).textTheme.titleLarge),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: inventorySource,
+                    decoration: const InputDecoration(labelText: 'Inventory source'),
+                    items: const [
+                      DropdownMenuItem(value: 'van', child: Text('Salesperson van')),
+                      DropdownMenuItem(value: 'warehouse', child: Text('Warehouse only')),
+                      DropdownMenuItem(value: 'warehouse_deliver', child: Text('Warehouse + delivery')),
+                    ],
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setSheetState(() => inventorySource = value);
+                    },
+                  ),
+                  if (needsSp) ...[
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<SalesPersonModel>(
+                      value: selectedSp,
+                      decoration: const InputDecoration(labelText: 'Delivery salesperson'),
+                      items: salesPersons
+                          .map((sp) => DropdownMenuItem(value: sp, child: Text(sp.name)))
+                          .toList(),
+                      onChanged: (value) => setSheetState(() => selectedSp = value),
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: const Text('Confirm order'),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await ref.read(orderRepositoryProvider).confirmOrder(
+            widget.orderId,
+            salesPersonId: inventorySource == 'warehouse' ? null : selectedSp?.id,
+            inventorySource: inventorySource,
+          );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order confirmed')));
+        await _load();
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 
@@ -152,20 +270,31 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
 
     final order = _order!;
     final currency = NumberFormat.currency(symbol: 'SAR ');
-    final pending = order.id < 0;
-    final canEdit = order.isEditable && !pending;
+    final pendingSync = order.id < 0;
+    final awaitingApproval = order.isPending;
+    final canEdit = order.isEditable && !pendingSync && !awaitingApproval;
+    final canCancel = order.isEditable && !pendingSync;
     final due = order.amountDue > 0 ? order.amountDue : order.totalBill - order.amountPaid;
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        if (pending)
+        if (pendingSync)
           const Card(
             color: Colors.orange,
             child: ListTile(
               leading: Icon(Icons.sync),
               title: Text('Pending sync'),
               subtitle: Text('This order will upload when online'),
+            ),
+          ),
+        if (awaitingApproval)
+          Card(
+            color: Colors.orange.shade50,
+            child: const ListTile(
+              leading: Icon(Icons.hourglass_top),
+              title: Text('Pending approval'),
+              subtitle: Text('Confirm to assign delivery and deduct inventory'),
             ),
           ),
         if (canEdit)
@@ -194,10 +323,20 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                 const Divider(),
                 _row('Paid', currency.format(order.amountPaid)),
                 _row('Due', currency.format(due), bold: true),
+                if (order.createdAt != null) _row('Created', formatAppDateTime(order.createdAt)),
+                if (order.dueDate != null) _row('Due date', formatAppDateTime(order.dueDate)),
               ],
             ),
           ),
         ),
+        if (awaitingApproval) ...[
+          FilledButton.icon(
+            onPressed: _confirmPendingOrder,
+            icon: const Icon(Icons.check_circle_outline),
+            label: const Text('Confirm order'),
+          ),
+          const SizedBox(height: 16),
+        ],
         if (canEdit && due > 0) ...[
           FilledButton.icon(
             onPressed: _collectPayment,
@@ -224,7 +363,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                 [
                   if (p.isVoided) 'voided',
                   if (p.paymentMethod != null) p.paymentMethod!,
-                  if (p.paidAt != null) p.paidAt!,
+                  if (p.paidAt != null) formatAppDateTime(p.paidAt),
                 ].join(' · '),
               ),
               trailing: Row(
@@ -243,7 +382,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
               ),
             ),
         ],
-        if (canEdit) ...[
+        if (canCancel) ...[
           const SizedBox(height: 16),
           OutlinedButton(
             onPressed: () async {

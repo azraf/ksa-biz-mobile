@@ -46,7 +46,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/sales',
-                redirect: (_, __) => '/sales/orders',
+                redirect: (context, state) =>
+                    state.uri.path == '/sales' ? '/sales/orders' : null,
                 routes: [
                   GoRoute(
                     path: 'orders',
@@ -67,7 +68,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/inventory',
-                redirect: (_, __) => '/inventory/van',
+                redirect: (context, state) =>
+                    state.uri.path == '/inventory' ? '/inventory/van' : null,
                 routes: [
                   GoRoute(path: 'van', builder: (context, state) => const VanStockScreen()),
                 ],

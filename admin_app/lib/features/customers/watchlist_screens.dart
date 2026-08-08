@@ -1,4 +1,4 @@
-import 'package:core/core.dart';
+import 'package:core/core.dart' hide sharedPreferencesProvider;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,22 +16,37 @@ class AdminWatchlistScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminWatchlistScreenState extends ConsumerState<AdminWatchlistScreen> {
+  static const _listKey = 'admin_watchlist';
+
   bool _loading = true;
   List<WatchlistItemModel> _items = [];
   String _status = 'active';
+  ListSortMode _sortMode = ListSortMode.date;
 
   @override
   void initState() {
     super.initState();
+    _sortMode = ListSortPreference(ref.read(sharedPreferencesProvider))
+        .read(_listKey, defaultMode: ListSortMode.date);
     _load();
   }
 
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final result = await ref.read(watchlistRepositoryProvider).list(status: _status);
+      final result = await ref.read(watchlistRepositoryProvider).list(
+            status: _status,
+            sort: _sortMode.watchlistApiSortParam(),
+          );
+      final items = sortByListMode(
+        result.items,
+        _sortMode,
+        dateIso: (item) => item.createdAt,
+        name: (item) => item.displayTitle,
+        salesPerson: (item) => item.salesPerson?.name,
+      );
       setState(() {
-        _items = result.items;
+        _items = items;
         _loading = false;
       });
     } catch (e) {
@@ -61,6 +76,15 @@ class _AdminWatchlistScreenState extends ConsumerState<AdminWatchlistScreen> {
               PopupMenuItem(value: 'archived', child: Text('Archived')),
             ],
           ),
+          ListSortButton(
+            modes: [ListSortMode.date, ListSortMode.name, ListSortMode.salesPerson],
+            selected: _sortMode,
+            onSelected: (mode) async {
+              _sortMode = mode;
+              await ListSortPreference(ref.read(sharedPreferencesProvider)).write(_listKey, mode);
+              await _load();
+            },
+          ),
         ],
       ),
       body: _loading
@@ -74,7 +98,11 @@ class _AdminWatchlistScreenState extends ConsumerState<AdminWatchlistScreen> {
                   return ListTile(
                     title: Text(item.displayTitle),
                     subtitle: Text(
-                      '${item.salesPerson?.name ?? 'SP #${item.salesPersonId}'} · ${item.noteText ?? item.gps}',
+                      [
+                        if (item.createdAt != null) formatAppDateTime(item.createdAt),
+                        item.salesPerson?.name ?? 'SP #${item.salesPersonId}',
+                        item.noteText ?? item.gps,
+                      ].where((s) => s.isNotEmpty).join(' · '),
                     ),
                     trailing: Text(item.status),
                     onTap: () => Navigator.push(
@@ -135,6 +163,10 @@ class _AdminWatchlistDetailScreenState extends ConsumerState<AdminWatchlistDetai
         children: [
           Text('Salesperson: ${item.salesPerson?.name ?? item.salesPersonId}'),
           GpsLocationRow(gps: item.gps),
+          if (item.createdAt != null) ...[
+            const SizedBox(height: 8),
+            Text(formatAppDateTime(item.createdAt), style: Theme.of(context).textTheme.bodySmall),
+          ],
           Text('Status: ${item.status}${item.archivedReason != null ? ' (${item.archivedReason})' : ''}'),
           if (item.noteText != null) ...[const SizedBox(height: 12), Text(item.noteText!)],
           if (item.customerShopId != null)

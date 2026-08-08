@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:disk_space/disk_space.dart';
+import 'package:disk_capacity/disk_capacity.dart';
 import 'package:flutter/material.dart';
 import 'package:l10n/l10n.dart';
 
@@ -37,8 +37,8 @@ Future<bool> ensureStorageForCapture(BuildContext context) async {
 Future<int?> _estimateFreeBytes() async {
   if (!Platform.isAndroid && !Platform.isIOS) return null;
   try {
-    final mb = await DiskSpace.getFreeDiskSpace;
-    if (mb == null) return null;
+    final diskCapacity = DiskCapacity();
+    final mb = await diskCapacity.getFreeDiskSpace();
     return (mb * 1024 * 1024).round();
   } catch (_) {
     return null;

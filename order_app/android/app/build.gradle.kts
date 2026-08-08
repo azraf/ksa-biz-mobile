@@ -6,6 +6,10 @@ plugins {
 
 import java.util.Properties
 
+apply(from = rootProject.file("../../config/android/admin_secrets.gradle.kts"))
+
+val secrets = extra["ksaAdminSecrets"] as Properties
+
 val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()
 if (keystorePropertiesFile.exists()) {
@@ -32,6 +36,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["GOOGLE_MAPS_API_KEY"] =
+            secrets.getProperty("GOOGLE_MAPS_API_KEY", "")
     }
 
     signingConfigs {

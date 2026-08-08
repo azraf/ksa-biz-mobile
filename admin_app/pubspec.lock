@@ -200,6 +200,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.14"
+  disk_capacity:
+    dependency: transitive
+    description:
+      name: disk_capacity
+      sha256: da83e5beba0403d9e1a45777b807a7f0395e483a3e6abb232710cdb118780a6e
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.0"
   equatable:
     dependency: transitive
     description:

@@ -1,3 +1,5 @@
+import '../support/json_parse.dart';
+
 class PaginatedResponse<T> {
   PaginatedResponse({
     required this.items,
@@ -20,9 +22,9 @@ class PaginatedResponse<T> {
     final data = json['data'] as List<dynamic>? ?? [];
     return PaginatedResponse<T>(
       items: data.map((e) => fromJsonT(e as Map<String, dynamic>)).toList(),
-      currentPage: json['current_page'] as int? ?? 1,
-      lastPage: json['last_page'] as int? ?? 1,
-      total: json['total'] as int? ?? data.length,
+      currentPage: parseJsonInt(json['current_page'], fallback: 1),
+      lastPage: parseJsonInt(json['last_page'], fallback: 1),
+      total: parseJsonInt(json['total'], fallback: data.length),
     );
   }
 }

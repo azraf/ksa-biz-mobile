@@ -2782,6 +2782,54 @@ abstract class AppLocalizations {
   /// **'Nearest'**
   String get commonSortNearest;
 
+  /// No description provided for @commonSort.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get commonSort;
+
+  /// No description provided for @commonSortByDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get commonSortByDate;
+
+  /// No description provided for @commonSortByArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Area'**
+  String get commonSortByArea;
+
+  /// No description provided for @commonSortBySalesPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales person'**
+  String get commonSortBySalesPerson;
+
+  /// No description provided for @commonCreateCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Create customer'**
+  String get commonCreateCustomer;
+
+  /// No description provided for @commonAddWatchlistPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Add place'**
+  String get commonAddWatchlistPlace;
+
+  /// No description provided for @salesCustomerCreateGoOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Go online to create a customer'**
+  String get salesCustomerCreateGoOnline;
+
+  /// No description provided for @adminShopQuickAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick add shop'**
+  String get adminShopQuickAdd;
+
   /// No description provided for @salesPickerInactive60d.
   ///
   /// In en, this message translates to:

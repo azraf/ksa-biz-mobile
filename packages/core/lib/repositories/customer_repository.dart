@@ -4,6 +4,7 @@ import '../models/customer.dart';
 import '../models/customer_assignment_models.dart';
 import '../models/paginated_response.dart';
 import '../models/sales_person.dart';
+import '../models/user.dart';
 
 class CustomerListQuery {
   const CustomerListQuery({
@@ -117,11 +118,24 @@ class CustomerRepository {
     String? gps,
     int? areaId,
     int? salesPersonId,
+    bool createUser = false,
+    String? userEmail,
+    String? userPhone,
+    String? userPassword,
+    String? userPasswordConfirmation,
   }) async {
     final body = <String, dynamic>{'name': name};
     if (gps != null) body['gps'] = gps;
     if (areaId != null) body['area_id'] = areaId;
     if (salesPersonId != null) body['sales_person_id'] = salesPersonId;
+    body.addAll(buildCreateUserPayload(
+          createUser: createUser,
+          email: userEmail,
+          phone: userPhone,
+          password: userPassword,
+          passwordConfirmation: userPasswordConfirmation,
+        ) ??
+        {});
     final response = await _api.post('/customer-shops', body: body);
     return CustomerShopModel.fromJson(response['data'] as Map<String, dynamic>);
   }
@@ -149,6 +163,11 @@ class CustomerRepository {
     String? city,
     int? areaId,
     int? salesPersonId,
+    bool createUser = false,
+    String? userEmail,
+    String? userPhone,
+    String? userPassword,
+    String? userPasswordConfirmation,
   }) async {
     final body = <String, dynamic>{'name': name};
     if (mobile != null) body['mobile'] = mobile;
@@ -158,6 +177,14 @@ class CustomerRepository {
     if (city != null) body['city'] = city;
     if (areaId != null) body['area_id'] = areaId;
     if (salesPersonId != null) body['sales_person_id'] = salesPersonId;
+    body.addAll(buildCreateUserPayload(
+          createUser: createUser,
+          email: userEmail,
+          phone: userPhone,
+          password: userPassword,
+          passwordConfirmation: userPasswordConfirmation,
+        ) ??
+        {});
     final response = await _api.post('/customer-vans', body: body);
     return CustomerVanModel.fromJson(response['data'] as Map<String, dynamic>);
   }
@@ -170,6 +197,11 @@ class CustomerRepository {
     String? city,
     int? areaId,
     int? salesPersonId,
+    bool createUser = false,
+    String? userEmail,
+    String? userPhone,
+    String? userPassword,
+    String? userPasswordConfirmation,
   }) async {
     final body = <String, dynamic>{'name': name};
     if (mobile != null) body['mobile'] = mobile;
@@ -178,7 +210,99 @@ class CustomerRepository {
     if (city != null) body['city'] = city;
     if (areaId != null) body['area_id'] = areaId;
     if (salesPersonId != null) body['sales_person_id'] = salesPersonId;
+    body.addAll(buildCreateUserPayload(
+          createUser: createUser,
+          email: userEmail,
+          phone: userPhone,
+          password: userPassword,
+          passwordConfirmation: userPasswordConfirmation,
+        ) ??
+        {});
     final response = await _api.post('/customer-importers', body: body);
+    return CustomerImporterModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
+  Future<CustomerShopModel> createShopUser({
+    required int shopId,
+    String? email,
+    String? phone,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    final response = await _api.post('/customer-shops/$shopId/create-user', body: {
+      if (email != null) 'email': email,
+      if (phone != null) 'phone': phone,
+      'password': password,
+      'password_confirmation': passwordConfirmation,
+    });
+    return CustomerShopModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
+  Future<CustomerVanModel> createVanUser({
+    required int vanId,
+    String? email,
+    String? phone,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    final response = await _api.post('/customer-vans/$vanId/create-user', body: {
+      if (email != null) 'email': email,
+      if (phone != null) 'phone': phone,
+      'password': password,
+      'password_confirmation': passwordConfirmation,
+    });
+    return CustomerVanModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
+  Future<CustomerImporterModel> createImporterUser({
+    required int importerId,
+    String? email,
+    String? phone,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    final response = await _api.post('/customer-importers/$importerId/create-user', body: {
+      if (email != null) 'email': email,
+      if (phone != null) 'phone': phone,
+      'password': password,
+      'password_confirmation': passwordConfirmation,
+    });
+    return CustomerImporterModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
+  Future<CustomerShopModel> resetShopUserPassword({
+    required int shopId,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    final response = await _api.post('/customer-shops/$shopId/reset-user-password', body: {
+      'password': password,
+      'password_confirmation': passwordConfirmation,
+    });
+    return CustomerShopModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
+  Future<CustomerVanModel> resetVanUserPassword({
+    required int vanId,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    final response = await _api.post('/customer-vans/$vanId/reset-user-password', body: {
+      'password': password,
+      'password_confirmation': passwordConfirmation,
+    });
+    return CustomerVanModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
+  Future<CustomerImporterModel> resetImporterUserPassword({
+    required int importerId,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    final response = await _api.post('/customer-importers/$importerId/reset-user-password', body: {
+      'password': password,
+      'password_confirmation': passwordConfirmation,
+    });
     return CustomerImporterModel.fromJson(response['data'] as Map<String, dynamic>);
   }
 

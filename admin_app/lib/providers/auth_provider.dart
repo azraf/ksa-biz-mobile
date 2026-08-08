@@ -26,7 +26,7 @@ class AuthNotifier extends Notifier<AuthState> {
       isAuthenticated: true,
       biometricEnabled: _authRepository.isBiometricEnabled,
       biometricAvailable: state.biometricAvailable,
-      storedUserEmail: session.user.email,
+      storedUserEmail: session.user.loginIdentifier,
       tokenExpiresAt: session.tokenExpiresAt ?? _authRepository.storedTokenExpiresAt,
       user: session.user,
       roles: session.roles,

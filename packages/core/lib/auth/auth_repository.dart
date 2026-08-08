@@ -21,6 +21,7 @@ class AuthSession {
     this.roles = const [],
     this.canPickSalesPerson = false,
     this.tokenExpiresAt,
+    this.linkedCustomer,
   });
 
   final UserModel user;
@@ -31,6 +32,7 @@ class AuthSession {
   final String token;
   final String apiBaseUrl;
   final DateTime? tokenExpiresAt;
+  final LinkedCustomerModel? linkedCustomer;
 
   Map<String, dynamic> toJson() => {
         'token': token,
@@ -41,6 +43,14 @@ class AuthSession {
         if (salesPerson != null) 'sales_person': salesPerson!.toJson(),
         if (activeSalesPerson != null) 'active_sales_person': activeSalesPerson!.toJson(),
         if (tokenExpiresAt != null) 'token_expires_at': tokenExpiresAt!.toIso8601String(),
+        if (linkedCustomer != null)
+          'linked_customer': {
+            'type': linkedCustomer!.type,
+            'id': linkedCustomer!.id,
+            'name': linkedCustomer!.name,
+            if (linkedCustomer!.customerTypeId != null)
+              'customer_type_id': linkedCustomer!.customerTypeId,
+          },
       };
 
   factory AuthSession.fromStoredJson(Map<String, dynamic> json) {
@@ -57,6 +67,9 @@ class AuthSession {
       roles: (json['roles'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
       canPickSalesPerson: json['can_pick_sales_person'] as bool? ?? false,
       tokenExpiresAt: _parseDate(json['token_expires_at']),
+      linkedCustomer: json['linked_customer'] is Map
+          ? LinkedCustomerModel.fromJson(json['linked_customer'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -122,12 +135,14 @@ class AuthRepository {
     required String email,
     required String password,
     String? apiBaseUrl,
+    String? client,
   }) async {
     final resolvedUrl = AppConfig.resolveApiBaseUrl(apiBaseUrl);
     _api.setBaseUrl(resolvedUrl);
     final response = await _api.post('/login', body: {
       'email': email,
       'password': password,
+      if (client != null) 'client': client,
     });
 
     final session = await _sessionFromLoginResponse(response, resolvedUrl);
@@ -188,7 +203,7 @@ class AuthRepository {
     _appLock.markUnlocked();
     return AuthRestoreResult(
       session: session,
-      storedUserEmail: session.user.email,
+      storedUserEmail: session.user.loginIdentifier,
       biometricEnabled: false,
       tokenExpiresAt: session.tokenExpiresAt ?? tokenExpiresAt,
     );
@@ -246,6 +261,7 @@ class AuthRepository {
       roles: session.roles,
       canPickSalesPerson: session.canPickSalesPerson,
       tokenExpiresAt: session.tokenExpiresAt,
+      linkedCustomer: session.linkedCustomer,
     );
     await _persistSession(updated);
   }
@@ -267,6 +283,9 @@ class AuthRepository {
         .map((e) => e.toString())
         .toList();
     final canPick = response['can_pick_sales_person'] as bool? ?? false;
+    final linkedCustomer = response['linked_customer'] is Map
+        ? LinkedCustomerModel.fromJson(response['linked_customer'] as Map<String, dynamic>)
+        : null;
 
     SalesPersonModel? activeSalesPerson;
     if (!canPick && salesPerson != null) {
@@ -285,15 +304,16 @@ class AuthRepository {
       token: response['token'] as String,
       apiBaseUrl: apiBaseUrl,
       tokenExpiresAt: AuthSession._parseDate(response['token_expires_at']),
+      linkedCustomer: linkedCustomer,
     );
   }
 
   Future<void> _persistSession(AuthSession session) async {
     await _secureStore.writeSession(jsonEncode(session.toJson()));
     await _prefs.setString(AppConfig.apiBaseUrlKey, session.apiBaseUrl);
-    final email = session.user.email;
-    if (email != null) {
-      await _prefs.setString(AppConfig.lastUserEmailKey, email);
+    final identifier = session.user.loginIdentifier;
+    if (identifier != null) {
+      await _prefs.setString(AppConfig.lastUserEmailKey, identifier);
     }
     if (session.tokenExpiresAt != null) {
       await _prefs.setString(

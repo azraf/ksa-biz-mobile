@@ -11,12 +11,15 @@ class WatchlistRepository {
     int? salesPersonId,
     String status = 'active',
     String? archivedReason,
+    String sort = 'created_at',
     int page = 1,
+    int perPage = 20,
   }) async {
     final query = <String, String>{
       'page': '$page',
-      'per_page': '20',
+      'per_page': '$perPage',
       'status': status,
+      'sort': sort,
     };
     if (salesPersonId != null) query['sales_person_id'] = '$salesPersonId';
     if (archivedReason != null) query['archived_reason'] = archivedReason;

@@ -38,7 +38,12 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     setState(() => _submitting = true);
     try {
       final order = await ref.read(orderRepositoryProvider).create(body);
-      if (mounted) context.go('/orders/${order.id}');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.statusPending)),
+        );
+        context.go('/orders/${order.id}');
+      }
     } catch (e) {
       setState(() => _submitting = false);
       if (mounted) {

@@ -29,11 +29,13 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
   int? _priorityRating;
   String? _paymentOverride;
   CustomerMetricsFields _metrics = const CustomerMetricsFields();
+  CustomerShopModel? _shop;
 
   @override
   void initState() {
     super.initState();
-    final shop = widget.shop;
+    _shop = widget.shop;
+    final shop = _shop;
     if (shop != null) {
       _nameController.text = shop.name;
       _gps = shop.gps;
@@ -47,6 +49,15 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
   void dispose() {
     _nameController.dispose();
     super.dispose();
+  }
+
+  Future<void> _reloadShop() async {
+    final shopId = _shop?.id;
+    if (shopId == null) return;
+    try {
+      final updated = await ref.read(customerRepositoryProvider).getShop(shopId);
+      if (mounted) setState(() => _shop = updated);
+    } catch (_) {}
   }
 
   Future<void> _takeShopPhoto() async {
@@ -86,16 +97,16 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
     try {
       final repo = ref.read(customerRepositoryProvider);
       CustomerShopModel shop;
-      if (widget.shop == null) {
+      if (_shop == null) {
         shop = await repo.createShop(name: name, gps: _gps);
       } else {
-        await ref.read(apiClientProvider).put('/customer-shops/${widget.shop!.id}', body: {
+        await ref.read(apiClientProvider).put('/customer-shops/${_shop!.id}', body: {
           'name': name,
           'gps': _gps,
           if (_priorityRating != null) 'priority_rating': _priorityRating,
           'payment_reliability_override': _paymentOverride,
         });
-        shop = widget.shop!;
+        shop = _shop!;
       }
       if (_shopPhoto != null) {
         await ref.read(mediaCaptureFacadeProvider).attachShopPhoto(File(_shopPhoto!.path), shop.id);
@@ -112,8 +123,9 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final shop = _shop;
     return Scaffold(
-      appBar: AppBar(title: Text(widget.shop == null ? 'New Shop' : 'Edit Shop')),
+      appBar: AppBar(title: Text(shop == null ? 'New Shop' : 'Edit Shop')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -160,10 +172,10 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
             ),
           ],
           const SizedBox(height: 24),
-          if (widget.shop != null) ...[
+          if (shop != null) ...[
             const SizedBox(height: 16),
             MediaGallerySection(
-              remoteItems: widget.shop!.images,
+              remoteItems: shop.images,
               title: AppLocalizations.of(context).salesCustomerMedia,
             ),
             const SizedBox(height: 12),
@@ -175,9 +187,17 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
               onPaymentOverrideChanged: (v) => setState(() => _paymentOverride = v),
             ),
             const SizedBox(height: 12),
+            CustomerLoginAccountSection(
+              customerType: 'customer_shop',
+              customerId: shop.id,
+              customer: shop,
+              customerRepository: ref.read(customerRepositoryProvider),
+              onUpdated: _reloadShop,
+            ),
+            const SizedBox(height: 12),
             CustomerDiarySection(
               customerType: 'customer_shop',
-              customerId: widget.shop!.id,
+              customerId: shop.id,
             ),
             const SizedBox(height: 12),
           ],

@@ -86,6 +86,7 @@ class OfflineCustomerRepository {
     bool scoped = true,
     int? lastOrderWithinDays,
     int? areaId,
+    String sort = 'created_at',
     int page = 1,
     int perPage = 25,
   }) async {
@@ -96,6 +97,7 @@ class OfflineCustomerRepository {
       scoped: scoped,
       lastOrderWithinDays: lastOrderWithinDays,
       areaId: areaId,
+      sort: sort,
       page: page,
       perPage: perPage,
     );
@@ -118,6 +120,7 @@ class OfflineCustomerRepository {
     bool scoped = true,
     int? lastOrderWithinDays,
     int? areaId,
+    String sort = 'created_at',
     int page = 1,
     int perPage = 25,
   }) async {
@@ -128,6 +131,7 @@ class OfflineCustomerRepository {
       scoped: scoped,
       lastOrderWithinDays: lastOrderWithinDays,
       areaId: areaId,
+      sort: sort,
       page: page,
       perPage: perPage,
     );

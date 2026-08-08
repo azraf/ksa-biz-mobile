@@ -136,5 +136,3 @@ class AuthNotifier extends Notifier<AuthState> {
 }
 
 final authProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
-
-String formatOrderId(int id) => '$id';

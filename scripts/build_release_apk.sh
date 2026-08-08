@@ -70,8 +70,8 @@ remove_arm_apk_outputs() {
 
 resolve_app_dir "${1:-}"
 APP_NAME="$(basename "$(pwd)")"
-# shellcheck source=load_maps_api_key.sh
-source "$SCRIPT_DIR/load_maps_api_key.sh"
+# shellcheck source=load_admin_secrets.sh
+source "$SCRIPT_DIR/load_admin_secrets.sh"
 
 # Drop app name arg if it was a valid app folder name
 if [[ $# -ge 1 && "$1" != "." && -f "$MOBILEAPP_ROOT/$1/pubspec.yaml" ]]; then
@@ -97,10 +97,7 @@ if [[ "${KSA_WAKELOCK_PATCH_APPLIED:-0}" == "1" ]]; then
   "$SCRIPT_DIR/patch_wakelock_plus.sh"
 fi
 
-BUILD_ARGS=()
-if [[ -n "${KSA_GOOGLE_MAPS_API_KEY:-}" ]]; then
-  BUILD_ARGS+=(--dart-define=GOOGLE_MAPS_API_KEY="$KSA_GOOGLE_MAPS_API_KEY")
-fi
+BUILD_ARGS=("${KSA_DART_DEFINE_ARGS[@]:-}")
 
 flutter build apk --release "${BUILD_ARGS[@]}" "$@"
 

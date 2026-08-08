@@ -30,6 +30,7 @@ class LocalDatabase {
     final db = await openDatabase(
       path,
       version: 3,
+      onConfigure: _configureDatabase,
       onCreate: (db, version) async {
         await _createSchema(db);
         await _createMediaBlobsTable(db);
@@ -41,10 +42,18 @@ class LocalDatabase {
         }
       },
     );
-    await db.execute('PRAGMA journal_mode=WAL');
-    await db.execute('PRAGMA synchronous=NORMAL');
     await _resetStuckStatuses(db);
     return db;
+  }
+
+  /// PRAGMA returns result rows — use rawQuery (Android rejects execute() for these).
+  Future<void> _configureDatabase(Database db) async {
+    try {
+      await db.rawQuery('PRAGMA journal_mode=WAL');
+      await db.rawQuery('PRAGMA synchronous=NORMAL');
+    } catch (_) {
+      // WAL is a performance optimization; default journal mode is fine.
+    }
   }
 
   Future<void> _createSchema(Database db) async {

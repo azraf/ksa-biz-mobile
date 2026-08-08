@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../support/json_parse.dart';
+
 class SalesReport extends Equatable {
   const SalesReport({
     this.fromDate,
@@ -18,7 +20,7 @@ class SalesReport extends Equatable {
   factory SalesReport.fromJson(Map<String, dynamic> json) => SalesReport(
         fromDate: json['from_date']?.toString(),
         toDate: json['to_date']?.toString(),
-        ordersCount: json['orders_count'] as int? ?? 0,
+        ordersCount: parseJsonInt(json['orders_count']),
         totalBill: _toDouble(json['total_bill']),
         byProduct: (json['by_product'] as List<dynamic>? ?? [])
             .map((e) => ProductSalesRow.fromJson(e as Map<String, dynamic>))
@@ -43,8 +45,8 @@ class ProductSalesRow extends Equatable {
   final double revenue;
 
   factory ProductSalesRow.fromJson(Map<String, dynamic> json) => ProductSalesRow(
-        productId: json['product_id'] as int?,
-        qty: json['qty'] as int? ?? 0,
+        productId: parseJsonIntOrNull(json['product_id']),
+        qty: parseJsonInt(json['qty']),
         revenue: SalesReport._toDouble(json['revenue']),
       );
 
@@ -110,10 +112,10 @@ class ExpenseCategoryRow extends Equatable {
 
   factory ExpenseCategoryRow.fromJson(Map<String, dynamic> json) =>
       ExpenseCategoryRow(
-        expenseCategoryId: json['expense_category_id'] as int?,
+        expenseCategoryId: parseJsonIntOrNull(json['expense_category_id']),
         categoryName: json['category_name'] as String?,
         total: SalesReport._toDouble(json['total']),
-        count: json['count'] as int? ?? 0,
+        count: parseJsonInt(json['count']),
       );
 
   @override

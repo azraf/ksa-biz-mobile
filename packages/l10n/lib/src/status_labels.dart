@@ -49,6 +49,12 @@ String localizedStatusLabel(BuildContext context, String status) {
       return l10n.statusDormant;
     case 'never':
       return l10n.statusNever;
+    case 'van':
+      return 'Van stock';
+    case 'warehouse':
+      return 'Warehouse only';
+    case 'warehouse_deliver':
+      return 'Warehouse + delivery';
     case 'good':
       return l10n.statusGoodPayer;
     case 'fair':

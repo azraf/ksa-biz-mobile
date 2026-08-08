@@ -6,23 +6,62 @@ import '../models/paginated_response.dart';
 import '../models/payment.dart';
 import '../utils/client_request_id.dart';
 
+class OrderListQuery {
+  const OrderListQuery({
+    this.salesPersonId,
+    this.status,
+    this.paymentStatus,
+    this.sort = 'created_at',
+    this.page = 1,
+    this.perPage = 20,
+  });
+
+  final int? salesPersonId;
+  final String? status;
+  final String? paymentStatus;
+  final String sort;
+  final int page;
+  final int perPage;
+
+  Map<String, String> toQuery() {
+    final q = <String, String>{
+      'page': '$page',
+      'per_page': '$perPage',
+      'view': 'list',
+      'sort': sort,
+    };
+    if (salesPersonId != null) q['sales_person_id'] = '$salesPersonId';
+    if (status != null) q['status'] = status!;
+    if (paymentStatus != null) q['payment_status'] = paymentStatus!;
+    return q;
+  }
+}
+
 class OrderRepository {
   OrderRepository(this._api);
 
   final ApiClient _api;
 
   Future<PaginatedResponse<OrderModel>> list({
+    OrderListQuery? query,
     int? salesPersonId,
     String? status,
     String? paymentStatus,
+    String sort = 'created_at',
     int page = 1,
+    int perPage = 20,
   }) async {
-    final query = <String, String>{'page': '$page', 'per_page': '20', 'view': 'list'};
-    if (salesPersonId != null) query['sales_person_id'] = '$salesPersonId';
-    if (status != null) query['status'] = status;
-    if (paymentStatus != null) query['payment_status'] = paymentStatus;
+    final q = query ??
+        OrderListQuery(
+          salesPersonId: salesPersonId,
+          status: status,
+          paymentStatus: paymentStatus,
+          sort: sort,
+          page: page,
+          perPage: perPage,
+        );
 
-    final response = await _api.get('/orders', query: query);
+    final response = await _api.get('/orders', query: q.toQuery());
     return PaginatedResponse.fromJson(response, OrderModel.fromJson);
   }
 
@@ -114,6 +153,19 @@ class OrderRepository {
   Future<OrderModel> recordReturn(int orderId, List<Map<String, dynamic>> items) async {
     final response = await _api.post('/orders/$orderId/returns', body: {'items': items});
     return OrderModel.fromJson(response['order'] as Map<String, dynamic>);
+  }
+
+  Future<OrderModel> confirmOrder(
+    int orderId, {
+    int? salesPersonId,
+    String? inventorySource,
+  }) async {
+    final body = <String, dynamic>{
+      if (salesPersonId != null) 'sales_person_id': salesPersonId,
+      if (inventorySource != null) 'inventory_source': inventorySource,
+    };
+    final response = await _api.post('/orders/$orderId/confirm', body: body);
+    return OrderModel.fromJson(response['data'] as Map<String, dynamic>);
   }
 
   Future<OrderModel> cancel(int orderId, String reason) async {

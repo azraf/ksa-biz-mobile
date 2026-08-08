@@ -11,7 +11,7 @@ import '../../providers/connectivity_provider.dart';
 import '../../providers/format_providers.dart';
 import '../../providers/repositories.dart';
 
-enum _OrderFilter { all, today, week, pendingSync, unpaid }
+enum _OrderFilter { all, today, week, pendingSync, unpaid, pendingApproval }
 
 class OrderListScreen extends ConsumerStatefulWidget {
   const OrderListScreen({super.key});
@@ -30,10 +30,15 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
   int _currentPage = 1;
   int _lastPage = 1;
   _OrderFilter _filter = _OrderFilter.all;
+  ListSortMode _sortMode = ListSortMode.date;
+
+  static const _listKey = 'sales_orders';
 
   @override
   void initState() {
     super.initState();
+    final prefs = ListSortPreference(ref.read(sharedPreferencesProvider));
+    _sortMode = prefs.read(_listKey, defaultMode: ListSortMode.date);
     _scrollController.addListener(_onScroll);
     _load(page: 1, reset: true);
   }
@@ -73,6 +78,8 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
           return order.id < 0;
         case _OrderFilter.unpaid:
           return order.paymentStatus != 'paid' && order.paymentStatus != 'cancelled';
+        case _OrderFilter.pendingApproval:
+          return order.isPending;
         case _OrderFilter.all:
           return true;
       }
@@ -100,16 +107,27 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
       }
       final result = await ref.read(offlineOrderRepositoryProvider).list(
             salesPersonId: salesPersonId,
+            status: _filter == _OrderFilter.pendingApproval ? 'pending' : null,
+            sort: _sortMode.orderApiSortParam(),
             page: page,
           );
+      var items = result.items;
+      items = sortByListMode(
+        items,
+        _sortMode,
+        dateIso: (o) => o.createdAt,
+        name: (o) => o.customerShopName ?? '',
+        area: (o) => o.customerShopAreaName,
+        salesPerson: (o) => o.salesPerson?.name,
+      );
       setState(() {
         if (reset) {
-          _orders = result.items;
+          _orders = items;
         } else {
           final existingIds = _orders.map((o) => o.id).toSet();
           _orders = [
             ..._orders,
-            ...result.items.where((order) => !existingIds.contains(order.id)),
+            ...items.where((order) => !existingIds.contains(order.id)),
           ];
         }
         _currentPage = result.currentPage;
@@ -162,6 +180,21 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
                 _filterChip(l10n.salesOrderFilterWeek, _OrderFilter.week),
                 _filterChip(l10n.salesOrderFilterPendingSync, _OrderFilter.pendingSync),
                 _filterChip(l10n.salesOrderFilterUnpaid, _OrderFilter.unpaid),
+                _filterChip(l10n.statusPending, _OrderFilter.pendingApproval),
+                ListSortButton(
+                  modes: [
+                    ListSortMode.date,
+                    ListSortMode.name,
+                    ListSortMode.area,
+                    ListSortMode.salesPerson,
+                  ],
+                  selected: _sortMode,
+                  onSelected: (mode) async {
+                    _sortMode = mode;
+                    await ListSortPreference(ref.read(sharedPreferencesProvider)).write(_listKey, mode);
+                    await _load(page: 1, reset: true);
+                  },
+                ),
               ],
             ),
           ),
@@ -174,21 +207,10 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
                 : _error != null
                     ? ErrorView(message: _error!, onRetry: () => _load(page: 1, reset: true))
                     : visible.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                EmptyView(message: l10n.commonNoOrdersYet),
-                                if (_orders.isEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.all(16),
-                                    child: FilledButton(
-                                      onPressed: () => context.push('/orders/create'),
-                                      child: Text(l10n.salesEmptyOrdersCta),
-                                    ),
-                                  ),
-                              ],
-                            ),
+                        ? EmptyView(
+                            message: l10n.commonNoOrdersYet,
+                            actionLabel: l10n.commonCreateOrder,
+                            onAction: () => context.push('/orders/create'),
                           )
                         : RefreshIndicator(
                             onRefresh: () => _load(page: 1, reset: true),
@@ -206,6 +228,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
                                 return OrderCard(
                                   order: order,
                                   currency: currency,
+                                  subtitle: orderListSubtitle(order, showSalesPerson: true),
                                   onTap: () => context.push('/orders/${order.id}'),
                                 );
                               },
@@ -224,7 +247,13 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
       child: FilterChip(
         label: Text(label),
         selected: selected,
-        onSelected: (_) => setState(() => _filter = selected ? _OrderFilter.all : value),
+        onSelected: (_) {
+          final next = selected ? _OrderFilter.all : value;
+          setState(() => _filter = next);
+          if (value == _OrderFilter.pendingApproval || selected) {
+            _load(page: 1, reset: true);
+          }
+        },
       ),
     );
   }

@@ -112,10 +112,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       keyboardType: TextInputType.emailAddress,
                     ),
                     const SizedBox(height: 12),
-                    TextField(
+                    PasswordTextField(
                       controller: _passwordController,
                       decoration: InputDecoration(labelText: l10n.commonPassword),
-                      obscureText: true,
                     ),
                   ],
                   if (auth.error != null) ...[

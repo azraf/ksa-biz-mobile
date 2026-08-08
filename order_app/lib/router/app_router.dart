@@ -32,8 +32,13 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       if (auth.isLoading) return null;
       if (!auth.isAuthenticated) return loggingIn ? null : '/login';
+      if (!isCustomerRole(auth.roles)) {
+        if (!loggingIn) {
+          Future.microtask(() => ref.read(authProvider.notifier).logout());
+        }
+        return '/login';
+      }
       if (loggingIn) return '/home';
-      if (!isCustomerRole(auth.roles)) return '/login';
       return null;
     },
     routes: [

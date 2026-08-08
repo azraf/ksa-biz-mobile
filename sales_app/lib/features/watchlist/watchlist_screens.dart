@@ -23,17 +23,21 @@ class WatchlistListScreen extends ConsumerStatefulWidget {
 }
 
 class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
+  static const _listKey = 'sales_watchlist';
+
   bool _loading = true;
   String? _error;
   bool _missingSalesPerson = false;
   List<WatchlistItemModel> _items = [];
   String _status = 'active';
-  bool _sortByDistance = false;
+  ListSortMode _sortMode = ListSortMode.date;
   Position? _position;
 
   @override
   void initState() {
     super.initState();
+    final prefs = ListSortPreference(ref.read(sharedPreferencesProvider));
+    _sortMode = prefs.read(_listKey, defaultMode: ListSortMode.date);
     _load();
   }
 
@@ -52,25 +56,39 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
       _missingSalesPerson = false;
     });
     try {
+      final apiSort = _sortMode == ListSortMode.distance
+          ? 'created_at'
+          : _sortMode.watchlistApiSortParam();
       final items = await ref.read(offlineWatchlistRepositoryProvider).listLocalAndRemote(
             salesPersonId: spId,
             status: _status,
+            sort: apiSort,
           );
       Position? pos;
-      if (_sortByDistance && await AppPermissions.requestLocation()) {
+      if (_sortMode == ListSortMode.distance && await AppPermissions.requestLocation()) {
         try {
           pos = await Geolocator.getCurrentPosition();
         } catch (_) {}
       }
-      if (_sortByDistance && pos != null) {
-        items.sort((a, b) {
-          final da = GpsParser.distanceMeters(pos!.latitude, pos.longitude, a.gps) ?? double.infinity;
-          final db = GpsParser.distanceMeters(pos.latitude, pos.longitude, b.gps) ?? double.infinity;
-          return da.compareTo(db);
-        });
+      var sorted = items;
+      if (_sortMode == ListSortMode.distance && pos != null) {
+        sorted = sortByListMode(
+          items,
+          ListSortMode.distance,
+          distanceMeters: (item) =>
+              GpsParser.distanceMeters(pos!.latitude, pos.longitude, item.gps) ?? double.infinity,
+        );
+      } else if (_sortMode != ListSortMode.distance) {
+        sorted = sortByListMode(
+          items,
+          _sortMode,
+          dateIso: (item) => item.createdAt,
+          name: (item) => item.displayTitle,
+          salesPerson: (item) => item.salesPerson?.name,
+        );
       }
       setState(() {
-        _items = items;
+        _items = sorted;
         _position = pos;
         _loading = false;
       });
@@ -111,12 +129,13 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
               tooltip: l10n.salesWatchlistViewMap,
               onPressed: _openMap,
             ),
-          IconButton(
-            icon: Icon(_sortByDistance ? Icons.near_me : Icons.near_me_outlined),
-            tooltip: l10n.salesWatchlistSortDistance,
-            onPressed: () {
-              setState(() => _sortByDistance = !_sortByDistance);
-              _load();
+          ListSortButton(
+            modes: [ListSortMode.distance, ListSortMode.date, ListSortMode.name],
+            selected: _sortMode,
+            onSelected: (mode) async {
+              _sortMode = mode;
+              await ListSortPreference(ref.read(sharedPreferencesProvider)).write(_listKey, mode);
+              await _load();
             },
           ),
           PopupMenuButton<String>(
@@ -144,16 +163,17 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
               : _error != null
               ? ErrorView(message: _error!, onRetry: _load)
               : _items.isEmpty
-                  ? EmptyView(message: l10n.salesWatchlistEmpty)
+                  ? EmptyView(
+                      message: l10n.salesWatchlistEmpty,
+                      actionLabel: l10n.commonAddWatchlistPlace,
+                      onAction: () => context.push('/watchlist/create'),
+                    )
                   : RefreshIndicator(
                       onRefresh: _load,
                       child: ListView.builder(
                         itemCount: _items.length,
                         itemBuilder: (_, i) {
                           final item = _items[i];
-                          final dist = _position != null
-                              ? GpsParser.distanceMeters(_position!.latitude, _position!.longitude, item.gps)
-                              : null;
                           return ListTile(
                             leading: item.isLocalOnly
                                 ? const Icon(Icons.cloud_off, color: Colors.orange)
@@ -161,7 +181,9 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
                             title: Text(item.displayTitle),
                             subtitle: Text(
                               [
-                                if (dist != null) '${(dist / 1000).toStringAsFixed(1)} km',
+                                if (item.createdAt != null) formatAppDateTime(item.createdAt),
+                                if (_position != null && _sortMode == ListSortMode.distance)
+                                  '${((GpsParser.distanceMeters(_position!.latitude, _position!.longitude, item.gps) ?? 0) / 1000).toStringAsFixed(1)} km',
                                 item.noteText ?? item.gps,
                               ].where((s) => s.isNotEmpty).join(' · '),
                             ),
@@ -628,6 +650,13 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
               ),
             ),
           GpsLocationRow(gps: item.gps),
+          if (item.createdAt != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              formatAppDateTime(item.createdAt),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
           if (item.noteText != null) ...[
             const SizedBox(height: 12),
             Text(item.noteText!),

@@ -22,6 +22,9 @@ class AppConfig {
   static const googleMapsApiKey =
       String.fromEnvironment('GOOGLE_MAPS_API_KEY', defaultValue: '');
 
+  /// True when a non-empty Maps key was passed via `--dart-define`.
+  static bool get hasGoogleMapsApiKey => googleMapsApiKey.trim().isNotEmpty;
+
   /// Log API request durations in debug builds.
   static bool get logApiTiming => kDebugMode;
 

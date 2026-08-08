@@ -23,6 +23,7 @@ class OfflineOrderRepository {
     int? salesPersonId,
     String? status,
     String? paymentStatus,
+    String sort = 'created_at',
     int page = 1,
   }) async {
     if (_isOnline()) {
@@ -31,6 +32,7 @@ class OfflineOrderRepository {
           salesPersonId: salesPersonId,
           status: status,
           paymentStatus: paymentStatus,
+          sort: sort,
           page: page,
         );
         await _db.cacheEntitiesBatch(

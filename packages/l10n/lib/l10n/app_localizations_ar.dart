@@ -1472,6 +1472,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commonSortNearest => 'الأقرب';
 
   @override
+  String get commonSort => 'ترتيب';
+
+  @override
+  String get commonSortByDate => 'التاريخ';
+
+  @override
+  String get commonSortByArea => 'المنطقة';
+
+  @override
+  String get commonSortBySalesPerson => 'مندوب البيع';
+
+  @override
+  String get commonCreateCustomer => 'إنشاء عميل';
+
+  @override
+  String get commonAddWatchlistPlace => 'إضافة مكان';
+
+  @override
+  String get salesCustomerCreateGoOnline => 'اتصل بالإنترنت لإنشاء عميل';
+
+  @override
+  String get adminShopQuickAdd => 'إضافة متجر سريعة';
+
+  @override
   String get salesPickerInactive60d => 'غير نشط 60+ يوم';
 
   @override

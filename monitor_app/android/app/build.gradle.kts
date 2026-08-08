@@ -6,17 +6,9 @@ plugins {
 
 import java.util.Properties
 
-val localSecrets = rootProject.file("secrets.properties")
-val sharedSecrets = rootProject.file("../../admin_app/android/secrets.properties")
-val secretsFile = when {
-    sharedSecrets.exists() -> sharedSecrets
-    localSecrets.exists() -> localSecrets
-    else -> localSecrets
-}
-val secrets = Properties()
-if (secretsFile.exists()) {
-    secrets.load(secretsFile.inputStream())
-}
+apply(from = rootProject.file("../../config/android/admin_secrets.gradle.kts"))
+
+val secrets = extra["ksaAdminSecrets"] as Properties
 
 val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()

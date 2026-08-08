@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:l10n/l10n.dart';
 
 import '../models/customer_diary_note.dart';
 import '../utils/contact_launcher.dart';
+import '../utils/format_helpers.dart';
 
 class CustomerDiaryPanel extends StatelessWidget {
   const CustomerDiaryPanel({
@@ -73,8 +73,7 @@ class _DiaryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final date = note.createdAt != null ? DateTime.tryParse(note.createdAt!) : null;
-    final dateLabel = date != null ? DateFormat('d MMM y, HH:mm').format(date.toLocal()) : '';
+    final dateLabel = note.createdAt != null ? formatAppDateTime(note.createdAt) : '';
 
     return ListTile(
       contentPadding: EdgeInsets.zero,

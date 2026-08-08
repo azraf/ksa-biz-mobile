@@ -4,6 +4,7 @@ import 'package:l10n/l10n.dart';
 
 import '../models/order.dart';
 import '../theme/app_colors.dart';
+import '../utils/format_helpers.dart';
 import 'common_widgets.dart';
 
 class OrderCard extends StatelessWidget {
@@ -12,19 +13,20 @@ class OrderCard extends StatelessWidget {
     required this.order,
     required this.onTap,
     this.currency,
+    this.subtitle,
   });
 
   final OrderModel order;
   final VoidCallback onTap;
   final NumberFormat? currency;
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final money = currency ?? NumberFormat.currency(symbol: 'SAR ');
     final pending = order.id < 0;
-    final created = order.createdAt;
-    final relative = created != null ? _relativeTime(created) : null;
+    final dateLabel = order.createdAt != null ? formatAppDateWithRelative(order.createdAt) : null;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -51,9 +53,13 @@ class OrderCard extends StatelessWidget {
                           : 'Order #${formatOrderId(order.id)}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    if (relative != null) ...[
+                    if (subtitle != null) ...[
                       const SizedBox(height: 4),
-                      Text(relative, style: Theme.of(context).textTheme.bodySmall),
+                      Text(subtitle!, style: Theme.of(context).textTheme.bodySmall),
+                    ],
+                    if (dateLabel != null && dateLabel.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(dateLabel, style: Theme.of(context).textTheme.bodySmall),
                     ],
                     const SizedBox(height: 8),
                     Wrap(
@@ -85,15 +91,6 @@ class OrderCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _relativeTime(String iso) {
-    final dt = DateTime.tryParse(iso);
-    if (dt == null) return iso;
-    final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
   }
 }
 

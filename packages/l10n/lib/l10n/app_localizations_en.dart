@@ -1477,6 +1477,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonSortNearest => 'Nearest';
 
   @override
+  String get commonSort => 'Sort';
+
+  @override
+  String get commonSortByDate => 'Date';
+
+  @override
+  String get commonSortByArea => 'Area';
+
+  @override
+  String get commonSortBySalesPerson => 'Sales person';
+
+  @override
+  String get commonCreateCustomer => 'Create customer';
+
+  @override
+  String get commonAddWatchlistPlace => 'Add place';
+
+  @override
+  String get salesCustomerCreateGoOnline => 'Go online to create a customer';
+
+  @override
+  String get adminShopQuickAdd => 'Quick add shop';
+
+  @override
   String get salesPickerInactive60d => 'Inactive 60d+';
 
   @override

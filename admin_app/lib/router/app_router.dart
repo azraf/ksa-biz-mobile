@@ -46,8 +46,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       final loggingIn = state.matchedLocation == '/login';
       if (auth.isLoading) return null;
       if (!auth.isAuthenticated) return loggingIn ? null : '/login';
+      if (!auth.isAdmin) return loggingIn ? null : '/login';
       if (loggingIn) return '/';
-      if (!auth.isAdmin) return '/login';
 
       final legacy = _legacyPathRedirect(state.matchedLocation);
       if (legacy != null) return legacy;
@@ -69,7 +69,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/sales',
-                redirect: (_, __) => '/sales/orders',
+                redirect: (context, state) =>
+                    state.uri.path == '/sales' ? '/sales/orders' : null,
                 routes: [
                   GoRoute(
                     path: 'orders',
@@ -107,7 +108,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/customers',
-                redirect: (_, __) => '/customers/hub',
+                redirect: (context, state) =>
+                    state.uri.path == '/customers' ? '/customers/hub' : null,
                 routes: [
                   GoRoute(path: 'hub', builder: (_, __) => const CustomersHubScreen()),
                   GoRoute(path: 'shops', builder: (_, __) => const CustomerShopsScreen(), routes: [
@@ -137,7 +139,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/inventory',
-                redirect: (_, __) => '/inventory/warehouse',
+                redirect: (context, state) =>
+                    state.uri.path == '/inventory' ? '/inventory/warehouse' : null,
                 routes: [
                   GoRoute(path: 'warehouse', builder: (_, __) => const WarehouseStockScreen()),
                   GoRoute(path: 'van', builder: (_, __) => const VanStockScreen()),

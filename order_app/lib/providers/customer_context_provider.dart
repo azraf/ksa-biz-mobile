@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:core/core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -64,20 +66,23 @@ class CustomerContextState {
 }
 
 class CustomerContextNotifier extends Notifier<CustomerContextState> {
+  Future<void>? _loadFuture;
+
   @override
   CustomerContextState build() {
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (!next.isAuthenticated) {
+        _loadFuture = null;
         state = const CustomerContextState();
         return;
       }
       if (next.isAuthenticated && !next.isLoading && state.profile == null && !state.isLoading) {
-        Future.microtask(load);
+        unawaited(load());
       }
     });
 
     final auth = ref.read(authProvider);
-    if (auth.isAuthenticated && !auth.isLoading) {
+    if (auth.isAuthenticated && !auth.isLoading && state.profile == null) {
       Future.microtask(load);
     }
     return const CustomerContextState(isLoading: true);
@@ -90,7 +95,11 @@ class CustomerContextNotifier extends Notifier<CustomerContextState> {
     return null;
   }
 
-  Future<void> load() async {
+  Future<void> load() {
+    return _loadFuture ??= _loadInternal().whenComplete(() => _loadFuture = null);
+  }
+
+  Future<void> _loadInternal() async {
     final auth = ref.read(authProvider);
     if (!auth.isAuthenticated) {
       state = const CustomerContextState();
@@ -109,12 +118,17 @@ class CustomerContextNotifier extends Notifier<CustomerContextState> {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final customerRepo = ref.read(customerRepositoryProvider);
-      final types = await customerRepo.customerTypes();
-      final type = types.cast<CustomerTypeModel?>().firstWhere(
-            (t) => t?.typeName == role,
-            orElse: () => null,
-          );
-      if (type == null) {
+      final linked = await _resolveLinkedCustomer(auth, customerRepo, role);
+      if (linked == null) {
+        state = CustomerContextState(
+          isLoading: false,
+          error: 'No ${role.replaceFirst('customer_', '')} profile linked to your account.',
+        );
+        return;
+      }
+
+      final customerTypeId = await _resolveCustomerTypeId(customerRepo, role, linked);
+      if (customerTypeId == null) {
         state = CustomerContextState(
           isLoading: false,
           error: 'Customer type "$role" is not configured on the server.',
@@ -122,87 +136,111 @@ class CustomerContextNotifier extends Notifier<CustomerContextState> {
         return;
       }
 
-      final email = auth.user?.email?.toLowerCase();
-      CustomerProfile? profile;
-
-      if (role == 'customer_shop') {
-        final result = await customerRepo.shops(search: email);
-        final shop = _matchShop(result.items, email) ?? (result.items.isNotEmpty ? result.items.first : null);
-        if (shop == null) {
-          state = const CustomerContextState(
-            isLoading: false,
-            error: 'No shop profile linked to your account.',
-          );
-          return;
-        }
-        profile = CustomerProfile(
-          role: role,
-          customerTypeId: type.id,
-          entityId: shop.id,
-          displayName: shop.name,
-          shop: shop,
-        );
-      } else if (role == 'customer_van') {
-        final result = await customerRepo.vans(search: email);
-        final van = _matchVan(result.items, email) ?? (result.items.isNotEmpty ? result.items.first : null);
-        if (van == null) {
-          state = const CustomerContextState(
-            isLoading: false,
-            error: 'No van profile linked to your account.',
-          );
-          return;
-        }
-        profile = CustomerProfile(
-          role: role,
-          customerTypeId: type.id,
-          entityId: van.id,
-          displayName: van.name,
-          mobile: van.mobile,
-        );
-      } else {
-        final result = await customerRepo.importers(search: email);
-        final importer = _matchImporter(result.items, email) ??
-            (result.items.isNotEmpty ? result.items.first : null);
-        if (importer == null) {
-          state = const CustomerContextState(
-            isLoading: false,
-            error: 'No importer profile linked to your account.',
-          );
-          return;
-        }
-        profile = CustomerProfile(
-          role: role,
-          customerTypeId: type.id,
-          entityId: importer.id,
-          displayName: importer.name,
-          mobile: importer.mobile,
-        );
-      }
-
-      state = CustomerContextState(isLoading: false, profile: profile);
+      state = CustomerContextState(
+        isLoading: false,
+        profile: linked.copyWith(customerTypeId: customerTypeId),
+      );
     } catch (e) {
       state = CustomerContextState(isLoading: false, error: e.toString());
     }
   }
 
-  CustomerShopModel? _matchShop(List<CustomerShopModel> items, String? email) {
-    if (email == null) return null;
-    for (final shop in items) {
-      for (final contact in shop.contacts) {
-        if (contact.contactEmail?.toLowerCase() == email) return shop;
-      }
+  Future<int?> _resolveCustomerTypeId(
+    CustomerRepository customerRepo,
+    String role,
+    CustomerProfile linked,
+  ) async {
+    final session = await ref.read(authRepositoryProvider).prepareRestore();
+    final typeId = session.session?.linkedCustomer?.customerTypeId;
+    if (typeId != null) return typeId;
+
+    final types = await customerRepo.customerTypes();
+    final type = types.cast<CustomerTypeModel?>().firstWhere(
+          (t) => t?.typeName == role,
+          orElse: () => null,
+        );
+    return type?.id;
+  }
+
+  Future<CustomerProfile?> _resolveLinkedCustomer(
+    AuthState auth,
+    CustomerRepository customerRepo,
+    String role,
+  ) async {
+    final session = await ref.read(authRepositoryProvider).prepareRestore();
+    final linked = session.session?.linkedCustomer;
+    if (linked != null && linked.type == role) {
+      return _profileFromLinked(customerRepo, linked);
     }
+
+    try {
+      final userResponse = await ref.read(apiClientProvider).get('/user');
+      final linkedJson = userResponse['linked_customer'];
+      if (linkedJson is Map<String, dynamic>) {
+        final parsed = LinkedCustomerModel.fromJson(linkedJson);
+        if (parsed.type == role) {
+          return _profileFromLinked(customerRepo, parsed);
+        }
+      }
+    } catch (_) {}
+
     return null;
   }
 
-  CustomerVanModel? _matchVan(List<CustomerVanModel> items, String? email) {
-    if (items.length == 1) return items.first;
-    return null;
+  Future<CustomerProfile> _profileFromLinked(
+    CustomerRepository customerRepo,
+    LinkedCustomerModel linked,
+  ) async {
+    switch (linked.type) {
+      case 'customer_shop':
+        final shop = await customerRepo.getShop(linked.id);
+        return CustomerProfile(
+          role: linked.type,
+          customerTypeId: linked.customerTypeId ?? 0,
+          entityId: shop.id,
+          displayName: shop.name,
+          shop: shop,
+        );
+      case 'customer_van':
+        final van = await customerRepo.getVan(linked.id);
+        return CustomerProfile(
+          role: linked.type,
+          customerTypeId: linked.customerTypeId ?? 0,
+          entityId: van.id,
+          displayName: van.name,
+          mobile: van.mobile,
+        );
+      case 'customer_importer':
+        final importer = await customerRepo.getImporter(linked.id);
+        return CustomerProfile(
+          role: linked.type,
+          customerTypeId: linked.customerTypeId ?? 0,
+          entityId: importer.id,
+          displayName: importer.name,
+          mobile: importer.mobile,
+        );
+      default:
+        return CustomerProfile(
+          role: linked.type,
+          customerTypeId: linked.customerTypeId ?? 0,
+          entityId: linked.id,
+          displayName: linked.name,
+        );
+    }
   }
+}
 
-  CustomerImporterModel? _matchImporter(List<CustomerImporterModel> items, String? email) {
-    if (items.length == 1) return items.first;
-    return null;
+extension on CustomerProfile {
+  CustomerProfile copyWith({required int customerTypeId}) {
+    return CustomerProfile(
+      role: role,
+      customerTypeId: customerTypeId,
+      entityId: entityId,
+      displayName: displayName,
+      mobile: mobile,
+      email: email,
+      shop: shop,
+    );
   }
 }
 

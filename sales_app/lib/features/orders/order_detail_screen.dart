@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:l10n/l10n.dart';
 
-import '../../providers/auth_provider.dart';
 import '../../providers/repositories.dart';
 import '../../widgets/customer_diary_sheet.dart';
 import 'collect_payment_screen.dart';
@@ -52,6 +51,32 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         _error = e.toString();
         _loading = false;
       });
+    }
+  }
+
+  Future<void> _confirmOrder() async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.statusPending),
+        content: const Text('Confirm this order and deduct stock from your van?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Confirm order')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await ref.read(orderRepositoryProvider).confirmOrder(widget.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.statusConfirmed)));
+        await _load();
+      }
+    } catch (e) {
+      if (mounted) showAppErrorSnackBar(context, e);
     }
   }
 
@@ -187,7 +212,9 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     final order = _order!;
     final currency = NumberFormat.currency(symbol: 'SAR ');
     final pending = isPendingSyncOrder(order.id);
-    final canEdit = order.isEditable && !pending;
+    final awaitingApproval = order.isPending;
+    final canEdit = order.isEditable && !pending && !awaitingApproval;
+    final canCancel = order.isEditable && !pending;
     final due = order.amountDue > 0 ? order.amountDue : order.totalBill - order.amountPaid;
 
     return ListView(
@@ -208,6 +235,15 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             child: Chip(
               label: Text(l10n.salesPendingSync),
               backgroundColor: Colors.blue.shade100,
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
+        if (awaitingApproval)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Chip(
+              label: Text(l10n.statusPending),
+              backgroundColor: Colors.orange.shade100,
               visualDensity: VisualDensity.compact,
             ),
           ),
@@ -234,7 +270,8 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                 _row(l10n.commonPaid, currency.format(order.amountPaid)),
                 _row(l10n.commonDue, currency.format(due), bold: true),
                 if (order.grandDiscount > 0) _row(l10n.commonGrandDiscount, currency.format(order.grandDiscount)),
-                if (order.dueDate != null) _row(l10n.commonDueDate, order.dueDate!),
+                if (order.createdAt != null) _row('Created', formatAppDateTime(order.createdAt)),
+                if (order.dueDate != null) _row(l10n.commonDueDate, formatAppDateTime(order.dueDate)),
                 if (order.isOverdue) _row(l10n.commonOverdue, l10n.commonOverdueDays(order.daysOverdue)),
               ],
             ),
@@ -250,6 +287,14 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
               onPressed: () => _openDiary(order),
             ),
           ),
+        if (awaitingApproval) ...[
+          FilledButton.icon(
+            onPressed: _confirmOrder,
+            icon: const Icon(Icons.check_circle_outline),
+            label: const Text('Confirm order'),
+          ),
+          const SizedBox(height: 16),
+        ],
         if (pending && due > 0)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
@@ -286,7 +331,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                 [
                   if (p.isVoided) l10n.paymentVoidedLabel,
                   if (p.paymentMethod != null) localizedPaymentMethodLabel(context, p.paymentMethod!),
-                  if (p.paidAt != null) p.paidAt!,
+                  if (p.paidAt != null) formatAppDateTime(p.paidAt),
                 ].join(' ').trim(),
               ),
               trailing: Row(
@@ -308,7 +353,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
               ),
             ),
         ],
-        if (canEdit)
+        if (canCancel)
           OutlinedButton.icon(
             onPressed: _cancel,
             icon: const Icon(Icons.cancel_outlined),
@@ -319,7 +364,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           for (final mod in _mods)
             ListTile(
               title: Text(localizedStatusLabel(context, mod.action)),
-              subtitle: Text(mod.notes ?? mod.createdAt ?? ''),
+              subtitle: Text(mod.notes ?? formatAppDateTime(mod.createdAt)),
             ),
         ],
       ],

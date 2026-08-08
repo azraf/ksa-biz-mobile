@@ -1,3 +1,2 @@
 #include "Generated.xcconfig"
 #include? "../../../admin_app/ios/Flutter/Secrets.xcconfig"
-#include? "Secrets.xcconfig"

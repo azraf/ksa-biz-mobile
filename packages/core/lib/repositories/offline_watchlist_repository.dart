@@ -19,12 +19,13 @@ class OfflineWatchlistRepository {
   Future<List<WatchlistItemModel>> listLocalAndRemote({
     required int salesPersonId,
     String status = 'active',
+    String sort = 'created_at',
   }) async {
     final local = await _localItems(salesPersonId, status);
     if (!_isOnline()) return local;
 
     try {
-      final remote = await _remote.list(salesPersonId: salesPersonId, status: status);
+      final remote = await _remote.list(salesPersonId: salesPersonId, status: status, sort: sort);
       for (final item in remote.items) {
         await _db.cacheEntity(
           entityType: 'watchlist',

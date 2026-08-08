@@ -1480,6 +1480,30 @@ class AppLocalizationsBn extends AppLocalizations {
   String get commonSortNearest => 'নিকটতম';
 
   @override
+  String get commonSort => 'সাজান';
+
+  @override
+  String get commonSortByDate => 'তারিখ';
+
+  @override
+  String get commonSortByArea => 'এলাকা';
+
+  @override
+  String get commonSortBySalesPerson => 'বিক্রয়কর্মী';
+
+  @override
+  String get commonCreateCustomer => 'গ্রাহক তৈরি';
+
+  @override
+  String get commonAddWatchlistPlace => 'স্থান যোগ';
+
+  @override
+  String get salesCustomerCreateGoOnline => 'গ্রাহক তৈরি করতে অনলাইনে যান';
+
+  @override
+  String get adminShopQuickAdd => 'দ্রুত দোকান যোগ';
+
+  @override
   String get salesPickerInactive60d => '৬০+ দিন নিষ্ক্রিয়';
 
   @override

@@ -25,6 +25,28 @@ For local Laravel during debug:
 | iOS simulator | `http://127.0.0.1:8000/api/v1` |
 | Physical device | `http://<your-pc-lan-ip>:8000/api/v1` |
 
+## API keys (Google Maps and other secrets)
+
+All v1 apps read API keys from **one place**:
+
+| Platform | File |
+|----------|------|
+| Android + Flutter `--dart-define` | `admin_app/android/secrets.properties` |
+| iOS native (Maps SDK) | `admin_app/ios/Flutter/Secrets.xcconfig` (auto-synced from `secrets.properties`) |
+
+Setup:
+
+```bash
+cp admin_app/android/secrets.properties.example admin_app/android/secrets.properties
+# Edit GOOGLE_MAPS_API_KEY (and any other KEY=value entries)
+```
+
+`./run_dev.sh` and `./run_release.sh` load every `KEY=value` from that file as `--dart-define=KEY=value`. Android Gradle uses the same file via `config/android/admin_secrets.gradle.kts`. iOS builds include `admin_app/ios/Flutter/Secrets.xcconfig` from every app’s `Debug.xcconfig` / `Release.xcconfig`.
+
+Do **not** copy secrets into `sales_app`, `monitor_app`, or `order_app` — those folders only reference `admin_app`.
+
+Override at build time with env vars `KSA_<KEY>` (e.g. `KSA_GOOGLE_MAPS_API_KEY`).
+
 ## Device permissions (both apps)
 
 Declared in Android `main/AndroidManifest.xml` and iOS `Info.plist`:

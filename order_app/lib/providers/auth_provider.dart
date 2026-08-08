@@ -26,7 +26,7 @@ class AuthNotifier extends Notifier<AuthState> {
       isAuthenticated: true,
       biometricEnabled: _authRepository.isBiometricEnabled,
       biometricAvailable: state.biometricAvailable,
-      storedUserEmail: session.user.email,
+      storedUserEmail: session.user.loginIdentifier,
       tokenExpiresAt: session.tokenExpiresAt ?? _authRepository.storedTokenExpiresAt,
       user: session.user,
       roles: session.roles,
@@ -45,12 +45,35 @@ class AuthNotifier extends Notifier<AuthState> {
     }());
   }
 
+  String? _customerRole(List<String> roles) {
+    for (final role in customerRoles) {
+      if (roles.contains(role)) return role;
+    }
+    return null;
+  }
+
+  bool _hasValidCustomerAccess(AuthSession session) {
+    if (!isCustomerRole(session.roles)) return false;
+    final role = _customerRole(session.roles);
+    final linked = session.linkedCustomer;
+    if (role == null || linked == null) return false;
+    return linked.type == role;
+  }
+
   Future<void> _restore() async {
     try {
       state = await _biometricSupport.buildInitialRestoreState(
         stateFromSession: _stateFromSession,
       );
-      if (state.isAuthenticated) _runBackgroundAuthTasks();
+      if (state.isAuthenticated) {
+        final session = (await _authRepository.prepareRestore()).session;
+        if (session == null || !_hasValidCustomerAccess(session)) {
+          await _authRepository.clearSession();
+          state = const AuthState(isLoading: false);
+          return;
+        }
+        _runBackgroundAuthTasks();
+      }
     } catch (_) {
       await _authRepository.clearSession();
       state = const AuthState(isLoading: false);
@@ -68,7 +91,16 @@ class AuthNotifier extends Notifier<AuthState> {
         email: email,
         password: password,
         apiBaseUrl: apiBaseUrl,
+        client: 'order_app',
       );
+      if (!_hasValidCustomerAccess(session)) {
+        await _authRepository.clearSession();
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Your account is not linked to a customer profile. Please contact support.',
+        );
+        return;
+      }
       state = _stateFromSession(session).copyWith(
         biometricAvailable: await ref.read(biometricAuthServiceProvider).canCheckBiometrics(),
       );

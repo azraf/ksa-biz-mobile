@@ -1,16 +1,17 @@
 import 'dart:async';
 
-import 'package:core/core.dart';
+import 'package:core/core.dart' hide showQuickCreateCustomerSheet;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:l10n/l10n.dart';
 import 'package:maps_ui/maps_ui.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../providers/connectivity_provider.dart';
 import '../../providers/repositories.dart';
+import '../../widgets/quick_create_customer.dart';
 import 'customer_diary_section.dart';
 
 class CustomerDetailRouteArgs {
@@ -31,39 +32,47 @@ class CustomersHubScreen extends ConsumerWidget {
       return ErrorView(message: l10n.salesSelectSalespersonFirst);
     }
 
-    return DefaultTabController(
-      length: 3,
-      child: Column(
-        children: [
-          Material(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: Text(l10n.salesCustomersAssignedOnly, style: Theme.of(context).textTheme.bodySmall),
-                ),
-                TabBar(
-                  tabs: [
-                    Tab(text: l10n.salesCustomersShops),
-                    Tab(text: l10n.salesCustomersVans),
-                    Tab(text: l10n.salesCustomersImporters),
-                  ],
-                ),
-              ],
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.salesCustomersTitle),
+      ),
+      body: DefaultTabController(
+        length: 3,
+        child: Column(
+          children: [
+            Material(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Text(
+                      l10n.salesCustomersAssignedOnly,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                  TabBar(
+                    tabs: [
+                      Tab(text: l10n.salesCustomersShops),
+                      Tab(text: l10n.salesCustomersVans),
+                      Tab(text: l10n.salesCustomersImporters),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          Expanded(
-            child: TabBarView(
-              children: [
-                _CustomerTypeList(customerType: 'customer_shop', salesPersonId: spId),
-                _CustomerTypeList(customerType: 'customer_van', salesPersonId: spId),
-                _CustomerTypeList(customerType: 'customer_importer', salesPersonId: spId),
-              ],
+            Expanded(
+              child: TabBarView(
+                children: [
+                  _CustomerTypeList(customerType: 'customer_shop', salesPersonId: spId),
+                  _CustomerTypeList(customerType: 'customer_van', salesPersonId: spId),
+                  _CustomerTypeList(customerType: 'customer_importer', salesPersonId: spId),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -95,10 +104,18 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
   bool _loadingMore = false;
   double? _lat;
   double? _lng;
+  late ListSortMode _sortMode;
+
+  String _listKey() => 'sales_${widget.customerType}';
 
   @override
   void initState() {
     super.initState();
+    final prefs = ListSortPreference(ref.read(sharedPreferencesProvider));
+    _sortMode = prefs.read(
+      _listKey(),
+      defaultMode: prefs.defaultForList(_listKey()),
+    );
     _searchController.addListener(_onSearchChanged);
     _load();
   }
@@ -136,18 +153,23 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
 
     final search = _searchController.text.trim();
     final repo = ref.read(offlineCustomerRepositoryProvider);
+    final sortParam = _apiSortParam();
 
     try {
       PaginatedResponse<dynamic> result;
       if (widget.customerType == 'customer_shop') {
         if (_lat == null && _lng == null) await _captureLocation();
+        final prefs = ListSortPreference(ref.read(sharedPreferencesProvider));
+        if (_lat != null && _lng != null && !prefs.hasSaved(_listKey())) {
+          _sortMode = ListSortMode.distance;
+        }
         result = await repo.shops(
           search: search.isEmpty ? null : search,
           salesPersonId: widget.salesPersonId,
           scoped: true,
-          sort: _lat != null ? 'distance' : 'name',
-          lat: _lat,
-          lng: _lng,
+          sort: sortParam,
+          lat: _sortMode == ListSortMode.distance ? _lat : null,
+          lng: _sortMode == ListSortMode.distance ? _lng : null,
           page: _page,
           perPage: _perPage,
         );
@@ -156,6 +178,7 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
           search: search.isEmpty ? null : search,
           salesPersonId: widget.salesPersonId,
           scoped: true,
+          sort: sortParam,
           page: _page,
           perPage: _perPage,
         );
@@ -164,17 +187,21 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
           search: search.isEmpty ? null : search,
           salesPersonId: widget.salesPersonId,
           scoped: true,
+          sort: sortParam,
           page: _page,
           perPage: _perPage,
         );
       }
 
+      var items = result.items;
+      items = _clientSort(items);
+
       if (!mounted) return;
       setState(() {
         if (append) {
-          _items = [..._items, ...result.items];
+          _items = [..._items, ...items];
         } else {
-          _items = result.items;
+          _items = items;
         }
         _lastPage = result.lastPage;
         _loading = false;
@@ -188,6 +215,69 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
         _loadingMore = false;
       });
     }
+  }
+
+  String _apiSortParam() {
+    if (widget.customerType == 'customer_shop' &&
+        _sortMode == ListSortMode.distance &&
+        _lat != null &&
+        _lng != null) {
+      return 'distance';
+    }
+    return _sortMode.apiSortParam();
+  }
+
+  List<dynamic> _clientSort(List<dynamic> items) {
+    return sortByListMode(
+      items,
+      _sortMode,
+      dateIso: customerActivityDateIso,
+      name: _itemName,
+      area: (item) {
+        if (item is CustomerShopModel) return item.areaName;
+        if (item is CustomerVanModel) return item.areaName;
+        if (item is CustomerImporterModel) return item.areaName;
+        return null;
+      },
+      distanceKm: (item) => item is CustomerShopModel ? item.distanceKm?.toDouble() : null,
+    );
+  }
+
+  List<ListSortMode> _sortModes() {
+    if (widget.customerType == 'customer_shop') {
+      return [
+        ListSortMode.distance,
+        ListSortMode.date,
+        ListSortMode.name,
+        ListSortMode.area,
+      ];
+    }
+    return [ListSortMode.date, ListSortMode.name, ListSortMode.area];
+  }
+
+  Future<void> _onSortChanged(ListSortMode mode) async {
+    _sortMode = mode;
+    await ListSortPreference(ref.read(sharedPreferencesProvider)).write(_listKey(), mode);
+    await _load(page: 1);
+  }
+
+  Future<void> _openQuickCreate() async {
+    final created = await showQuickCreateCustomerSheet(
+      context: context,
+      ref: ref,
+      customerType: widget.customerType,
+      salesPersonId: widget.salesPersonId,
+    );
+    if (created == null || !mounted) return;
+    await _load(page: 1);
+    if (!mounted) return;
+    context.push(
+      _detailPath(created),
+      extra: CustomerDetailRouteArgs(
+        customerType: widget.customerType,
+        customer: created,
+      ),
+    );
   }
 
   Future<void> _loadMore() async {
@@ -278,6 +368,16 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
                   tooltip: l10n.salesCustomersNearby,
                   onPressed: _openMap,
                 ),
+              ListSortButton(
+                modes: _sortModes(),
+                selected: _sortMode,
+                onSelected: _onSortChanged,
+              ),
+              IconButton(
+                icon: const Icon(Icons.person_add_outlined),
+                tooltip: l10n.commonCreateCustomer,
+                onPressed: _openQuickCreate,
+              ),
             ],
           ),
         ),
@@ -287,7 +387,11 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
               : _error != null
                   ? ErrorView(message: _error!, onRetry: () => _load(page: 1))
                   : _items.isEmpty
-                      ? EmptyView(message: l10n.salesCustomersEmpty)
+                      ? EmptyView(
+                          message: l10n.salesCustomersEmpty,
+                          actionLabel: l10n.commonCreateCustomer,
+                          onAction: _openQuickCreate,
+                        )
                       : RefreshIndicator(
                           onRefresh: () => _load(page: 1),
                           child: ListView.builder(
@@ -302,30 +406,12 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
                                 );
                               }
                               final item = _items[index];
-                              final metrics = _metrics(item);
-                              return ListTile(
-                                leading: Icon(
-                                  switch (widget.customerType) {
-                                    'customer_shop' => Icons.store,
-                                    'customer_van' => Icons.local_shipping,
-                                    _ => Icons.import_export,
-                                  },
-                                ),
-                                title: Text(_itemName(item)),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (_subtitle(item) != null) Text(_subtitle(item)!),
-                                    if (metrics != null) CustomerMetricsBadges(metrics: metrics, compact: true),
-                                  ],
-                                ),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    ContactActionButtons(phoneNumber: _phone(item), compact: true),
-                                    const Icon(Icons.chevron_right),
-                                  ],
-                                ),
+                              return _CustomerListTile(
+                                customerType: widget.customerType,
+                                name: _itemName(item),
+                                subtitle: customerListSubtitle(item),
+                                metrics: _metrics(item),
+                                phoneNumber: _phone(item),
                                 onTap: () => context.push(
                                   _detailPath(item),
                                   extra: CustomerDetailRouteArgs(
@@ -341,32 +427,76 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
       ],
     );
   }
+}
 
-  String? _subtitle(dynamic item) {
-    if (item is CustomerShopModel) {
-      final parts = <String>[];
-      if (item.areaName != null) parts.add(item.areaName!);
-      if (item.distanceKm != null) parts.add('${item.distanceKm} km');
-      if (item.lastOrderAt != null) parts.add(_formatLastOrder(item.lastOrderAt!));
-      return parts.isEmpty ? null : parts.join(' · ');
-    }
-    if (item is CustomerVanModel || item is CustomerImporterModel) {
-      final area = item is CustomerVanModel ? item.areaName : (item as CustomerImporterModel).areaName;
-      final mobile = item is CustomerVanModel ? item.mobile : (item as CustomerImporterModel).mobile;
-      final parts = [mobile, area, if (item.lastOrderAt != null) _formatLastOrder(item.lastOrderAt!)];
-      return parts.whereType<String>().where((s) => s.isNotEmpty).join(' · ');
-    }
-    return null;
-  }
+/// Custom row avoids ListTile.subtitle Column/Wrap layout crashes (blank rows in release).
+class _CustomerListTile extends StatelessWidget {
+  const _CustomerListTile({
+    required this.customerType,
+    required this.name,
+    required this.subtitle,
+    required this.metrics,
+    required this.phoneNumber,
+    required this.onTap,
+  });
 
-  String _formatLastOrder(String iso) {
-    final date = DateTime.tryParse(iso);
-    if (date == null) return iso;
-    return DateFormat('d MMM y').format(date.toLocal());
+  final String customerType;
+  final String name;
+  final String subtitle;
+  final CustomerMetricsFields? metrics;
+  final String? phoneNumber;
+  final VoidCallback onTap;
+
+  IconData get _leadingIcon => switch (customerType) {
+        'customer_shop' => Icons.store,
+        'customer_van' => Icons.local_shipping,
+        _ => Icons.import_export,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(_leadingIcon),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(name, style: theme.textTheme.titleMedium),
+                  if (subtitle.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                  if (metrics != null) ...[
+                    const SizedBox(height: 4),
+                    CustomerMetricsBadges(metrics: metrics!, compact: true),
+                  ],
+                ],
+              ),
+            ),
+            ContactActionButtons(phoneNumber: phoneNumber, compact: true),
+            const Icon(Icons.chevron_right),
+          ],
+        ),
+      ),
+    );
   }
 }
 
-class CustomerDetailScreen extends ConsumerWidget {
+class CustomerDetailScreen extends ConsumerStatefulWidget {
   const CustomerDetailScreen({
     super.key,
     required this.customerType,
@@ -379,52 +509,103 @@ class CustomerDetailScreen extends ConsumerWidget {
   final dynamic initialCustomer;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CustomerDetailScreen> createState() => _CustomerDetailScreenState();
+}
+
+class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
+  late dynamic _customer;
+
+  @override
+  void initState() {
+    super.initState();
+    _customer = widget.initialCustomer;
+  }
+
+  Future<void> _reloadCustomer() async {
+    final repo = ref.read(customerRepositoryProvider);
+    setState(() {
+      _customer = switch (widget.customerType) {
+        'customer_van' => null,
+        'customer_importer' => null,
+        _ => null,
+      };
+    });
+    final updated = switch (widget.customerType) {
+      'customer_van' => await repo.getVan(widget.customerId),
+      'customer_importer' => await repo.getImporter(widget.customerId),
+      _ => await repo.getShop(widget.customerId),
+    };
+    if (mounted) setState(() => _customer = updated);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final customer = initialCustomer;
+    final customer = _customer;
     final name = _name(customer);
     final phone = _phone(customer);
     final area = _area(customer);
     final gps = customer is CustomerShopModel ? customer.gps : null;
     final metrics = _metrics(customer);
     final lastOrder = _lastOrder(customer);
+    final createdAt = _createdAt(customer);
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Text(name, style: Theme.of(context).textTheme.headlineSmall),
-        if (area != null) ...[
-          const SizedBox(height: 4),
-          Text(area, style: Theme.of(context).textTheme.bodyMedium),
-        ],
-        if (phone != null && phone.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          ContactActionButtons(phoneNumber: phone),
-        ],
-        if (metrics != null) ...[
-          const SizedBox(height: 12),
-          CustomerMetricsBadges(metrics: metrics),
-        ],
-        if (lastOrder != null) ...[
-          const SizedBox(height: 12),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.history),
-            title: Text(l10n.salesCustomerActivity),
-            subtitle: Text(lastOrder),
+    return Scaffold(
+      appBar: AppBar(title: Text(name)),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Text(name, style: Theme.of(context).textTheme.headlineSmall),
+          if (area != null) ...[
+            const SizedBox(height: 4),
+            Text(area, style: Theme.of(context).textTheme.bodyMedium),
+          ],
+          if (phone != null && phone.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            ContactActionButtons(phoneNumber: phone),
+          ],
+          if (metrics != null) ...[
+            const SizedBox(height: 12),
+            CustomerMetricsBadges(metrics: metrics),
+          ],
+          if (createdAt != null) ...[
+            const SizedBox(height: 12),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.event),
+              title: const Text('Created'),
+              subtitle: Text(createdAt),
+            ),
+          ],
+          if (lastOrder != null) ...[
+            const SizedBox(height: 12),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.history),
+              title: Text(l10n.salesCustomerActivity),
+              subtitle: Text(lastOrder),
+            ),
+          ],
+          if (gps != null && gps.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            GpsLocationRow(gps: gps),
+            const SizedBox(height: 8),
+            OpenInMapsButton(gps: gps),
+          ],
+          const SizedBox(height: 16),
+          CustomerLoginAccountSection(
+            customerType: widget.customerType,
+            customerId: widget.customerId,
+            customer: customer,
+            customerRepository: ref.read(customerRepositoryProvider),
+            onUpdated: _reloadCustomer,
           ),
-        ],
-        if (gps != null && gps.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Text(l10n.salesCustomerDiary, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
-          GpsLocationRow(gps: gps),
-          const SizedBox(height: 8),
-          OpenInMapsButton(gps: gps),
+          CustomerDiarySection(customerType: widget.customerType, customerId: widget.customerId),
         ],
-        const SizedBox(height: 16),
-        Text(l10n.salesCustomerDiary, style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        CustomerDiarySection(customerType: customerType, customerId: customerId),
-      ],
+      ),
     );
   }
 
@@ -432,7 +613,7 @@ class CustomerDetailScreen extends ConsumerWidget {
     if (customer is CustomerShopModel) return customer.name;
     if (customer is CustomerVanModel) return customer.name;
     if (customer is CustomerImporterModel) return customer.name;
-    return '#$customerId';
+    return '#${widget.customerId}';
   }
 
   String? _phone(dynamic customer) {
@@ -462,8 +643,15 @@ class CustomerDetailScreen extends ConsumerWidget {
     if (customer is CustomerVanModel) raw = customer.lastOrderAt;
     if (customer is CustomerImporterModel) raw = customer.lastOrderAt;
     if (raw == null) return null;
-    final date = DateTime.tryParse(raw);
-    if (date == null) return raw;
-    return DateFormat('d MMM y, HH:mm').format(date.toLocal());
+    return formatAppDateTime(raw);
+  }
+
+  String? _createdAt(dynamic customer) {
+    String? raw;
+    if (customer is CustomerShopModel) raw = customer.createdAt;
+    if (customer is CustomerVanModel) raw = customer.createdAt;
+    if (customer is CustomerImporterModel) raw = customer.createdAt;
+    if (raw == null) return null;
+    return formatAppDateTime(raw);
   }
 }

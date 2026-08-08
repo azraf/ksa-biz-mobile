@@ -50,6 +50,7 @@ class _OrderHomeScreenState extends ConsumerState<OrderHomeScreen> {
       double month = 0;
       double due = 0;
       for (final o in orders) {
+        if (o.isPending) continue;
         final created = DateTime.tryParse(o.createdAt ?? '');
         if (created != null && created.year == now.year && created.month == now.month) {
           month += o.totalBill;

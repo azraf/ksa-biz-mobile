@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:core/core.dart';
+import 'package:core/core.dart' hide showQuickCreateCustomerSheet;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
@@ -424,41 +424,53 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
                           separatorBuilder: (_, __) => const Divider(height: 1),
                           itemBuilder: (_, i) {
                             final item = _items[i];
-                            return ListTile(
-                              title: Text(_itemName(item)),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildSubtitle(item),
-                                  if (_metrics(item) != null) ...[
-                                    const SizedBox(height: 4),
-                                    CustomerMetricsBadges(metrics: _metrics(item)!, compact: true),
-                                  ],
-                                ],
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (_diaryTarget(item) case final target?)
-                                    IconButton(
-                                      icon: const Icon(Icons.notes_outlined),
-                                      tooltip: l10n.commonDiary,
-                                      onPressed: () => showCustomerDiarySheet(
-                                        context: context,
-                                        ref: ref,
-                                        customerType: target.type,
-                                        customerId: target.id,
-                                        customerName: target.name,
+                            final metrics = _metrics(item);
+                            final diaryTarget = _diaryTarget(item);
+                            return InkWell(
+                              onTap: () => _selectItem(item),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(_itemName(item), style: Theme.of(context).textTheme.titleMedium),
+                                          const SizedBox(height: 2),
+                                          _buildSubtitle(item),
+                                          if (metrics != null) ...[
+                                            const SizedBox(height: 4),
+                                            CustomerMetricsBadges(metrics: metrics, compact: true),
+                                          ],
+                                        ],
                                       ),
                                     ),
-                                  if (_isInactive(item))
-                                    Chip(
-                                      label: Text(l10n.salesPickerInactive60d, style: const TextStyle(fontSize: 10)),
-                                      visualDensity: VisualDensity.compact,
-                                    ),
-                                ],
+                                    if (diaryTarget != null)
+                                      IconButton(
+                                        icon: const Icon(Icons.notes_outlined),
+                                        tooltip: l10n.commonDiary,
+                                        onPressed: () => showCustomerDiarySheet(
+                                          context: context,
+                                          ref: ref,
+                                          customerType: diaryTarget.type,
+                                          customerId: diaryTarget.id,
+                                          customerName: diaryTarget.name,
+                                        ),
+                                      ),
+                                    if (_isInactive(item))
+                                      Chip(
+                                        label: Text(
+                                          l10n.salesPickerInactive60d,
+                                          style: const TextStyle(fontSize: 10),
+                                        ),
+                                        visualDensity: VisualDensity.compact,
+                                      ),
+                                  ],
+                                ),
                               ),
-                              onTap: () => _selectItem(item),
                             );
                           },
                         ),
