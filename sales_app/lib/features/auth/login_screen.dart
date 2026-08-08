@@ -88,10 +88,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(l10n.salesAppName, style: Theme.of(context).textTheme.headlineMedium),
-                  const SizedBox(height: 8),
-                  Text(l10n.salesSignInSubtitle),
-                  const SizedBox(height: 24),
+                  LoginHero(
+                    icon: Icons.storefront_outlined,
+                    title: l10n.salesAppName,
+                    subtitle: l10n.salesSignInSubtitle,
+                  ),
                   if (showBiometricOnly)
                     BiometricLoginSection(
                       email: auth.storedUserEmail!,
@@ -119,7 +120,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ],
                   if (auth.error != null) ...[
                     const SizedBox(height: 12),
-                    Text(auth.error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                    NoticeCard(
+                      kind: NoticeKind.danger,
+                      icon: Icons.error_outline,
+                      title: auth.error!,
+                      margin: EdgeInsets.zero,
+                    ),
                   ],
                   if (!showBiometricOnly) ...[
                     const SizedBox(height: 24),

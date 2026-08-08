@@ -191,13 +191,13 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          TextField(controller: _name, decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder())),
+          TextField(controller: _name, decoration: const InputDecoration(labelText: 'Name')),
           const SizedBox(height: 12),
-          TextField(controller: _price, decoration: const InputDecoration(labelText: 'Price', border: OutlineInputBorder()), keyboardType: TextInputType.number),
+          TextField(controller: _price, decoration: const InputDecoration(labelText: 'Price'), keyboardType: TextInputType.number),
           const SizedBox(height: 12),
-          TextField(controller: _cost, decoration: const InputDecoration(labelText: 'Cost', border: OutlineInputBorder()), keyboardType: TextInputType.number),
+          TextField(controller: _cost, decoration: const InputDecoration(labelText: 'Cost'), keyboardType: TextInputType.number),
           const SizedBox(height: 12),
-          TextField(controller: _description, decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()), maxLines: 3),
+          TextField(controller: _description, decoration: const InputDecoration(labelText: 'Description'), maxLines: 3),
           const SizedBox(height: 24),
           FilledButton(
             onPressed: () async {

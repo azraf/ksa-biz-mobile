@@ -38,7 +38,7 @@ class WarehouseStockScreen extends ConsumerWidget {
               final low = (s.product?.alertQuantity ?? 0) > 0 && s.balance <= (s.product?.alertQuantity ?? 0);
               return ListTile(
                 title: Text(s.product?.name ?? 'Product #${s.productId}'),
-                subtitle: low ? const Text('Low stock', style: TextStyle(color: Colors.orange)) : null,
+                subtitle: low ? Text('Low stock', style: TextStyle(color: AppColors.warning(context))) : null,
                 trailing: Text(s.displayBalance),
               );
             },
@@ -85,7 +85,7 @@ class _VanStockScreenState extends ConsumerState<VanStockScreen> {
               padding: const EdgeInsets.all(16),
               child: DropdownButtonFormField<int>(
                 value: _selectedId,
-                decoration: const InputDecoration(labelText: 'Sales Person', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Sales Person'),
                 items: _persons.map((p) => DropdownMenuItem(value: p.id, child: Text(p.name))).toList(),
                 onChanged: (v) => setState(() => _selectedId = v),
               ),
@@ -272,7 +272,7 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
             padding: const EdgeInsets.all(16),
             child: DropdownButtonFormField<int>(
               value: _selectedPersonId,
-              decoration: const InputDecoration(labelText: 'Sales Person', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: 'Sales Person'),
               items: _persons.map((p) => DropdownMenuItem(value: p.id, child: Text(p.name))).toList(),
               onChanged: (v) async {
                 setState(() => _selectedPersonId = v);
@@ -355,13 +355,13 @@ class _StockAdjustmentScreenState extends ConsumerState<StockAdjustmentScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            TextField(controller: _productId, decoration: const InputDecoration(labelText: 'Product ID', border: OutlineInputBorder()), keyboardType: TextInputType.number),
+            TextField(controller: _productId, decoration: const InputDecoration(labelText: 'Product ID'), keyboardType: TextInputType.number),
             const SizedBox(height: 12),
-            TextField(controller: _quantity, decoration: const InputDecoration(labelText: 'Quantity', border: OutlineInputBorder()), keyboardType: TextInputType.number),
+            TextField(controller: _quantity, decoration: const InputDecoration(labelText: 'Quantity'), keyboardType: TextInputType.number),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               value: _direction,
-              decoration: const InputDecoration(labelText: 'Direction', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: 'Direction'),
               items: const [
                 DropdownMenuItem(value: 'in', child: Text('Stock In')),
                 DropdownMenuItem(value: 'out', child: Text('Stock Out')),
@@ -369,7 +369,7 @@ class _StockAdjustmentScreenState extends ConsumerState<StockAdjustmentScreen> {
               onChanged: (v) => setState(() => _direction = v ?? 'out'),
             ),
             const SizedBox(height: 12),
-            TextField(controller: _reason, decoration: const InputDecoration(labelText: 'Reason', border: OutlineInputBorder()), maxLines: 2),
+            TextField(controller: _reason, decoration: const InputDecoration(labelText: 'Reason'), maxLines: 2),
             const SizedBox(height: 24),
             FilledButton(
               onPressed: () async {
@@ -413,11 +413,11 @@ class _DamageWriteoffScreenState extends ConsumerState<DamageWriteoffScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            TextField(controller: _productId, decoration: const InputDecoration(labelText: 'Product ID', border: OutlineInputBorder()), keyboardType: TextInputType.number),
+            TextField(controller: _productId, decoration: const InputDecoration(labelText: 'Product ID'), keyboardType: TextInputType.number),
             const SizedBox(height: 12),
-            TextField(controller: _quantity, decoration: const InputDecoration(labelText: 'Quantity', border: OutlineInputBorder()), keyboardType: TextInputType.number),
+            TextField(controller: _quantity, decoration: const InputDecoration(labelText: 'Quantity'), keyboardType: TextInputType.number),
             const SizedBox(height: 12),
-            TextField(controller: _reason, decoration: const InputDecoration(labelText: 'Reason', border: OutlineInputBorder()), maxLines: 2),
+            TextField(controller: _reason, decoration: const InputDecoration(labelText: 'Reason'), maxLines: 2),
             const SizedBox(height: 24),
             FilledButton(
               onPressed: () async {

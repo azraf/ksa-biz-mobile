@@ -52,7 +52,12 @@ class MoreHubScreen extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.only(top: 16, bottom: 4),
-          child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.labelLarge!.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
         ),
         ...children,
       ],

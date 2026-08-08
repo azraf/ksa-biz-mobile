@@ -197,7 +197,7 @@ class _MapUnavailableFallback extends StatelessWidget {
               return ListTile(
                 leading: Icon(
                   pin.type == MapPinType.shop ? Icons.store : Icons.place,
-                  color: pin.type == MapPinType.shop ? Colors.blue : Colors.orange,
+                  color: pin.type == MapPinType.shop ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.tertiary,
                 ),
                 title: Text(pin.title),
                 subtitle: Text(pin.subtitle ?? gps),

@@ -29,8 +29,8 @@ class SalesApp extends ConsumerWidget {
       },
       child: MaterialApp.router(
         title: 'ARM Sales(M)',
-        theme: AppTheme.light(),
-        darkTheme: AppTheme.dark(),
+        theme: AppTheme.light(AppBrand.sales),
+        darkTheme: AppTheme.dark(AppBrand.sales),
         themeMode: themeMode,
         locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,

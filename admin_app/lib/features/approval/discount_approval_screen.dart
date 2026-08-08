@@ -66,8 +66,8 @@ class _DiscountApprovalScreenState extends ConsumerState<DiscountApprovalScreen>
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        IconButton(icon: const Icon(Icons.check, color: Colors.green), onPressed: () => _approve(r.id)),
-                        IconButton(icon: const Icon(Icons.close, color: Colors.red), onPressed: () => _reject(r.id)),
+                        IconButton(icon: Icon(Icons.check, color: AppColors.success(context)), onPressed: () => _approve(r.id)),
+                        IconButton(icon: Icon(Icons.close, color: AppColors.danger(context)), onPressed: () => _reject(r.id)),
                       ],
                     ),
                   ),

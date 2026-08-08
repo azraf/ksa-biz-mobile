@@ -1,22 +1,34 @@
 import 'package:flutter/material.dart';
 
+/// Semantic status tokens, brightness-aware. Foreground colors hold >=4.5:1
+/// on their matching container in both modes.
 class AppColors {
-  static const seed = Color(0xFF0D6E4F);
+  static const seed = Color(0xFF4053B4);
 
-  static Color success(BuildContext context) => const Color(0xFF1B7F4E);
-  static Color successContainer(BuildContext context) => const Color(0xFFD8F3E3);
+  static bool _dark(BuildContext c) => Theme.of(c).brightness == Brightness.dark;
 
-  static Color warning(BuildContext context) => const Color(0xFFB86E00);
-  static Color warningContainer(BuildContext context) => const Color(0xFFFFE8C2);
+  static Color success(BuildContext c) =>
+      _dark(c) ? const Color(0xFF7DDA9C) : const Color(0xFF166534);
+  static Color successContainer(BuildContext c) =>
+      _dark(c) ? const Color(0xFF14432A) : const Color(0xFFDCFCE7);
 
-  static Color pending(BuildContext context) => const Color(0xFF1565C0);
-  static Color pendingContainer(BuildContext context) => const Color(0xFFD6E8FF);
+  static Color warning(BuildContext c) =>
+      _dark(c) ? const Color(0xFFFFC46B) : const Color(0xFF92400E);
+  static Color warningContainer(BuildContext c) =>
+      _dark(c) ? const Color(0xFF4A3007) : const Color(0xFFFEF3C7);
 
-  static Color danger(BuildContext context) => const Color(0xFFC62828);
-  static Color dangerContainer(BuildContext context) => const Color(0xFFFAD4D4);
+  static Color pending(BuildContext c) =>
+      _dark(c) ? const Color(0xFF8FC3FF) : const Color(0xFF1D4ED8);
+  static Color pendingContainer(BuildContext c) =>
+      _dark(c) ? const Color(0xFF1B3358) : const Color(0xFFDBEAFE);
 
-  static Color offline(BuildContext context) => Theme.of(context).colorScheme.error;
-  static Color offlineContainer(BuildContext context) => Theme.of(context).colorScheme.errorContainer;
+  static Color danger(BuildContext c) =>
+      _dark(c) ? const Color(0xFFFFA8A0) : const Color(0xFFB91C1C);
+  static Color dangerContainer(BuildContext c) =>
+      _dark(c) ? const Color(0xFF4F1512) : const Color(0xFFFEE2E2);
+
+  static Color offline(BuildContext c) => Theme.of(c).colorScheme.error;
+  static Color offlineContainer(BuildContext c) => Theme.of(c).colorScheme.errorContainer;
 }
 
 class AppSpacing {
@@ -25,4 +37,18 @@ class AppSpacing {
   static const md = 12.0;
   static const lg = 16.0;
   static const xl = 24.0;
+  static const xxl = 32.0;
+}
+
+class AppRadii {
+  static const sm = 10.0;
+  static const md = 12.0;
+  static const lg = 16.0;
+  static const xl = 24.0;
+}
+
+class AppDurations {
+  static const fast = Duration(milliseconds: 150);
+  static const medium = Duration(milliseconds: 250);
+  static const slow = Duration(milliseconds: 350);
 }

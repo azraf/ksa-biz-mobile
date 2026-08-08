@@ -88,10 +88,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('ARM admin(M)', style: Theme.of(context).textTheme.headlineMedium),
-                  const SizedBox(height: 8),
-                  const Text('Admin-only access. Offline mode supported for orders & expenses.'),
-                  const SizedBox(height: 24),
+                  const LoginHero(
+                    icon: Icons.admin_panel_settings_outlined,
+                    title: 'ARM admin(M)',
+                    subtitle: 'Admin-only access. Offline mode supported for orders & expenses.',
+                  ),
                   if (showBiometricOnly)
                     BiometricLoginSection(
                       email: auth.storedUserEmail!,
@@ -103,23 +104,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     if (AppConfig.showApiBaseUrlField) ...[
                       TextField(
                         controller: _apiUrlController,
-                        decoration: const InputDecoration(labelText: 'API base URL', border: OutlineInputBorder()),
+                        decoration: const InputDecoration(labelText: 'API base URL'),
                       ),
                       const SizedBox(height: 12),
                     ],
                     TextField(
                       controller: _emailController,
-                      decoration: const InputDecoration(labelText: 'Email or phone', border: OutlineInputBorder()),
+                      decoration: const InputDecoration(labelText: 'Email or phone'),
                     ),
                     const SizedBox(height: 12),
                     PasswordTextField(
                       controller: _passwordController,
-                      decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder()),
+                      decoration: const InputDecoration(labelText: 'Password'),
                     ),
                   ],
                   if (auth.error != null) ...[
                     const SizedBox(height: 12),
-                    Text(auth.error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                    NoticeCard(
+                      kind: NoticeKind.danger,
+                      icon: Icons.error_outline,
+                      title: auth.error!,
+                      margin: EdgeInsets.zero,
+                    ),
                   ],
                   if (!showBiometricOnly) ...[
                     const SizedBox(height: 24),

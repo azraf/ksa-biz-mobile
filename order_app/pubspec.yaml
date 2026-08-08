@@ -1,7 +1,7 @@
 name: order_app
 description: KSA Biz customer mobile app (shop, van, importer).
 publish_to: 'none'
-version: 1.0.0+2
+version: 3.0.0+4
 
 environment:
   sdk: ^3.11.3

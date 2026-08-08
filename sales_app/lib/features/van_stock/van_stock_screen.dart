@@ -177,7 +177,7 @@ class _VanStockScreenState extends ConsumerState<VanStockScreen> {
                                 return ListTile(
                                   title: Text(item.product?.name ?? l10n.commonProductFallback(item.productId)),
                                   subtitle: low
-                                      ? Text(l10n.salesVanLowStock, style: const TextStyle(color: Colors.orange))
+                                      ? Text(l10n.salesVanLowStock, style: TextStyle(color: AppColors.warning(context)))
                                       : null,
                                   trailing: Row(
                                     mainAxisSize: MainAxisSize.min,

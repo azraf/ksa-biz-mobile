@@ -93,25 +93,25 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
         children: [
           DropdownButtonFormField<int>(
             value: _categoryId,
-            decoration: const InputDecoration(labelText: 'Category', border: OutlineInputBorder()),
+            decoration: const InputDecoration(labelText: 'Category'),
             items: _categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
             onChanged: (v) => setState(() => _categoryId = v),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _amount,
-            decoration: const InputDecoration(labelText: 'Amount (SAR)', border: OutlineInputBorder()),
+            decoration: const InputDecoration(labelText: 'Amount (SAR)'),
             keyboardType: TextInputType.number,
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _date,
-            decoration: const InputDecoration(labelText: 'Date', border: OutlineInputBorder()),
+            decoration: const InputDecoration(labelText: 'Date'),
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             value: _status,
-            decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()),
+            decoration: const InputDecoration(labelText: 'Status'),
             items: ['draft', 'submitted', 'approved', 'paid']
                 .map((s) => DropdownMenuItem(value: s, child: Text(s)))
                 .toList(),
@@ -120,7 +120,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
           const SizedBox(height: 12),
           TextField(
             controller: _description,
-            decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
+            decoration: const InputDecoration(labelText: 'Description'),
             maxLines: 2,
           ),
           const SizedBox(height: 24),

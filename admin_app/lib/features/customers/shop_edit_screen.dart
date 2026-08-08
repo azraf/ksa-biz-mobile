@@ -131,7 +131,7 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
         children: [
           TextField(
             controller: _nameController,
-            decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder()),
+            decoration: const InputDecoration(labelText: 'Name'),
           ),
           const SizedBox(height: 16),
           GpsLocationRow(

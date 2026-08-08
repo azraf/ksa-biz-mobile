@@ -28,8 +28,8 @@ class OrderApp extends ConsumerWidget {
       },
       child: MaterialApp.router(
         title: 'ARM Orders',
-        theme: AppTheme.light(),
-        darkTheme: AppTheme.dark(),
+        theme: AppTheme.light(AppBrand.order),
+        darkTheme: AppTheme.dark(AppBrand.order),
         themeMode: ref.watch(themeModeNotifierProvider),
         locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,

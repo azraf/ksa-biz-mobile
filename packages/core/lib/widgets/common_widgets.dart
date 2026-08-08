@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:l10n/l10n.dart';
 
+import '../theme/app_colors.dart';
+
 class LoadingView extends StatelessWidget {
   const LoadingView({super.key, this.message});
 
@@ -74,7 +76,7 @@ class EmptyView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 48, color: Colors.grey),
+            Icon(icon, size: 48, color: Theme.of(context).colorScheme.onSurfaceVariant),
             const SizedBox(height: 12),
             Text(message, style: Theme.of(context).textTheme.bodyLarge, textAlign: TextAlign.center),
             if (actionLabel != null && onAction != null) ...[
@@ -93,32 +95,35 @@ class StatusChip extends StatelessWidget {
 
   final String label;
 
-  Color _color(BuildContext context) {
+  (Color, Color) _colors(BuildContext context) {
     switch (label) {
       case 'cancelled':
-        return Colors.red.shade100;
+        return (AppColors.dangerContainer(context), AppColors.danger(context));
       case 'converted':
       case 'confirmed':
       case 'paid':
-        return Colors.green.shade100;
+        return (AppColors.successContainer(context), AppColors.success(context));
       case 'in_review':
       case 'modified':
       case 'partial':
-        return Colors.orange.shade100;
+        return (AppColors.warningContainer(context), AppColors.warning(context));
       case 'pending':
       case 'assigned':
-        return Colors.blue.shade100;
+        return (AppColors.pendingContainer(context), AppColors.pending(context));
       default:
-        return Colors.grey.shade200;
+        final cs = Theme.of(context).colorScheme;
+        return (cs.surfaceContainerHighest, cs.onSurfaceVariant);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final display = localizedStatusLabel(context, label);
+    final (bg, fg) = _colors(context);
     return Chip(
-      label: Text(display),
-      backgroundColor: _color(context),
+      label: Text(display, style: TextStyle(color: fg, fontWeight: FontWeight.w600)),
+      backgroundColor: bg,
+      side: BorderSide.none,
       visualDensity: VisualDensity.compact,
     );
   }

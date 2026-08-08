@@ -18,7 +18,10 @@ class MonitorApp extends ConsumerWidget {
 
     return MaterialApp.router(
       title: 'ARM Monitor(M)',
-      theme: AppTheme.light(),
+      theme: AppTheme.light(AppBrand.monitor),
+      darkTheme: AppTheme.dark(AppBrand.monitor),
+      themeMode: ref.watch(themeModeNotifierProvider),
+      locale: ref.watch(localeNotifierProvider),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: router,

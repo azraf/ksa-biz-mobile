@@ -92,6 +92,7 @@ export 'utils/maps_launcher.dart';
 export 'widgets/language_picker_tile.dart';
 export 'widgets/open_in_maps_button.dart';
 export 'widgets/common_widgets.dart';
+export 'widgets/v3_building_blocks.dart';
 export 'widgets/line_items_editor.dart';
 export 'widgets/contact_action_buttons.dart';
 export 'widgets/customer_diary_panel.dart';

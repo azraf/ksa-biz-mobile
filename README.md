@@ -1,4 +1,6 @@
-# KSA Biz – Mobile Apps (Flutter)
+# KSA Biz – Mobile Apps (Flutter) — V3
+
+**This is the `version-3` branch** (worktree `ksa-mobileapp-v3/`): v1 + modern UI/UX redesign + performance. See `doc/V3_DESIGN_SYSTEM.md` for the design system (per-app brand colors, bundled Manrope/Noto fonts with BN/AR fallbacks, tokens, shared building blocks). v1 stays untouched in `ksa-mobileapp/`; the v2 Isar experiment stays in `ksa-mobileapp-v2/`. Apps version from `3.0.0+4`; release APKs get a `-v3` suffix.
 
 This folder contains four Flutter apps that consume the Laravel API:
 

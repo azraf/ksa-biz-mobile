@@ -50,19 +50,18 @@ class _SalesReportScreenState extends ConsumerState<SalesReportScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           if (_result?.isCached == true)
-            const Card(
-              child: ListTile(
-                leading: Icon(Icons.offline_pin),
-                title: Text('Showing cached data'),
-                subtitle: Text('Connect to refresh from server'),
-              ),
+            const NoticeCard(
+              kind: NoticeKind.info,
+              icon: Icons.offline_pin,
+              title: 'Showing cached data',
+              subtitle: 'Connect to refresh from server',
             ),
           Text('Orders: ${_result?.data.ordersCount ?? 0}'),
           Text('Total: SAR ${(_result?.data.totalBill ?? 0).toStringAsFixed(2)}'),
           if (_result?.fetchedAt != null)
             Text(
               'Updated: ${_result!.fetchedAt!.substring(0, 16)}',
-              style: const TextStyle(color: Colors.grey),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           const Divider(),
           const Text('By product', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -112,7 +111,7 @@ class _ProfitReportScreenState extends ConsumerState<ProfitReportScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           if (_result?.isCached == true)
-            const Text('Cached data', style: TextStyle(color: Colors.grey)),
+            Text('Cached data', style: Theme.of(context).textTheme.bodySmall),
           Text('Revenue: SAR ${(r?.revenue ?? 0).toStringAsFixed(2)}'),
           Text('Cost: SAR ${(r?.cost ?? 0).toStringAsFixed(2)}'),
           Text(
@@ -158,7 +157,7 @@ class _ExpenseReportScreenState extends ConsumerState<ExpenseReportScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           if (_result?.isCached == true)
-            const Text('Cached data', style: TextStyle(color: Colors.grey)),
+            Text('Cached data', style: Theme.of(context).textTheme.bodySmall),
           Text('Total: SAR ${(_result?.data.totalAmount ?? 0).toStringAsFixed(2)}'),
           ...(_result?.data.byCategory ?? []).map(
             (c) => ListTile(
@@ -210,7 +209,7 @@ class _ExpenseSummaryReportScreenState extends ConsumerState<ExpenseSummaryRepor
         padding: const EdgeInsets.all(16),
         children: [
           if (_result?.isCached == true)
-            const Text('Cached data', style: TextStyle(color: Colors.grey)),
+            Text('Cached data', style: Theme.of(context).textTheme.bodySmall),
           Text(
             'Grand total: SAR ${(_result?.data.grandTotal ?? 0).toStringAsFixed(2)}',
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),

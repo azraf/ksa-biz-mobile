@@ -10,6 +10,7 @@ import 'package:record/record.dart';
 import 'package:l10n/l10n.dart';
 
 import 'package:maps_ui/maps_ui.dart';
+import 'package:media/media.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/connectivity_provider.dart';
@@ -176,7 +177,7 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
                           final item = _items[i];
                           return ListTile(
                             leading: item.isLocalOnly
-                                ? const Icon(Icons.cloud_off, color: Colors.orange)
+                                ? Icon(Icons.cloud_off, color: AppColors.warning(context))
                                 : const Icon(Icons.place),
                             title: Text(item.displayTitle),
                             subtitle: Text(
@@ -684,9 +685,9 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
                 itemBuilder: (_, i) {
                   final img = item.images[i];
                   if (img.url == null) return const SizedBox.shrink();
-                  return ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(img.url!, width: 100, height: 100, fit: BoxFit.cover),
+                  return SizedBox(
+                    width: 100,
+                    child: MediaImageTile(url: img.url, height: 100),
                   );
                 },
               ),

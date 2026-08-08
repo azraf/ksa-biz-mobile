@@ -355,7 +355,7 @@ class _AssignmentCalendarScreenState extends ConsumerState<AssignmentCalendarScr
                 if (_overlapWarning != null)
                   MaterialBanner(
                     content: Text(_overlapWarning!),
-                    leading: const Icon(Icons.warning_amber, color: Colors.orange),
+                    leading: Icon(Icons.warning_amber, color: AppColors.warning(context)),
                     actions: [TextButton(onPressed: () {}, child: const SizedBox.shrink())],
                   ),
                 Expanded(

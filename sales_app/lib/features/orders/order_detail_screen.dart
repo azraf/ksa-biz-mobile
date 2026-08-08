@@ -234,7 +234,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             padding: const EdgeInsets.only(bottom: 12),
             child: Chip(
               label: Text(l10n.salesPendingSync),
-              backgroundColor: Colors.blue.shade100,
+              backgroundColor: AppColors.pendingContainer(context),
               visualDensity: VisualDensity.compact,
             ),
           ),
@@ -243,7 +243,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             padding: const EdgeInsets.only(bottom: 12),
             child: Chip(
               label: Text(l10n.statusPending),
-              backgroundColor: Colors.orange.shade100,
+              backgroundColor: AppColors.warningContainer(context),
               visualDensity: VisualDensity.compact,
             ),
           ),

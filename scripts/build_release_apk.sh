@@ -37,10 +37,10 @@ read_pubspec_version() {
 
 resolve_arm_apk_name() {
   case "$1" in
-    admin_app) echo "ARM-AdminApp.apk" ;;
-    monitor_app) echo "ARM-MonitorApp.apk" ;;
-    order_app) echo "ARM-OrderApp.apk" ;;
-    sales_app) echo "ARM-SalesApp.apk" ;;
+    admin_app) echo "ARM-AdminApp-v3.apk" ;;
+    monitor_app) echo "ARM-MonitorApp-v3.apk" ;;
+    order_app) echo "ARM-OrderApp-v3.apk" ;;
+    sales_app) echo "ARM-SalesApp-v3.apk" ;;
     *)
       echo "Error: unknown app '$1' for ARM APK naming." >&2
       exit 1
@@ -53,10 +53,10 @@ remove_arm_apk_outputs() {
   local names=()
 
   case "$app" in
-    admin_app) names=(ARM-AdminApp.apk) ;;
-    monitor_app) names=(ARM-MonitorApp.apk) ;;
-    order_app) names=(ARM-OrderApp.apk ARM-SaleOrderApp.apk) ;;
-    sales_app) names=(ARM-SalesApp.apk ARM-SalesPersonApp.apk) ;;
+    admin_app) names=(ARM-AdminApp-v3.apk) ;;
+    monitor_app) names=(ARM-MonitorApp-v3.apk) ;;
+    order_app) names=(ARM-OrderApp-v3.apk ARM-SaleOrderApp-v3.apk) ;;
+    sales_app) names=(ARM-SalesApp-v3.apk ARM-SalesPersonApp-v3.apk) ;;
     *) return 0 ;;
   esac
 

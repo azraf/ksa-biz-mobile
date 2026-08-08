@@ -77,11 +77,7 @@ class _OrderHomeScreenState extends ConsumerState<OrderHomeScreen> {
     final currency = ref.watch(currencyFormatProvider);
 
     if (_loading) {
-      return ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: 4,
-        itemBuilder: (_, __) => const SkeletonListTile(),
-      );
+      return const SkeletonDashboard();
     }
     if (_error != null) {
       return ErrorView(message: _error!, onRetry: _load);
@@ -92,23 +88,19 @@ class _OrderHomeScreenState extends ConsumerState<OrderHomeScreen> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(l10n.orderHomeThisMonth, style: Theme.of(context).textTheme.titleMedium),
-                  Text(currency.format(_monthTotal), style: Theme.of(context).textTheme.headlineSmall),
-                  const SizedBox(height: 8),
-                  Text(l10n.orderHomeOutstanding),
-                  Text(currency.format(_outstanding), style: Theme.of(context).textTheme.titleLarge),
-                ],
-              ),
-            ),
+          KpiCard(
+            title: l10n.orderHomeThisMonth,
+            value: currency.format(_monthTotal),
+            icon: Icons.calendar_month_outlined,
           ),
-          const SizedBox(height: 16),
-          Text(l10n.orderHomeRecent, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: AppSpacing.md),
+          KpiCard(
+            title: l10n.orderHomeOutstanding,
+            value: currency.format(_outstanding),
+            icon: Icons.account_balance_wallet_outlined,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          SectionHeader(title: l10n.orderHomeRecent),
           if (_recent.isEmpty)
             Padding(
               padding: const EdgeInsets.all(16),

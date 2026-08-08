@@ -280,7 +280,7 @@ class _CrudFormScreenState extends State<CrudFormScreen> {
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: DropdownButtonFormField<dynamic>(
-            decoration: InputDecoration(labelText: field.label, border: const OutlineInputBorder()),
+            decoration: InputDecoration(labelText: field.label),
             initialValue: value,
             items: field.options
                 ?.map((o) => DropdownMenuItem(value: o.value, child: Text(o.label)))
@@ -293,7 +293,7 @@ class _CrudFormScreenState extends State<CrudFormScreen> {
           padding: const EdgeInsets.only(bottom: 12),
           child: TextFormField(
             initialValue: value?.toString(),
-            decoration: InputDecoration(labelText: field.label, border: const OutlineInputBorder()),
+            decoration: InputDecoration(labelText: field.label),
             maxLines: 3,
             readOnly: field.readOnly,
             validator: field.required ? (v) => (v == null || v.isEmpty) ? 'Required' : null : null,
@@ -305,7 +305,7 @@ class _CrudFormScreenState extends State<CrudFormScreen> {
           padding: const EdgeInsets.only(bottom: 12),
           child: TextFormField(
             initialValue: value?.toString(),
-            decoration: InputDecoration(labelText: field.label, border: const OutlineInputBorder()),
+            decoration: InputDecoration(labelText: field.label),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             readOnly: field.readOnly,
             validator: field.required ? (v) => (v == null || v.isEmpty) ? 'Required' : null : null,
@@ -317,7 +317,7 @@ class _CrudFormScreenState extends State<CrudFormScreen> {
           padding: const EdgeInsets.only(bottom: 12),
           child: PasswordTextField(
             initialValue: value?.toString(),
-            decoration: InputDecoration(labelText: field.label, border: const OutlineInputBorder()),
+            decoration: InputDecoration(labelText: field.label),
             readOnly: field.readOnly,
             validator: field.required ? (v) => (v == null || v.isEmpty) ? 'Required' : null : null,
             onSaved: (v) => _values[field.key] = v,
@@ -328,7 +328,7 @@ class _CrudFormScreenState extends State<CrudFormScreen> {
           padding: const EdgeInsets.only(bottom: 12),
           child: TextFormField(
             initialValue: value?.toString(),
-            decoration: InputDecoration(labelText: field.label, border: const OutlineInputBorder()),
+            decoration: InputDecoration(labelText: field.label),
             keyboardType: field.type == FieldType.email ? TextInputType.emailAddress : TextInputType.text,
             readOnly: field.readOnly,
             validator: field.required ? (v) => (v == null || v.isEmpty) ? 'Required' : null : null,

@@ -122,7 +122,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final auth = ref.watch(authProvider);
     final currency = NumberFormat.currency(symbol: 'SAR ');
 
-    if (_loading) return LoadingView(message: l10n.salesDashboardLoading);
+    if (_loading) return const SkeletonDashboard();
     if (_needsSalesPersonSelection != null) {
       final message = _needsSalesPersonSelection!
           ? l10n.salesDashboardSelectSp
@@ -147,15 +147,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           if (_duesFromCache && _duesIsStale && _duesCachedAt != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: MaterialBanner(
-                content: Text(l10n.salesDashboardCachedDues(_duesCachedAt!.substring(0, 16))),
-                leading: const Icon(Icons.cloud_off_outlined),
-                actions: [
-                  TextButton(onPressed: _refresh, child: Text(l10n.commonRetry)),
-                ],
-              ),
+            NoticeCard(
+              kind: NoticeKind.info,
+              icon: Icons.cloud_off_outlined,
+              title: l10n.salesDashboardCachedDues(_duesCachedAt!.substring(0, 16)),
+              actionLabel: l10n.commonRetry,
+              onAction: _refresh,
             ),
           Row(
             children: [
@@ -176,21 +173,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           else if (auth.salesPerson != null)
             Text(auth.salesPerson!.name, style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 16),
-          _SummaryCard(
+          KpiCard(
             title: l10n.salesCardOutstandingDues,
             value: currency.format(_totalDue),
             subtitle: l10n.salesCardUnpaidOrders(_unpaidOrders),
             icon: Icons.payments,
             onTap: () => context.go('/dues'),
           ),
-          _SummaryCard(
+          const SizedBox(height: AppSpacing.md),
+          KpiCard(
             title: l10n.salesCardManualOrders,
             value: '$_openManualOrders',
             subtitle: l10n.salesCardManualSubtitle,
             icon: Icons.phone_in_talk,
             onTap: () => context.go('/manual-orders'),
           ),
-          _SummaryCard(
+          const SizedBox(height: AppSpacing.md),
+          KpiCard(
             title: l10n.salesCardVanStock,
             value: l10n.salesCardVanProducts(_vanProducts),
             subtitle: _lowStock > 0
@@ -199,21 +198,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             icon: Icons.local_shipping,
             onTap: () => context.go('/van-stock'),
           ),
-          _SummaryCard(
+          const SizedBox(height: AppSpacing.md),
+          KpiCard(
             title: l10n.salesCardMyOrders,
             value: l10n.salesCardViewAll,
             subtitle: l10n.salesCardOrdersSubtitle,
             icon: Icons.receipt_long,
             onTap: () => context.go('/orders'),
           ),
-          _SummaryCard(
+          const SizedBox(height: AppSpacing.md),
+          KpiCard(
             title: l10n.salesCardCustomers,
             value: l10n.salesCardCustomersValue,
             subtitle: l10n.salesCardCustomersSubtitle,
             icon: Icons.people_outline,
             onTap: () => context.push('/customers'),
           ),
-          _SummaryCard(
+          const SizedBox(height: AppSpacing.md),
+          KpiCard(
             title: l10n.salesCardWatchlist,
             value: l10n.salesCardWatchlistValue,
             subtitle: l10n.salesCardWatchlistSubtitle,
@@ -231,36 +233,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
         FirstRunTips(prefs: ref.watch(sharedPreferencesProvider)),
       ],
-    );
-  }
-}
-
-class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({
-    required this.title,
-    required this.value,
-    required this.subtitle,
-    required this.icon,
-    required this.onTap,
-  });
-
-  final String title;
-  final String value;
-  final String subtitle;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: CircleAvatar(child: Icon(icon)),
-        title: Text(title),
-        subtitle: Text(subtitle),
-        trailing: Text(value, style: Theme.of(context).textTheme.titleMedium),
-        onTap: onTap,
-      ),
     );
   }
 }

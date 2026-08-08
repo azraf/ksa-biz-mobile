@@ -35,3 +35,38 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   sqflite_common_ffi: ^2.3.6
+
+flutter:
+  fonts:
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/Manrope-400.ttf
+          weight: 400
+        - asset: assets/fonts/Manrope-500.ttf
+          weight: 500
+        - asset: assets/fonts/Manrope-600.ttf
+          weight: 600
+        - asset: assets/fonts/Manrope-700.ttf
+          weight: 700
+        - asset: assets/fonts/Manrope-800.ttf
+          weight: 800
+    - family: NotoSansBengali
+      fonts:
+        - asset: assets/fonts/NotoSansBengali-400.ttf
+          weight: 400
+        - asset: assets/fonts/NotoSansBengali-500.ttf
+          weight: 500
+        - asset: assets/fonts/NotoSansBengali-600.ttf
+          weight: 600
+        - asset: assets/fonts/NotoSansBengali-700.ttf
+          weight: 700
+    - family: NotoSansArabic
+      fonts:
+        - asset: assets/fonts/NotoSansArabic-400.ttf
+          weight: 400
+        - asset: assets/fonts/NotoSansArabic-500.ttf
+          weight: 500
+        - asset: assets/fonts/NotoSansArabic-600.ttf
+          weight: 600
+        - asset: assets/fonts/NotoSansArabic-700.ttf
+          weight: 700

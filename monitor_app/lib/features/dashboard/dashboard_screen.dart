@@ -66,7 +66,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     final currency = NumberFormat.currency(symbol: 'SAR ');
 
-    if (_loading) return const LoadingView(message: 'Loading dashboard...');
+    if (_loading) return const SkeletonDashboard();
     if (_error != null) return ErrorView(message: _error!, onRetry: _load);
 
     return RefreshIndicator(
@@ -74,37 +74,40 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text('Business overview', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 16),
-          _KpiCard(
+          const SectionHeader(title: 'Business overview'),
+          KpiCard(
             title: 'Sales (this month)',
             value: currency.format(_sales?.totalBill ?? 0),
             subtitle: '${_sales?.ordersCount ?? 0} orders',
             icon: Icons.receipt_long,
             onTap: () => context.go('/reports/sales'),
           ),
-          _KpiCard(
+          const SizedBox(height: AppSpacing.md),
+          KpiCard(
             title: 'Profit',
             value: currency.format(_profit?.profit ?? 0),
             subtitle: 'Revenue ${currency.format(_profit?.revenue ?? 0)}',
             icon: Icons.trending_up,
             onTap: () => context.go('/reports/profit'),
           ),
-          _KpiCard(
+          const SizedBox(height: AppSpacing.md),
+          KpiCard(
             title: 'Expenses (YTD)',
             value: currency.format(_expenseSummary?.grandTotal ?? 0),
             subtitle: '${_expenseSummary?.byPeriod.length ?? 0} periods',
             icon: Icons.payments,
             onTap: () => context.go('/reports/expense-summary'),
           ),
-          _KpiCard(
+          const SizedBox(height: AppSpacing.md),
+          KpiCard(
             title: 'Orders',
             value: '$_orderCount',
             subtitle: 'All orders',
             icon: Icons.shopping_cart_outlined,
             onTap: () => context.go('/sales'),
           ),
-          _KpiCard(
+          const SizedBox(height: AppSpacing.md),
+          KpiCard(
             title: 'Pending manual orders',
             value: '$_pendingOrders',
             subtitle: 'Awaiting review',
@@ -112,36 +115,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             onTap: () => context.go('/sales'),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _KpiCard extends StatelessWidget {
-  const _KpiCard({
-    required this.title,
-    required this.value,
-    required this.subtitle,
-    required this.icon,
-    this.onTap,
-  });
-
-  final String title;
-  final String value;
-  final String subtitle;
-  final IconData icon;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: CircleAvatar(child: Icon(icon)),
-        title: Text(title),
-        subtitle: Text(subtitle),
-        trailing: Text(value, style: Theme.of(context).textTheme.titleMedium),
-        onTap: onTap,
       ),
     );
   }

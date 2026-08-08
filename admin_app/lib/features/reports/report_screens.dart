@@ -65,7 +65,7 @@ class _SalesReportScreenState extends ConsumerState<SalesReportScreen> {
                 Text('Orders: ${_result?.data.ordersCount ?? 0}'),
                 Text('Total: SAR ${(_result?.data.totalBill ?? 0).toStringAsFixed(2)}'),
                 if (_result?.fetchedAt != null)
-                  Text('Updated: ${_result!.fetchedAt!.substring(0, 16)}', style: const TextStyle(color: Colors.grey)),
+                  Text('Updated: ${_result!.fetchedAt!.substring(0, 16)}', style: Theme.of(context).textTheme.bodySmall),
                 const Divider(),
                 const Text('By Product', style: TextStyle(fontWeight: FontWeight.bold)),
                 ...(_result?.data.byProduct ?? []).map((p) => ListTile(
@@ -115,7 +115,7 @@ class _ProfitReportScreenState extends ConsumerState<ProfitReportScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (_result?.isCached == true) const Text('Cached data', style: TextStyle(color: Colors.grey)),
+                  if (_result?.isCached == true) Text('Cached data', style: Theme.of(context).textTheme.bodySmall),
                   Text('Revenue: SAR ${(r?.revenue ?? 0).toStringAsFixed(2)}'),
                   Text('Cost: SAR ${(r?.cost ?? 0).toStringAsFixed(2)}'),
                   Text('Profit: SAR ${(r?.profit ?? 0).toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -160,7 +160,7 @@ class _ExpenseReportScreenState extends ConsumerState<ExpenseReportScreen> {
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                if (_result?.isCached == true) const Text('Cached data (offline)', style: TextStyle(color: Colors.grey)),
+                if (_result?.isCached == true) Text('Cached data (offline)', style: Theme.of(context).textTheme.bodySmall),
                 Text('Total: SAR ${(_result?.data.totalAmount ?? 0).toStringAsFixed(2)}'),
                 ...(_result?.data.byCategory ?? []).map((c) => ListTile(
                       title: Text(c.categoryName ?? 'Category'),
@@ -211,7 +211,7 @@ class _ExpenseSummaryReportScreenState extends ConsumerState<ExpenseSummaryRepor
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                if (_result?.isCached == true) const Text('Cached data', style: TextStyle(color: Colors.grey)),
+                if (_result?.isCached == true) Text('Cached data', style: Theme.of(context).textTheme.bodySmall),
                 Text('Grand Total: SAR ${(_result?.data.grandTotal ?? 0).toStringAsFixed(2)}',
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ...(_result?.data.byPeriod ?? []).map((p) => ListTile(

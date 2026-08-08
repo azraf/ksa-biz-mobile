@@ -27,8 +27,8 @@ class AdminApp extends ConsumerWidget {
       },
       child: MaterialApp.router(
         title: 'ARM admin(M)',
-        theme: AppTheme.light(),
-        darkTheme: AppTheme.dark(),
+        theme: AppTheme.light(AppBrand.admin),
+        darkTheme: AppTheme.dark(AppBrand.admin),
         themeMode: ref.watch(themeModeNotifierProvider),
         locale: ref.watch(localeNotifierProvider),
         localizationsDelegates: AppLocalizations.localizationsDelegates,

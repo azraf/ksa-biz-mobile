@@ -234,7 +234,7 @@ class _CreatePurchaseScreenState extends ConsumerState<CreatePurchaseScreen> {
         children: [
           DropdownButtonFormField<String>(
             value: _purchaseType,
-            decoration: const InputDecoration(labelText: 'Purchase Type', border: OutlineInputBorder()),
+            decoration: const InputDecoration(labelText: 'Purchase Type'),
             items: const [
               DropdownMenuItem(value: 'local', child: Text('Local')),
               DropdownMenuItem(value: 'import', child: Text('Import')),
@@ -242,11 +242,11 @@ class _CreatePurchaseScreenState extends ConsumerState<CreatePurchaseScreen> {
             onChanged: (v) => setState(() => _purchaseType = v ?? 'local'),
           ),
           const SizedBox(height: 12),
-          TextField(controller: _date, decoration: const InputDecoration(labelText: 'Date', border: OutlineInputBorder())),
+          TextField(controller: _date, decoration: const InputDecoration(labelText: 'Date')),
           const SizedBox(height: 12),
-          TextField(controller: _reference, decoration: const InputDecoration(labelText: 'Reference / Invoice #', border: OutlineInputBorder())),
+          TextField(controller: _reference, decoration: const InputDecoration(labelText: 'Reference / Invoice #')),
           const SizedBox(height: 12),
-          TextField(controller: _notes, decoration: const InputDecoration(labelText: 'Notes', border: OutlineInputBorder())),
+          TextField(controller: _notes, decoration: const InputDecoration(labelText: 'Notes')),
           const SizedBox(height: 16),
           Text('Line items', style: Theme.of(context).textTheme.titleMedium),
           ..._items.asMap().entries.map((e) => ListTile(

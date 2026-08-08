@@ -280,9 +280,9 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       padding: const EdgeInsets.all(16),
       children: [
         if (pendingSync)
-          const Card(
-            color: Colors.orange,
-            child: ListTile(
+          Card(
+            color: AppColors.warning(context),
+            child: const ListTile(
               leading: Icon(Icons.sync),
               title: Text('Pending sync'),
               subtitle: Text('This order will upload when online'),
@@ -523,7 +523,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
         const SizedBox(height: 12),
         DropdownButtonFormField<int>(
           value: _salesPersonId,
-          decoration: const InputDecoration(labelText: 'Sales person', border: OutlineInputBorder()),
+          decoration: const InputDecoration(labelText: 'Sales person'),
           items: _salesPersons.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))).toList(),
           onChanged: (v) => setState(() => _salesPersonId = v),
         ),
@@ -536,13 +536,13 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
           ),
           TextField(
             controller: _walkInNoteController,
-            decoration: const InputDecoration(labelText: 'Note (optional)', border: OutlineInputBorder()),
+            decoration: const InputDecoration(labelText: 'Note (optional)'),
           ),
           const SizedBox(height: 12),
         ] else ...[
           DropdownButtonFormField<CustomerShopModel>(
             value: _selectedShop,
-            decoration: const InputDecoration(labelText: 'Shop', border: OutlineInputBorder()),
+            decoration: const InputDecoration(labelText: 'Shop'),
             items: _shops
                 .map((s) => DropdownMenuItem(value: s, child: Text(s.name)))
                 .toList(),

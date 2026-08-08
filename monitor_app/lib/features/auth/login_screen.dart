@@ -87,10 +87,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('ARM Monitor(M)', style: Theme.of(context).textTheme.headlineMedium),
-                  const SizedBox(height: 8),
-                  const Text('Read-only dashboards for monitor accounts'),
-                  const SizedBox(height: 24),
+                  const LoginHero(
+                    icon: Icons.insights_outlined,
+                    title: 'ARM Monitor(M)',
+                    subtitle: 'Read-only dashboards for monitor accounts',
+                  ),
                   if (showBiometricOnly)
                     BiometricLoginSection(
                       email: auth.storedUserEmail!,
@@ -119,7 +120,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ],
                   if (auth.error != null) ...[
                     const SizedBox(height: 12),
-                    Text(auth.error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                    NoticeCard(
+                      kind: NoticeKind.danger,
+                      icon: Icons.error_outline,
+                      title: auth.error!,
+                      margin: EdgeInsets.zero,
+                    ),
                   ],
                   if (!showBiometricOnly) ...[
                     const SizedBox(height: 24),

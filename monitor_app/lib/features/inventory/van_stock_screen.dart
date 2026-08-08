@@ -81,10 +81,7 @@ class _VanStockScreenState extends ConsumerState<VanStockScreen> {
           padding: const EdgeInsets.all(16),
           child: DropdownButtonFormField<int>(
             value: _selectedId,
-            decoration: const InputDecoration(
-              labelText: 'Sales person',
-              border: OutlineInputBorder(),
-            ),
+            decoration: const InputDecoration(labelText: 'Sales person'),
             items: _persons
                 .map((p) => DropdownMenuItem(value: p.id, child: Text(p.name)))
                 .toList(),
@@ -112,7 +109,7 @@ class _VanStockScreenState extends ConsumerState<VanStockScreen> {
                               return ListTile(
                                 title: Text(item.product?.name ?? 'Product #${item.productId}'),
                                 subtitle: low
-                                    ? const Text('Low stock', style: TextStyle(color: Colors.orange))
+                                    ? Text('Low stock', style: TextStyle(color: AppColors.warning(context)))
                                     : null,
                                 trailing: Text(item.displayBalance),
                               );
