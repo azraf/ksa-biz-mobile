@@ -109,6 +109,7 @@
     }
   },
   "commonInvoiceLabel": "الفاتورة",
+  "commonPageNotFound": "الصفحة غير موجودة",
   "commonOrderNumber": "طلب #{id}",
   "@commonOrderNumber": {
     "placeholders": {

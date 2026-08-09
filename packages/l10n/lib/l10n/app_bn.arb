@@ -109,6 +109,7 @@
     }
   },
   "commonInvoiceLabel": "ইনভয়েস",
+  "commonPageNotFound": "পৃষ্ঠা পাওয়া যায়নি",
   "commonOrderNumber": "অর্ডার #{id}",
   "@commonOrderNumber": {
     "placeholders": {

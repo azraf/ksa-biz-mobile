@@ -109,6 +109,7 @@
     }
   },
   "commonInvoiceLabel": "Invoice",
+  "commonPageNotFound": "Page not found",
   "commonOrderNumber": "Order #{id}",
   "@commonOrderNumber": {
     "placeholders": {

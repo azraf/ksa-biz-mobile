@@ -36,6 +36,10 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
+    errorBuilder: (context, state) => Scaffold(
+      appBar: AppBar(),
+      body: ErrorView(message: AppLocalizations.of(context).commonPageNotFound),
+    ),
     refreshListenable: _RouterRefresh(ref),
     redirect: (context, state) {
       final location = state.matchedLocation;

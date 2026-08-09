@@ -26,6 +26,10 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/home',
+    errorBuilder: (context, state) => Scaffold(
+      appBar: AppBar(),
+      body: ErrorView(message: AppLocalizations.of(context).commonPageNotFound),
+    ),
     refreshListenable: _RouterRefresh(ref),
     redirect: (context, state) {
       final location = state.matchedLocation;
@@ -151,7 +155,7 @@ class HomeShell extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final location = GoRouterState.of(context).matchedLocation;
     final title = _titleForLocation(context, location);
-    final showBack = Navigator.of(context).canPop();
+    final showBack = GoRouter.of(context).canPop();
 
     return Scaffold(
       appBar: AppBar(

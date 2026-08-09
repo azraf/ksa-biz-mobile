@@ -166,6 +166,9 @@ class AppLocalizationsBn extends AppLocalizations {
   String get commonInvoiceLabel => 'ইনভয়েস';
 
   @override
+  String get commonPageNotFound => 'পৃষ্ঠা পাওয়া যায়নি';
+
+  @override
   String commonOrderNumber(int id) {
     return 'অর্ডার #$id';
   }

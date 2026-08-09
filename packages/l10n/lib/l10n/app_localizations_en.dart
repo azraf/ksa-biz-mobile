@@ -166,6 +166,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonInvoiceLabel => 'Invoice';
 
   @override
+  String get commonPageNotFound => 'Page not found';
+
+  @override
   String commonOrderNumber(int id) {
     return 'Order #$id';
   }

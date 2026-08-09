@@ -382,6 +382,12 @@ abstract class AppLocalizations {
   /// **'Invoice'**
   String get commonInvoiceLabel;
 
+  /// No description provided for @commonPageNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Page not found'**
+  String get commonPageNotFound;
+
   /// No description provided for @commonOrderNumber.
   ///
   /// In en, this message translates to:

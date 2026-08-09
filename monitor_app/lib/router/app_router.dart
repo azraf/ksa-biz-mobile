@@ -22,6 +22,10 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
+    errorBuilder: (context, state) => Scaffold(
+      appBar: AppBar(),
+      body: ErrorView(message: 'Page not found'),
+    ),
     refreshListenable: _RouterRefresh(ref),
     redirect: (context, state) {
       final loggingIn = state.matchedLocation == '/login';
@@ -133,7 +137,7 @@ class MonitorHomeShell extends StatelessWidget {
     };
   }
 
-  bool _showBackButton(BuildContext context) => Navigator.of(context).canPop();
+  bool _showBackButton(BuildContext context) => GoRouter.of(context).canPop();
 
   @override
   Widget build(BuildContext context) {
@@ -142,16 +146,19 @@ class MonitorHomeShell extends StatelessWidget {
     final showBack = _showBackButton(context);
 
     return Scaffold(
-      appBar: AppBar(
-        leading: showBack ? BackButton(onPressed: () => context.pop()) : null,
-        title: Text(title),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person_outline),
-            onPressed: () => context.push('/profile'),
-          ),
-        ],
-      ),
+      // The map screen draws its own AppBar — avoid a double header.
+      appBar: location.contains('/reports/map')
+          ? null
+          : AppBar(
+              leading: showBack ? BackButton(onPressed: () => context.pop()) : null,
+              title: Text(title),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.person_outline),
+                  onPressed: () => context.push('/profile'),
+                ),
+              ],
+            ),
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
