@@ -18,7 +18,7 @@ void main() {
         entityType: 'order',
         operation: 'create',
         localId: -1,
-        payload: {'client_request_id': 'test-uuid'},
+        payload: const {'client_request_id': 'test-uuid'},
         status: 'pending',
         retryCount: 0,
         createdAt: DateTime.now().toIso8601String(),

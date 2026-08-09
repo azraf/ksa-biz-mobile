@@ -9,7 +9,6 @@ import 'package:l10n/l10n.dart';
 import 'package:maps_ui/maps_ui.dart';
 
 import '../../providers/auth_provider.dart';
-import '../../providers/connectivity_provider.dart';
 import '../../providers/repositories.dart';
 import '../../widgets/quick_create_customer.dart';
 import 'customer_diary_section.dart';

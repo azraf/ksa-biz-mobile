@@ -138,7 +138,7 @@ class OfflineWatchlistRepository {
       entityType: 'watchlist',
       operation: 'delete',
       serverId: id,
-      payload: {},
+      payload: const {},
       status: 'pending',
       retryCount: 0,
       createdAt: DateTime.now().toIso8601String(),

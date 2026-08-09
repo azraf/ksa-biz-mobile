@@ -54,7 +54,9 @@ class AuthNotifier extends Notifier<AuthState> {
         if (session != null && !await _ensureMonitorRole(session)) return;
       }
     } catch (_) {
-      await _authRepository.clearSession();
+      try {
+        await _authRepository.clearSession();
+      } catch (_) {}
       state = const AuthState(isLoading: false);
     }
   }

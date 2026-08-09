@@ -1,4 +1,4 @@
-library core;
+library;
 
 export 'api/api_client.dart';
 export 'api/api_exception.dart';
@@ -6,6 +6,7 @@ export 'api/api_reachability_service.dart';
 export 'auth/auth_repository.dart';
 export 'auth/auth_state.dart';
 export 'auth/auth_providers.dart';
+export 'auth/biometric_auth_service.dart';
 export 'config/app_config.dart';
 export 'locale/locale_notifier.dart';
 export 'locale/theme_mode_notifier.dart';

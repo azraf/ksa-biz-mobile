@@ -11,8 +11,6 @@ import '../../widgets/crud_screens.dart';
 import '../../widgets/field_config.dart';
 import '../../widgets/line_items_editor.dart';
 import 'collect_payment_screen.dart';
-import 'manual_order_detail_screen.dart';
-import 'order_edit_screen.dart';
 
 class SalesPersonsScreen extends ConsumerWidget {
   const SalesPersonsScreen({super.key});
@@ -40,8 +38,11 @@ class SalesPersonsScreen extends ConsumerWidget {
       ],
       onSave: (v) async {
         final api = ref.read(apiClientProvider);
-        if (person == null) await api.post('/sales-persons', body: v);
-        else await api.put('/sales-persons/${person.id}', body: v);
+        if (person == null) {
+          await api.post('/sales-persons', body: v);
+        } else {
+          await api.put('/sales-persons/${person.id}', body: v);
+        }
       },
     )));
   }
@@ -81,7 +82,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
       },
       itemTitle: (o) => '#${o.id} — ${o.customerShopName ?? ''} — SAR ${o.totalBill.toStringAsFixed(2)}',
       itemSubtitle: (o) => orderListSubtitle(o, showSalesPerson: true, showCreatedAt: true),
-      sortModes: [
+      sortModes: const [
         ListSortMode.date,
         ListSortMode.name,
         ListSortMode.area,
@@ -172,7 +173,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                   Text('Confirm order', style: Theme.of(ctx).textTheme.titleLarge),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: inventorySource,
+                    initialValue: inventorySource,
                     decoration: const InputDecoration(labelText: 'Inventory source'),
                     items: const [
                       DropdownMenuItem(value: 'van', child: Text('Salesperson van')),
@@ -187,7 +188,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                   if (needsSp) ...[
                     const SizedBox(height: 12),
                     DropdownButtonFormField<SalesPersonModel>(
-                      value: selectedSp,
+                      initialValue: selectedSp,
                       decoration: const InputDecoration(labelText: 'Delivery salesperson'),
                       items: salesPersons
                           .map((sp) => DropdownMenuItem(value: sp, child: Text(sp.name)))
@@ -522,7 +523,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<int>(
-          value: _salesPersonId,
+          initialValue: _salesPersonId,
           decoration: const InputDecoration(labelText: 'Sales person'),
           items: _salesPersons.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))).toList(),
           onChanged: (v) => setState(() => _salesPersonId = v),
@@ -541,7 +542,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
           const SizedBox(height: 12),
         ] else ...[
           DropdownButtonFormField<CustomerShopModel>(
-            value: _selectedShop,
+            initialValue: _selectedShop,
             decoration: const InputDecoration(labelText: 'Shop'),
             items: _shops
                 .map((s) => DropdownMenuItem(value: s, child: Text(s.name)))

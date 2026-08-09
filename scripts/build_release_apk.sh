@@ -53,10 +53,10 @@ remove_arm_apk_outputs() {
   local names=()
 
   case "$app" in
-    admin_app) names=(ARM-AdminApp-v3.apk) ;;
-    monitor_app) names=(ARM-MonitorApp-v3.apk) ;;
-    order_app) names=(ARM-OrderApp-v3.apk ARM-SaleOrderApp-v3.apk) ;;
-    sales_app) names=(ARM-SalesApp-v3.apk ARM-SalesPersonApp-v3.apk) ;;
+    admin_app) names=(ARM-AdminApp-v3.apk ARM-AdminApp-v3-arm32.apk) ;;
+    monitor_app) names=(ARM-MonitorApp-v3.apk ARM-MonitorApp-v3-arm32.apk) ;;
+    order_app) names=(ARM-OrderApp-v3.apk ARM-OrderApp-v3-arm32.apk ARM-SaleOrderApp-v3.apk) ;;
+    sales_app) names=(ARM-SalesApp-v3.apk ARM-SalesApp-v3-arm32.apk ARM-SalesPersonApp-v3.apk) ;;
     *) return 0 ;;
   esac
 
@@ -82,8 +82,12 @@ VERSION="$(read_pubspec_version)"
 BUILD_NUMBER="${VERSION#*+}"
 ARM_APK_NAME="$(resolve_arm_apk_name "$APP_NAME")"
 APP_BUILTS_DIR="$MOBILEAPP_ROOT/app-builts"
-FLUTTER_APK="$(pwd)/build/app/outputs/flutter-apk/app-release.apk"
+FLUTTER_APK_DIR="$(pwd)/build/app/outputs/flutter-apk"
+FLUTTER_APK_ARM64="$FLUTTER_APK_DIR/app-arm64-v8a-release.apk"
+FLUTTER_APK_ARM32="$FLUTTER_APK_DIR/app-armeabi-v7a-release.apk"
 OUTPUT_APK="$APP_BUILTS_DIR/$ARM_APK_NAME"
+OUTPUT_APK_ARM32="$APP_BUILTS_DIR/${ARM_APK_NAME%.apk}-arm32.apk"
+SYMBOLS_DIR="$APP_BUILTS_DIR/symbols/$APP_NAME-$VERSION"
 
 echo "Building release APK for $APP_NAME (version $VERSION)..."
 
@@ -99,31 +103,37 @@ fi
 
 BUILD_ARGS=("${KSA_DART_DEFINE_ARGS[@]:-}")
 
-flutter build apk --release "${BUILD_ARGS[@]}" "$@"
+mkdir -p "$SYMBOLS_DIR"
+flutter build apk --release --split-per-abi \
+  --target-platform android-arm,android-arm64 \
+  --split-debug-info="$SYMBOLS_DIR" \
+  "${BUILD_ARGS[@]}" "$@"
 
-if [[ ! -f "$FLUTTER_APK" ]]; then
-  echo "Error: expected APK not found at $FLUTTER_APK" >&2
+if [[ ! -f "$FLUTTER_APK_ARM64" || ! -f "$FLUTTER_APK_ARM32" ]]; then
+  echo "Error: expected split APKs not found in $FLUTTER_APK_DIR" >&2
   exit 1
 fi
 
 mkdir -p "$APP_BUILTS_DIR"
 remove_arm_apk_outputs "$APP_NAME"
-cp "$FLUTTER_APK" "$OUTPUT_APK"
+cp "$FLUTTER_APK_ARM64" "$OUTPUT_APK"
+cp "$FLUTTER_APK_ARM32" "$OUTPUT_APK_ARM32"
 
 cat <<EOF
 
 ────────────────────────────────────────────────────────
-  Release APK ready
+  Release APKs ready (split per ABI)
 
   App:     $APP_NAME
   Version: $VERSION
   Build:   $BUILD_NUMBER (versionCode — increment +N in pubspec.yaml each release)
 
   Copied to:
-    $OUTPUT_APK
+    $OUTPUT_APK          (arm64 — modern phones, primary download)
+    $OUTPUT_APK_ARM32    (arm32 — older phones only)
 
-  Flutter build output:
-    $FLUTTER_APK
+  Crash symbols (keep for this release):
+    $SYMBOLS_DIR
 ────────────────────────────────────────────────────────
 
 EOF

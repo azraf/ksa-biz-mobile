@@ -55,7 +55,7 @@ class ProfileScreen extends ConsumerWidget {
                   title: Text(l10n.salesLastSyncedAt(formatFetchedAt(at.toIso8601String()))),
                 ),
           loading: () => const SizedBox.shrink(),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, _) => const SizedBox.shrink(),
         ),
         const Divider(),
         const LanguagePickerTile(),

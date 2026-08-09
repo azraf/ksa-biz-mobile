@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 
 enum FieldType { text, number, email, password, textarea, boolean, date, dropdown }
 

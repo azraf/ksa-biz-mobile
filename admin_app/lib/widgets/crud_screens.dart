@@ -97,7 +97,7 @@ class _CrudListScreenState<T> extends State<CrudListScreen<T>> {
           onRefresh: () async => _reload(),
           child: ListView.separated(
             itemCount: items.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
+            separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final item = items[index];
               final pending = widget.isPending?.call(item) ?? false;

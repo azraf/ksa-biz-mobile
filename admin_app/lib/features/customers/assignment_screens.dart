@@ -99,13 +99,13 @@ class _CustomerAssignmentsScreenState extends ConsumerState<CustomerAssignmentsS
               mainAxisSize: MainAxisSize.min,
               children: [
                 DropdownButtonFormField<int>(
-                  value: areaId,
+                  initialValue: areaId,
                   decoration: const InputDecoration(labelText: 'Area'),
                   items: areas.map((a) => DropdownMenuItem(value: a.id, child: Text(a.name))).toList(),
                   onChanged: (v) => setLocal(() => areaId = v),
                 ),
                 DropdownButtonFormField<int?>(
-                  value: fromSpId,
+                  initialValue: fromSpId,
                   decoration: const InputDecoration(labelText: 'From salesperson'),
                   items: [
                     const DropdownMenuItem(value: null, child: Text('Any')),
@@ -114,7 +114,7 @@ class _CustomerAssignmentsScreenState extends ConsumerState<CustomerAssignmentsS
                   onChanged: (v) => setLocal(() => fromSpId = v),
                 ),
                 DropdownButtonFormField<int>(
-                  value: toSpId,
+                  initialValue: toSpId,
                   decoration: const InputDecoration(labelText: 'To salesperson *'),
                   items: _salesPersons.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))).toList(),
                   onChanged: (v) => setLocal(() => toSpId = v),
@@ -137,7 +137,7 @@ class _CustomerAssignmentsScreenState extends ConsumerState<CustomerAssignmentsS
     try {
       final count = await ref.read(customerRepositoryProvider).bulkTemporaryAssignment({
         'area_id': areaId,
-        if (fromSpId != null) 'from_sales_person_id': fromSpId,
+        'from_sales_person_id': ?fromSpId,
         'to_sales_person_id': toSpId,
         'starts_at': DateTime.now().toIso8601String(),
         'ends_at': DateTime.now().add(Duration(days: days)).toIso8601String(),
@@ -168,7 +168,7 @@ class _CustomerAssignmentsScreenState extends ConsumerState<CustomerAssignmentsS
                 Padding(
                   padding: const EdgeInsets.all(12),
                   child: DropdownButtonFormField<int?>(
-                    value: _salesPersonFilter,
+                    initialValue: _salesPersonFilter,
                     decoration: const InputDecoration(labelText: 'Salesperson'),
                     items: [
                       const DropdownMenuItem(value: null, child: Text('All')),
@@ -183,7 +183,7 @@ class _CustomerAssignmentsScreenState extends ConsumerState<CustomerAssignmentsS
                 Expanded(
                   child: ListView.separated(
                     itemCount: _assignments.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    separatorBuilder: (_, _) => const Divider(height: 1),
                     itemBuilder: (_, i) {
                       final a = _assignments[i];
                       return ListTile(
@@ -361,7 +361,7 @@ class _AssignmentCalendarScreenState extends ConsumerState<AssignmentCalendarScr
                 Expanded(
                   child: ListView.separated(
                     itemCount: _items.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    separatorBuilder: (_, _) => const Divider(height: 1),
                     itemBuilder: (_, i) {
                       final a = _items[i];
                       return ListTile(
@@ -409,7 +409,7 @@ class _AssignmentAuditScreenState extends ConsumerState<AssignmentAuditScreen> {
 
   Future<void> _exportCsv() async {
     if (_logs.isEmpty) return;
-    final header = 'action,customer_type,sales_person_id,assignment_kind,reason,created_at';
+    const header = 'action,customer_type,sales_person_id,assignment_kind,reason,created_at';
     final rows = _logs.map((log) {
       return [
         log['action'],
@@ -443,7 +443,7 @@ class _AssignmentAuditScreenState extends ConsumerState<AssignmentAuditScreen> {
           ? const Center(child: CircularProgressIndicator())
           : ListView.separated(
               itemCount: _logs.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (_, i) {
                 final log = _logs[i];
                 return ListTile(
@@ -498,7 +498,7 @@ class _SalesPersonTerritoryScreenState extends ConsumerState<SalesPersonTerritor
         builder: (ctx, setLocal) => AlertDialog(
           title: const Text('Assign area to salesperson'),
           content: DropdownButtonFormField<int>(
-            value: areaId,
+            initialValue: areaId,
             items: _areas.map((a) => DropdownMenuItem(value: a.id, child: Text(a.name))).toList(),
             onChanged: (v) => setLocal(() => areaId = v),
           ),
@@ -537,7 +537,7 @@ class _SalesPersonTerritoryScreenState extends ConsumerState<SalesPersonTerritor
                 Padding(
                   padding: const EdgeInsets.all(12),
                   child: DropdownButtonFormField<int?>(
-                    value: _selectedSp,
+                    initialValue: _selectedSp,
                     decoration: const InputDecoration(labelText: 'Salesperson'),
                     items: _salesPersons
                         .map((s) => DropdownMenuItem(value: s.id, child: Text(s.name)))
@@ -551,7 +551,7 @@ class _SalesPersonTerritoryScreenState extends ConsumerState<SalesPersonTerritor
                 Expanded(
                   child: ListView.separated(
                     itemCount: _territories.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    separatorBuilder: (_, _) => const Divider(height: 1),
                     itemBuilder: (_, i) {
                       final t = _territories[i];
                       return ListTile(
@@ -626,7 +626,7 @@ class _SalesPersonDashboardScreenState extends ConsumerState<SalesPersonDashboar
               padding: const EdgeInsets.all(16),
               children: [
                 DropdownButtonFormField<int?>(
-                  value: _selectedSp,
+                  initialValue: _selectedSp,
                   decoration: const InputDecoration(labelText: 'Salesperson'),
                   items: _salesPersons
                       .map((s) => DropdownMenuItem(value: s.id, child: Text(s.name)))

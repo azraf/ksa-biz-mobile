@@ -126,7 +126,7 @@ class _CustomerVansScreenState extends ConsumerState<CustomerVansScreen> {
       loadItems: () async => (await repo.vans(query: CustomerListQuery(sort: _sortMode.apiSortParam()))).items,
       itemTitle: (v) => v.name,
       itemSubtitle: customerListSubtitle,
-      sortModes: [ListSortMode.date, ListSortMode.name, ListSortMode.area, ListSortMode.salesPerson],
+      sortModes: const [ListSortMode.date, ListSortMode.name, ListSortMode.area, ListSortMode.salesPerson],
       initialSortMode: _sortMode,
       onSortChanged: (mode) async {
         _sortMode = mode;
@@ -247,7 +247,7 @@ class _CustomerImportersScreenState extends ConsumerState<CustomerImportersScree
           (await repo.importers(query: CustomerListQuery(sort: _sortMode.apiSortParam()))).items,
       itemTitle: (v) => v.name,
       itemSubtitle: customerListSubtitle,
-      sortModes: [ListSortMode.date, ListSortMode.name, ListSortMode.area, ListSortMode.salesPerson],
+      sortModes: const [ListSortMode.date, ListSortMode.name, ListSortMode.area, ListSortMode.salesPerson],
       initialSortMode: _sortMode,
       onSortChanged: (mode) async {
         _sortMode = mode;
@@ -350,7 +350,7 @@ class _CustomerShopsScreenState extends ConsumerState<CustomerShopsScreen> {
           (await repo.shops(query: CustomerListQuery(sort: _sortMode.apiSortParam()))).items,
       itemTitle: (s) => s.name,
       itemSubtitle: customerListSubtitle,
-      sortModes: [
+      sortModes: const [
         ListSortMode.date,
         ListSortMode.name,
         ListSortMode.area,

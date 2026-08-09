@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/repositories.dart';
 import '../../widgets/crud_screens.dart';
 import '../../widgets/field_config.dart';
-import '../inventory/inventory_screens.dart';
 
 class CountriesScreen extends ConsumerWidget {
   const CountriesScreen({super.key});
@@ -32,7 +31,11 @@ class CountriesScreen extends ConsumerWidget {
       ],
       onSave: (v) async {
         final repo = ref.read(adminRepositoriesProvider).countries;
-        if (item == null) await repo.create(v); else await repo.update(item.id, v);
+        if (item == null) {
+          await repo.create(v);
+        } else {
+          await repo.update(item.id, v);
+        }
       },
     )));
   }
@@ -65,7 +68,11 @@ class SuppliersScreen extends ConsumerWidget {
       ],
       onSave: (v) async {
         final repo = ref.read(adminRepositoriesProvider).suppliers;
-        if (item == null) await repo.create(v); else await repo.update(item.id, v);
+        if (item == null) {
+          await repo.create(v);
+        } else {
+          await repo.update(item.id, v);
+        }
       },
     )));
   }
@@ -135,7 +142,11 @@ class ContainersScreen extends ConsumerWidget {
       ],
       onSave: (v) async {
         final repo = ref.read(adminRepositoriesProvider).shippingContainers;
-        if (item == null) await repo.create(v); else await repo.update(item.id, v);
+        if (item == null) {
+          await repo.create(v);
+        } else {
+          await repo.update(item.id, v);
+        }
       },
     )));
   }
@@ -233,7 +244,7 @@ class _CreatePurchaseScreenState extends ConsumerState<CreatePurchaseScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           DropdownButtonFormField<String>(
-            value: _purchaseType,
+            initialValue: _purchaseType,
             decoration: const InputDecoration(labelText: 'Purchase Type'),
             items: const [
               DropdownMenuItem(value: 'local', child: Text('Local')),

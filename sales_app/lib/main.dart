@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
-import 'providers/repositories.dart';
 import 'services/push_notification_service.dart';
 
 Future<void> main() async {

@@ -55,14 +55,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+      GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             AdminHomeShell(navigationShell: navigationShell),
         branches: [
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/', builder: (_, __) => const DashboardScreen()),
+              GoRoute(path: '/', builder: (_, _) => const DashboardScreen()),
             ],
           ),
           StatefulShellBranch(
@@ -74,9 +74,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'orders',
-                    builder: (_, __) => const OrdersScreen(),
+                    builder: (_, _) => const OrdersScreen(),
                     routes: [
-                      GoRoute(path: 'create', builder: (_, __) => const CreateOrderScreen()),
+                      GoRoute(path: 'create', builder: (_, _) => const CreateOrderScreen()),
                       GoRoute(
                         path: ':id',
                         builder: (_, s) =>
@@ -91,15 +91,15 @@ final routerProvider = Provider<GoRouter>((ref) {
                       ),
                     ],
                   ),
-                  GoRoute(path: 'manual-orders', builder: (_, __) => const ManualOrdersScreen(), routes: [
+                  GoRoute(path: 'manual-orders', builder: (_, _) => const ManualOrdersScreen(), routes: [
                     GoRoute(
                       path: ':id',
                       builder: (_, s) =>
                           AdminManualOrderDetailScreen(id: int.parse(s.pathParameters['id']!)),
                     ),
                   ]),
-                  GoRoute(path: 'invoices', builder: (_, __) => const InvoicesScreen()),
-                  GoRoute(path: 'persons', builder: (_, __) => const SalesPersonsScreen()),
+                  GoRoute(path: 'invoices', builder: (_, _) => const InvoicesScreen()),
+                  GoRoute(path: 'persons', builder: (_, _) => const SalesPersonsScreen()),
                 ],
               ),
             ],
@@ -111,26 +111,26 @@ final routerProvider = Provider<GoRouter>((ref) {
                 redirect: (context, state) =>
                     state.uri.path == '/customers' ? '/customers/hub' : null,
                 routes: [
-                  GoRoute(path: 'hub', builder: (_, __) => const CustomersHubScreen()),
-                  GoRoute(path: 'shops', builder: (_, __) => const CustomerShopsScreen(), routes: [
+                  GoRoute(path: 'hub', builder: (_, _) => const CustomersHubScreen()),
+                  GoRoute(path: 'shops', builder: (_, _) => const CustomerShopsScreen(), routes: [
                     GoRoute(
                       path: ':id',
                       builder: (_, s) => ShopDetailScreen(shopId: int.parse(s.pathParameters['id']!)),
                     ),
                   ]),
-                  GoRoute(path: 'vans', builder: (_, __) => const CustomerVansScreen()),
-                  GoRoute(path: 'importers', builder: (_, __) => const CustomerImportersScreen()),
-                  GoRoute(path: 'types', builder: (_, __) => const CustomerTypesScreen()),
-                  GoRoute(path: 'areas', builder: (_, __) => const AreasScreen()),
-                  GoRoute(path: 'assignments', builder: (_, __) => const CustomerAssignmentsScreen()),
-                  GoRoute(path: 'dashboard', builder: (_, __) => const SalesPersonDashboardScreen()),
-                  GoRoute(path: 'territories', builder: (_, __) => const SalesPersonTerritoryScreen()),
-                  GoRoute(path: 'calendar', builder: (_, __) => const AssignmentCalendarScreen()),
-                  GoRoute(path: 'unassigned', builder: (_, __) => const UnassignedCustomersScreen()),
-                  GoRoute(path: 'audit', builder: (_, __) => const AssignmentAuditScreen()),
-                  GoRoute(path: 'map', builder: (_, __) => const ShopMapScreen()),
-                  GoRoute(path: 'watchlist', builder: (_, __) => const AdminWatchlistScreen()),
-                  GoRoute(path: 'churn', builder: (_, __) => const ChurnRiskScreen()),
+                  GoRoute(path: 'vans', builder: (_, _) => const CustomerVansScreen()),
+                  GoRoute(path: 'importers', builder: (_, _) => const CustomerImportersScreen()),
+                  GoRoute(path: 'types', builder: (_, _) => const CustomerTypesScreen()),
+                  GoRoute(path: 'areas', builder: (_, _) => const AreasScreen()),
+                  GoRoute(path: 'assignments', builder: (_, _) => const CustomerAssignmentsScreen()),
+                  GoRoute(path: 'dashboard', builder: (_, _) => const SalesPersonDashboardScreen()),
+                  GoRoute(path: 'territories', builder: (_, _) => const SalesPersonTerritoryScreen()),
+                  GoRoute(path: 'calendar', builder: (_, _) => const AssignmentCalendarScreen()),
+                  GoRoute(path: 'unassigned', builder: (_, _) => const UnassignedCustomersScreen()),
+                  GoRoute(path: 'audit', builder: (_, _) => const AssignmentAuditScreen()),
+                  GoRoute(path: 'map', builder: (_, _) => const ShopMapScreen()),
+                  GoRoute(path: 'watchlist', builder: (_, _) => const AdminWatchlistScreen()),
+                  GoRoute(path: 'churn', builder: (_, _) => const ChurnRiskScreen()),
                 ],
               ),
             ],
@@ -142,11 +142,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                 redirect: (context, state) =>
                     state.uri.path == '/inventory' ? '/inventory/warehouse' : null,
                 routes: [
-                  GoRoute(path: 'warehouse', builder: (_, __) => const WarehouseStockScreen()),
-                  GoRoute(path: 'van', builder: (_, __) => const VanStockScreen()),
-                  GoRoute(path: 'load', builder: (_, __) => const LoadVanScreen()),
-                  GoRoute(path: 'adjust', builder: (_, __) => const StockAdjustmentScreen()),
-                  GoRoute(path: 'damage-writeoff', builder: (_, __) => const DamageWriteoffScreen()),
+                  GoRoute(path: 'warehouse', builder: (_, _) => const WarehouseStockScreen()),
+                  GoRoute(path: 'van', builder: (_, _) => const VanStockScreen()),
+                  GoRoute(path: 'load', builder: (_, _) => const LoadVanScreen()),
+                  GoRoute(path: 'adjust', builder: (_, _) => const StockAdjustmentScreen()),
+                  GoRoute(path: 'damage-writeoff', builder: (_, _) => const DamageWriteoffScreen()),
                 ],
               ),
             ],
@@ -155,21 +155,21 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/more',
-                builder: (_, __) => const MoreHubScreen(),
+                builder: (_, _) => const MoreHubScreen(),
                 routes: [
-                  GoRoute(path: 'reports/sales', builder: (_, __) => const SalesReportScreen()),
-                  GoRoute(path: 'reports/profit', builder: (_, __) => const ProfitReportScreen()),
-                  GoRoute(path: 'reports/expenses', builder: (_, __) => const ExpenseReportScreen()),
+                  GoRoute(path: 'reports/sales', builder: (_, _) => const SalesReportScreen()),
+                  GoRoute(path: 'reports/profit', builder: (_, _) => const ProfitReportScreen()),
+                  GoRoute(path: 'reports/expenses', builder: (_, _) => const ExpenseReportScreen()),
                   GoRoute(
                     path: 'reports/expense-summary',
-                    builder: (_, __) => const ExpenseSummaryReportScreen(),
+                    builder: (_, _) => const ExpenseSummaryReportScreen(),
                   ),
-                  GoRoute(path: 'expenses/categories', builder: (_, __) => const ExpenseCategoriesScreen()),
+                  GoRoute(path: 'expenses/categories', builder: (_, _) => const ExpenseCategoriesScreen()),
                   GoRoute(
                     path: 'expenses/list',
-                    builder: (_, __) => const ExpensesScreen(),
+                    builder: (_, _) => const ExpensesScreen(),
                     routes: [
-                      GoRoute(path: 'create', builder: (_, __) => const ExpenseFormScreen()),
+                      GoRoute(path: 'create', builder: (_, _) => const ExpenseFormScreen()),
                       GoRoute(
                         path: ':id',
                         builder: (_, s) =>
@@ -177,16 +177,16 @@ final routerProvider = Provider<GoRouter>((ref) {
                       ),
                     ],
                   ),
-                  GoRoute(path: 'expenses/vehicles', builder: (_, __) => const VehiclesScreen()),
-                  GoRoute(path: 'catalog/tags', builder: (_, __) => const TagsScreen()),
-                  GoRoute(path: 'catalog/brands', builder: (_, __) => const BrandsScreen()),
-                  GoRoute(path: 'catalog/units', builder: (_, __) => const UnitsScreen()),
-                  GoRoute(path: 'catalog/categories', builder: (_, __) => const CategoriesScreen()),
+                  GoRoute(path: 'expenses/vehicles', builder: (_, _) => const VehiclesScreen()),
+                  GoRoute(path: 'catalog/tags', builder: (_, _) => const TagsScreen()),
+                  GoRoute(path: 'catalog/brands', builder: (_, _) => const BrandsScreen()),
+                  GoRoute(path: 'catalog/units', builder: (_, _) => const UnitsScreen()),
+                  GoRoute(path: 'catalog/categories', builder: (_, _) => const CategoriesScreen()),
                   GoRoute(
                     path: 'catalog/products',
-                    builder: (_, __) => const ProductsScreen(),
+                    builder: (_, _) => const ProductsScreen(),
                     routes: [
-                      GoRoute(path: 'create', builder: (_, __) => const ProductFormScreen()),
+                      GoRoute(path: 'create', builder: (_, _) => const ProductFormScreen()),
                       GoRoute(
                         path: ':id',
                         builder: (_, s) =>
@@ -194,14 +194,14 @@ final routerProvider = Provider<GoRouter>((ref) {
                       ),
                     ],
                   ),
-                  GoRoute(path: 'catalog/promotions', builder: (_, __) => const PromotionsScreen()),
-                  GoRoute(path: 'shipping/countries', builder: (_, __) => const CountriesScreen()),
-                  GoRoute(path: 'shipping/suppliers', builder: (_, __) => const SuppliersScreen()),
-                  GoRoute(path: 'shipping/containers', builder: (_, __) => const ContainersScreen()),
-                  GoRoute(path: 'shipping/purchases', builder: (_, __) => const PurchasesScreen()),
-                  GoRoute(path: 'approval/discount', builder: (_, __) => const DiscountApprovalScreen()),
-                  GoRoute(path: 'users', builder: (_, __) => const UsersScreen()),
-                  GoRoute(path: 'profile', builder: (_, __) => const AdminProfileScreen()),
+                  GoRoute(path: 'catalog/promotions', builder: (_, _) => const PromotionsScreen()),
+                  GoRoute(path: 'shipping/countries', builder: (_, _) => const CountriesScreen()),
+                  GoRoute(path: 'shipping/suppliers', builder: (_, _) => const SuppliersScreen()),
+                  GoRoute(path: 'shipping/containers', builder: (_, _) => const ContainersScreen()),
+                  GoRoute(path: 'shipping/purchases', builder: (_, _) => const PurchasesScreen()),
+                  GoRoute(path: 'approval/discount', builder: (_, _) => const DiscountApprovalScreen()),
+                  GoRoute(path: 'users', builder: (_, _) => const UsersScreen()),
+                  GoRoute(path: 'profile', builder: (_, _) => const AdminProfileScreen()),
                 ],
               ),
             ],
@@ -311,7 +311,7 @@ class AdminHomeShell extends ConsumerWidget {
 
 class _RouterRefresh extends ChangeNotifier {
   _RouterRefresh(this.ref) {
-    ref.listen<AuthState>(authProvider, (_, __) => notifyListeners());
+    ref.listen<AuthState>(authProvider, (_, _) => notifyListeners());
   }
   final Ref ref;
 }

@@ -131,7 +131,7 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
               onPressed: _openMap,
             ),
           ListSortButton(
-            modes: [ListSortMode.distance, ListSortMode.date, ListSortMode.name],
+            modes: const [ListSortMode.distance, ListSortMode.date, ListSortMode.name],
             selected: _sortMode,
             onSelected: (mode) async {
               _sortMode = mode;
@@ -506,7 +506,7 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
             TextField(controller: _phoneController, decoration: InputDecoration(labelText: l10n.commonPhone)),
             const SizedBox(height: 8),
             DropdownButtonFormField<int>(
-              value: _priorityRating,
+              initialValue: _priorityRating,
               decoration: InputDecoration(labelText: l10n.salesWatchlistPriorityRating),
               items: List.generate(5, (i) => DropdownMenuItem(value: i + 1, child: Text('${i + 1} stars'))),
               onChanged: (v) => setState(() => _priorityRating = v),
@@ -681,7 +681,7 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: item.images.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
                 itemBuilder: (_, i) {
                   final img = item.images[i];
                   if (img.url == null) return const SizedBox.shrink();

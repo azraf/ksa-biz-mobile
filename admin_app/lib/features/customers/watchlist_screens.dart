@@ -77,7 +77,7 @@ class _AdminWatchlistScreenState extends ConsumerState<AdminWatchlistScreen> {
             ],
           ),
           ListSortButton(
-            modes: [ListSortMode.date, ListSortMode.name, ListSortMode.salesPerson],
+            modes: const [ListSortMode.date, ListSortMode.name, ListSortMode.salesPerson],
             selected: _sortMode,
             onSelected: (mode) async {
               _sortMode = mode;

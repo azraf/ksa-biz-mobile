@@ -2,10 +2,8 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../providers/repositories.dart';
-import '../../widgets/app_drawer.dart';
 import '../../widgets/crud_screens.dart';
 import '../../widgets/field_config.dart';
 
@@ -36,8 +34,11 @@ class TagsScreen extends ConsumerWidget {
         ],
         onSave: (v) async {
           final repo = ref.read(adminRepositoriesProvider).tags;
-          if (tag == null) await repo.create(v);
-          else await repo.update(tag.id, v);
+          if (tag == null) {
+            await repo.create(v);
+          } else {
+            await repo.update(tag.id, v);
+          }
         },
       ),
     ));
@@ -67,7 +68,11 @@ class BrandsScreen extends ConsumerWidget {
       fields: const [FieldConfig(key: 'name', label: 'Name', required: true)],
       onSave: (v) async {
         final repo = ref.read(adminRepositoriesProvider).brands;
-        if (item == null) await repo.create(v); else await repo.update(item.id, v);
+        if (item == null) {
+          await repo.create(v);
+        } else {
+          await repo.update(item.id, v);
+        }
       },
     )));
   }
@@ -99,7 +104,11 @@ class UnitsScreen extends ConsumerWidget {
       ],
       onSave: (v) async {
         final repo = ref.read(adminRepositoriesProvider).units;
-        if (item == null) await repo.create(v); else await repo.update(item.id, v);
+        if (item == null) {
+          await repo.create(v);
+        } else {
+          await repo.update(item.id, v);
+        }
       },
     )));
   }
@@ -131,7 +140,11 @@ class CategoriesScreen extends ConsumerWidget {
       ],
       onSave: (v) async {
         final repo = ref.read(adminRepositoriesProvider).categories;
-        if (item == null) await repo.create(v); else await repo.update(item.id, v);
+        if (item == null) {
+          await repo.create(v);
+        } else {
+          await repo.update(item.id, v);
+        }
       },
     )));
   }
@@ -171,8 +184,11 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.productId != null) _load();
-    else _loading = false;
+    if (widget.productId != null) {
+      _load();
+    } else {
+      _loading = false;
+    }
   }
 
   Future<void> _load() async {
@@ -208,8 +224,11 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 'description': _description.text,
               };
               final repo = ref.read(productRepositoryProvider);
-              if (widget.productId == null) await repo.create(body);
-              else await repo.update(widget.productId!, body);
+              if (widget.productId == null) {
+                await repo.create(body);
+              } else {
+                await repo.update(widget.productId!, body);
+              }
               if (context.mounted) Navigator.pop(context);
             },
             child: const Text('Save'),
@@ -251,7 +270,11 @@ class PromotionsScreen extends ConsumerWidget {
       ],
       onSave: (v) async {
         final repo = ref.read(adminRepositoriesProvider).promotions;
-        if (item == null) await repo.create(v); else await repo.update(item.id, v);
+        if (item == null) {
+          await repo.create(v);
+        } else {
+          await repo.update(item.id, v);
+        }
       },
     )));
   }

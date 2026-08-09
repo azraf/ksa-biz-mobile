@@ -1,4 +1,3 @@
-import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -77,7 +76,7 @@ class _AdminCollectPaymentScreenState extends ConsumerState<AdminCollectPaymentS
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: _method,
+            initialValue: _method,
             decoration: const InputDecoration(labelText: 'Payment method'),
             items: const [
               DropdownMenuItem(value: 'cash', child: Text('Cash')),

@@ -36,7 +36,7 @@ class UsersScreen extends ConsumerWidget {
           const FieldConfig(key: 'password', label: 'Password', type: FieldType.password, required: true),
           const FieldConfig(key: 'password_confirmation', label: 'Confirm Password', type: FieldType.password, required: true),
         ],
-        FieldConfig(
+        const FieldConfig(
           key: 'roles',
           label: 'Roles (comma-separated)',
           type: FieldType.text,

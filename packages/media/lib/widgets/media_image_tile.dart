@@ -19,10 +19,18 @@ class MediaImageTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Decode at display size (not full camera resolution) — big memory/jank win.
+    final decodeHeight = (height * MediaQuery.devicePixelRatioOf(context)).round();
     if (localPath != null && File(localPath!).existsSync()) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: Image.file(File(localPath!), height: height, width: double.infinity, fit: fit),
+        child: Image.file(
+          File(localPath!),
+          height: height,
+          width: double.infinity,
+          fit: fit,
+          cacheHeight: decodeHeight,
+        ),
       );
     }
     if (url != null && url!.isNotEmpty) {
@@ -33,6 +41,7 @@ class MediaImageTile extends StatelessWidget {
           height: height,
           width: double.infinity,
           fit: fit,
+          memCacheHeight: decodeHeight,
           placeholder: (_, __) => SizedBox(
             height: height,
             child: const Center(child: CircularProgressIndicator()),

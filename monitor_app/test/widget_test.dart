@@ -1,12 +1,31 @@
-import 'package:flutter_test/flutter_test.dart';
+import 'package:core/core.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:monitor_app/app.dart';
 import 'package:monitor_app/providers/repositories.dart';
 
+class _FakeBiometrics extends BiometricAuthService {
+  @override
+  Future<bool> canCheckBiometrics() async => false;
+
+  @override
+  Future<bool> isDeviceSupported() async => false;
+}
+
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+  final binding = TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    // Real plugin channels never respond in widget tests; unmocked calls hang.
+    const storage = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(storage, (call) async {
+      if (call.method == 'readAll') return <String, String>{};
+      return null;
+    });
+  });
 
   testWidgets('App boots to login screen', (tester) async {
     SharedPreferences.setMockInitialValues({});
@@ -14,7 +33,10 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          biometricAuthServiceProvider.overrideWithValue(_FakeBiometrics()),
+        ],
         child: const MonitorApp(),
       ),
     );

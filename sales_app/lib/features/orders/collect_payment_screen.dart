@@ -81,7 +81,7 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: _method,
+            initialValue: _method,
             decoration: InputDecoration(labelText: l10n.salesOrderPaymentMethod),
             items: [
               DropdownMenuItem(value: 'cash', child: Text(l10n.commonCash)),

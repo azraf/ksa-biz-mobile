@@ -108,7 +108,7 @@ class _ManualOrderListScreenState extends ConsumerState<ManualOrderListScreen> w
               if (_loading[index] == true) {
                 return ListView.builder(
                   itemCount: 5,
-                  itemBuilder: (_, __) => const SkeletonListTile(),
+                  itemBuilder: (_, _) => const SkeletonListTile(),
                 );
               }
               if (_error != null) return ErrorView(message: _error!, onRetry: () => _loadTab(index));

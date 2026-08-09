@@ -1,4 +1,3 @@
-import 'package:core/core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'repositories.dart';

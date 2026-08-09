@@ -160,7 +160,7 @@ class _VanStockScreenState extends ConsumerState<VanStockScreen> {
             child: _loading
                 ? ListView.builder(
                     itemCount: 6,
-                    itemBuilder: (_, __) => const SkeletonListTile(),
+                    itemBuilder: (_, _) => const SkeletonListTile(),
                   )
                 : _error != null
                     ? ErrorView(message: _error!, onRetry: _load)

@@ -219,7 +219,7 @@ class CustomerRatingSection extends StatelessWidget {
             CustomerMetricsBadges(metrics: metrics),
             const SizedBox(height: 8),
             DropdownButtonFormField<String?>(
-              value: paymentOverride,
+              initialValue: paymentOverride,
               decoration: const InputDecoration(labelText: 'Payment reliability override'),
               items: const [
                 DropdownMenuItem(value: null, child: Text('Auto')),

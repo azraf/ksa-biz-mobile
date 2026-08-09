@@ -1,5 +1,4 @@
 import '../api/api_client.dart';
-import '../models/customer.dart';
 import '../models/manual_order_request.dart';
 import '../models/order.dart';
 import '../models/paginated_response.dart';

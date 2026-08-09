@@ -75,7 +75,9 @@ class AuthNotifier extends Notifier<AuthState> {
         _runBackgroundAuthTasks();
       }
     } catch (_) {
-      await _authRepository.clearSession();
+      try {
+        await _authRepository.clearSession();
+      } catch (_) {}
       state = const AuthState(isLoading: false);
     }
   }

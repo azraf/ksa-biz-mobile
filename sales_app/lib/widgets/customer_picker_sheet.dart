@@ -421,7 +421,7 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
                       ? Center(child: Text(l10n.salesPickerNoCustomers))
                       : ListView.separated(
                           itemCount: _items.length,
-                          separatorBuilder: (_, __) => const Divider(height: 1),
+                          separatorBuilder: (_, _) => const Divider(height: 1),
                           itemBuilder: (_, i) {
                             final item = _items[i];
                             final metrics = _metrics(item);

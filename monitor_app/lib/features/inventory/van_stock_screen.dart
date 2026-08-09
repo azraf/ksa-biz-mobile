@@ -80,7 +80,7 @@ class _VanStockScreenState extends ConsumerState<VanStockScreen> {
         Padding(
           padding: const EdgeInsets.all(16),
           child: DropdownButtonFormField<int>(
-            value: _selectedId,
+            initialValue: _selectedId,
             decoration: const InputDecoration(labelText: 'Sales person'),
             items: _persons
                 .map((p) => DropdownMenuItem(value: p.id, child: Text(p.name)))

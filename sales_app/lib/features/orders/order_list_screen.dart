@@ -182,7 +182,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
                 _filterChip(l10n.salesOrderFilterUnpaid, _OrderFilter.unpaid),
                 _filterChip(l10n.statusPending, _OrderFilter.pendingApproval),
                 ListSortButton(
-                  modes: [
+                  modes: const [
                     ListSortMode.date,
                     ListSortMode.name,
                     ListSortMode.area,
@@ -202,7 +202,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
             child: _loading
                 ? ListView.builder(
                     itemCount: 6,
-                    itemBuilder: (_, __) => const SkeletonListTile(),
+                    itemBuilder: (_, _) => const SkeletonListTile(),
                   )
                 : _error != null
                     ? ErrorView(message: _error!, onRetry: () => _load(page: 1, reset: true))

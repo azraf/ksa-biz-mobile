@@ -13,8 +13,7 @@ class _LoadLine {
     required this.name,
     required this.available,
     required this.controller,
-    this.selected = false,
-  });
+  }) : selected = false;
 
   final int productId;
   final String name;

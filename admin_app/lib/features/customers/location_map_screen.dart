@@ -47,7 +47,7 @@ class _AdminLocationMapScreenState extends ConsumerState<AdminLocationMapScreen>
         : Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
             child: DropdownButtonFormField<int?>(
-              value: _areaFilter,
+              initialValue: _areaFilter,
               decoration: const InputDecoration(labelText: 'Filter shops by area'),
               items: [
                 const DropdownMenuItem(value: null, child: Text('All areas')),

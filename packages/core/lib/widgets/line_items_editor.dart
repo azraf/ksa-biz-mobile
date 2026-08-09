@@ -163,7 +163,7 @@ class _LineItemDialogState extends State<_LineItemDialog> {
         children: [
           if (canBreakPack)
             DropdownButtonFormField<int>(
-              value: _unitId,
+              initialValue: _unitId,
               decoration: InputDecoration(labelText: l10n.commonUnit),
               items: [
                 if (product.defaultCartonUnitId > 0)

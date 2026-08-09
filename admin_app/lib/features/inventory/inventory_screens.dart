@@ -84,7 +84,7 @@ class _VanStockScreenState extends ConsumerState<VanStockScreen> {
             Padding(
               padding: const EdgeInsets.all(16),
               child: DropdownButtonFormField<int>(
-                value: _selectedId,
+                initialValue: _selectedId,
                 decoration: const InputDecoration(labelText: 'Sales Person'),
                 items: _persons.map((p) => DropdownMenuItem(value: p.id, child: Text(p.name))).toList(),
                 onChanged: (v) => setState(() => _selectedId = v),
@@ -129,8 +129,7 @@ class _LoadLine {
     required this.name,
     required this.available,
     required this.controller,
-    this.selected = false,
-  });
+  }) : selected = false;
 
   final int productId;
   final String name;
@@ -271,7 +270,7 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: DropdownButtonFormField<int>(
-              value: _selectedPersonId,
+              initialValue: _selectedPersonId,
               decoration: const InputDecoration(labelText: 'Sales Person'),
               items: _persons.map((p) => DropdownMenuItem(value: p.id, child: Text(p.name))).toList(),
               onChanged: (v) async {
@@ -360,7 +359,7 @@ class _StockAdjustmentScreenState extends ConsumerState<StockAdjustmentScreen> {
             TextField(controller: _quantity, decoration: const InputDecoration(labelText: 'Quantity'), keyboardType: TextInputType.number),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: _direction,
+              initialValue: _direction,
               decoration: const InputDecoration(labelText: 'Direction'),
               items: const [
                 DropdownMenuItem(value: 'in', child: Text('Stock In')),

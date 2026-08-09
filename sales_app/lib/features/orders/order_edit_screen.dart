@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:l10n/l10n.dart';
 
 import '../../providers/connectivity_provider.dart';
-import '../../providers/connectivity_provider.dart';
 import '../../providers/repositories.dart';
 import '../../widgets/line_items_editor.dart';
 

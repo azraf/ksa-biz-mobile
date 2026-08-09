@@ -248,8 +248,8 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             ),
           ),
         if (order.hasPendingDiscount)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+          const Padding(
+            padding: EdgeInsets.only(bottom: 8),
             child: StatusChip(label: 'in_review'),
           ),
         Card(

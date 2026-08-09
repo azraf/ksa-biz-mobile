@@ -28,6 +28,7 @@ dependencies:
   record: ^6.0.0
   geolocator: ^13.0.4
 
+  path: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

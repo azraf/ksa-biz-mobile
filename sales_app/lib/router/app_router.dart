@@ -127,10 +127,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: '/van-stock',
                 builder: (context, state) => const VanStockScreen(),
                 routes: [
-                  GoRoute(path: 'load', builder: (_, __) => const LoadVanScreen()),
-                  GoRoute(path: 'transfer', builder: (_, __) => const TransferScreen()),
-                  GoRoute(path: 'damage', builder: (_, __) => const DamageReplacementScreen()),
-                  GoRoute(path: 'exchange', builder: (_, __) => const ProductExchangeScreen()),
+                  GoRoute(path: 'load', builder: (_, _) => const LoadVanScreen()),
+                  GoRoute(path: 'transfer', builder: (_, _) => const TransferScreen()),
+                  GoRoute(path: 'damage', builder: (_, _) => const DamageReplacementScreen()),
+                  GoRoute(path: 'exchange', builder: (_, _) => const ProductExchangeScreen()),
                 ],
               ),
             ],
@@ -159,7 +159,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: 'create',
-            builder: (_, __) => const WatchlistCreateScreen(),
+            builder: (_, _) => const WatchlistCreateScreen(),
           ),
           GoRoute(
             path: ':id',

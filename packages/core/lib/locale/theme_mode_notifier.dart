@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../config/app_config.dart';
 import '../providers/shared_preferences_provider.dart';
 
 class ThemeModeNotifier extends Notifier<ThemeMode> {

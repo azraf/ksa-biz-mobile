@@ -63,10 +63,10 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner> {
           onOpenSyncIssues: _openSyncIssues,
         ),
         loading: () => _offlineOnlyBanner(context, online),
-        error: (_, __) => const SizedBox.shrink(),
+        error: (_, _) => const SizedBox.shrink(),
       ),
       loading: () => _offlineOnlyBanner(context, online),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 

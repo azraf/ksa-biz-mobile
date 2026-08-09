@@ -92,7 +92,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           DropdownButtonFormField<int>(
-            value: _categoryId,
+            initialValue: _categoryId,
             decoration: const InputDecoration(labelText: 'Category'),
             items: _categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
             onChanged: (v) => setState(() => _categoryId = v),
@@ -110,7 +110,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: _status,
+            initialValue: _status,
             decoration: const InputDecoration(labelText: 'Status'),
             items: ['draft', 'submitted', 'approved', 'paid']
                 .map((s) => DropdownMenuItem(value: s, child: Text(s)))
@@ -177,7 +177,11 @@ class VehiclesScreen extends ConsumerWidget {
       ],
       onSave: (v) async {
         final repo = ref.read(adminRepositoriesProvider).vehicles;
-        if (item == null) await repo.create(v); else await repo.update(item.id, v);
+        if (item == null) {
+          await repo.create(v);
+        } else {
+          await repo.update(item.id, v);
+        }
       },
     )));
   }

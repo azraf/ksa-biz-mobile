@@ -82,7 +82,7 @@ class _ProductExchangeScreenState extends ConsumerState<ProductExchangeScreen> {
         ),
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
-          value: _settlement,
+          initialValue: _settlement,
           decoration: InputDecoration(labelText: l10n.salesVanExchangeSettlement, border: const OutlineInputBorder()),
           items: [
             DropdownMenuItem(value: 'product', child: Text(l10n.salesVanExchangeGiveProduct)),
