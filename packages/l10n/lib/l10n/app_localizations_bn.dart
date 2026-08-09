@@ -1263,6 +1263,10 @@ class AppLocalizationsBn extends AppLocalizations {
       'এন্ট্রি তৈরির পর ভয়েস সংরক্ষিত হবে (বিবরণ থেকে আপলোড)।';
 
   @override
+  String get salesWatchlistMediaPartial =>
+      'সংরক্ষিত হয়েছে, তবে কিছু সংযুক্তি আপলোড করা যায়নি।';
+
+  @override
   String get salesWatchlistPhotosAfterSave =>
       'বিবরণ স্ক্রিন থেকে সংরক্ষণের পর ছবি যোগ করুন।';
 

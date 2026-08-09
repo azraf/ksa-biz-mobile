@@ -512,6 +512,7 @@
   "salesWatchlistNoteOptional": "ملاحظة (اختياري)",
   "salesWatchlistSaveLocation": "حفظ الموقع",
   "salesWatchlistVoicePending": "يُحفظ الصوت بعد إنشاء الإدخال (الرفع من التفاصيل).",
+  "salesWatchlistMediaPartial": "تم الحفظ، لكن تعذّر رفع بعض المرفقات.",
   "salesWatchlistPhotosAfterSave": "أضف الصور بعد الحفظ من شاشة التفاصيل.",
   "salesWatchlistDeleteTitle": "حذف إدخال قائمة المراقبة؟",
   "salesWatchlistSyncBeforeConvert": "زامن هذا العنصر عبر الإنترنت قبل التحويل.",

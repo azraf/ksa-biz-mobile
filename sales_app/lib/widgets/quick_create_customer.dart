@@ -22,13 +22,21 @@ Future<dynamic> showQuickCreateCustomerSheet({
           ref.read(mediaCaptureFacadeProvider).attachShopPhoto(file, shopId),
       createOfflineProspect: offlineSalesPersonId == null
           ? null
-          : ({required gps, placeName, noteText}) =>
-              ref.read(offlineWatchlistRepositoryProvider).create(
+          : ({required gps, placeName, noteText, photoFile}) async {
+              final item = await ref.read(offlineWatchlistRepositoryProvider).create(
                     gps: gps,
                     salesPersonId: offlineSalesPersonId,
                     placeName: placeName,
                     noteText: noteText,
-                  ),
+                  );
+              if (photoFile != null) {
+                await ref.read(mediaCaptureFacadeProvider).attachWatchlistGallery(
+                      photoFile,
+                      item.id,
+                      localId: item.isLocalOnly ? item.id : null,
+                    );
+              }
+            },
     ),
     customerType: customerType,
     salesPersonId: salesPersonId,

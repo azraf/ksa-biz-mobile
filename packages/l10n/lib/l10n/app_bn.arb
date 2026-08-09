@@ -512,6 +512,7 @@
   "salesWatchlistNoteOptional": "নোট (ঐচ্ছিক)",
   "salesWatchlistSaveLocation": "অবস্থান সংরক্ষণ",
   "salesWatchlistVoicePending": "এন্ট্রি তৈরির পর ভয়েস সংরক্ষিত হবে (বিবরণ থেকে আপলোড)।",
+  "salesWatchlistMediaPartial": "সংরক্ষিত হয়েছে, তবে কিছু সংযুক্তি আপলোড করা যায়নি।",
   "salesWatchlistPhotosAfterSave": "বিবরণ স্ক্রিন থেকে সংরক্ষণের পর ছবি যোগ করুন।",
   "salesWatchlistDeleteTitle": "ওয়াচলিস্ট এন্ট্রি মুছবেন?",
   "salesWatchlistSyncBeforeConvert": "রূপান্তরের আগে অনলাইনে সিঙ্ক করুন।",

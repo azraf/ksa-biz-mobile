@@ -1260,6 +1260,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Voice saved after you create the entry (upload on detail).';
 
   @override
+  String get salesWatchlistMediaPartial =>
+      'Saved, but some attachments could not be uploaded.';
+
+  @override
   String get salesWatchlistPhotosAfterSave =>
       'Add photos after saving from detail screen.';
 

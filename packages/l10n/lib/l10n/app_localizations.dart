@@ -2368,6 +2368,12 @@ abstract class AppLocalizations {
   /// **'Voice saved after you create the entry (upload on detail).'**
   String get salesWatchlistVoicePending;
 
+  /// No description provided for @salesWatchlistMediaPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved, but some attachments could not be uploaded.'**
+  String get salesWatchlistMediaPartial;
+
   /// No description provided for @salesWatchlistPhotosAfterSave.
   ///
   /// In en, this message translates to:

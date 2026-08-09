@@ -215,6 +215,12 @@ class _WatchlistCreateScreenState extends ConsumerState<WatchlistCreateScreen> {
   String? _gps;
   bool _working = false;
   bool _isRecording = false;
+  DateTime? _recordStartedAt;
+
+  /// Media captured before saving — uploaded right after create() returns
+  /// (queued against the local id when offline).
+  final List<({String path, int seconds})> _voices = [];
+  final List<XFile> _photos = [];
 
   @override
   void initState() {
@@ -254,6 +260,33 @@ class _WatchlistCreateScreenState extends ConsumerState<WatchlistCreateScreen> {
         placeName: _placeController.text.trim().isEmpty ? null : _placeController.text.trim(),
         noteText: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
       );
+      final facade = ref.read(mediaCaptureFacadeProvider);
+      final localId = item.isLocalOnly ? item.id : null;
+      var mediaFailed = false;
+      for (final voice in _voices) {
+        try {
+          await facade.attachWatchlistAudio(
+            File(voice.path),
+            item.id,
+            localId: localId,
+            durationSeconds: voice.seconds,
+          );
+        } catch (_) {
+          mediaFailed = true;
+        }
+      }
+      for (final photo in _photos) {
+        try {
+          await facade.attachWatchlistGallery(File(photo.path), item.id, localId: localId);
+        } catch (_) {
+          mediaFailed = true;
+        }
+      }
+      if (mediaFailed && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).salesWatchlistMediaPartial)),
+        );
+      }
       if (mounted) context.go('/watchlist/${item.id}');
     } catch (e) {
       if (mounted) showAppErrorSnackBar(context, e);
@@ -264,17 +297,29 @@ class _WatchlistCreateScreenState extends ConsumerState<WatchlistCreateScreen> {
 
   Future<void> _toggleRecord() async {
     if (_isRecording) {
+      final started = _recordStartedAt;
       final path = await _recorder.stop();
-      setState(() => _isRecording = false);
+      setState(() {
+        _isRecording = false;
+        _recordStartedAt = null;
+      });
       if (path == null) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).salesWatchlistVoicePending)),
-      );
+      final seconds =
+          DateTime.now().difference(started ?? DateTime.now()).inSeconds.clamp(1, 180);
+      setState(() => _voices.add((path: path, seconds: seconds)));
       return;
     }
     if (!await AppPermissions.requestMicrophone()) return;
+    _recordStartedAt = DateTime.now();
     await _recorder.start(const RecordConfig(), path: '${Directory.systemTemp.path}/wl_${DateTime.now().millisecondsSinceEpoch}.m4a');
     setState(() => _isRecording = true);
+  }
+
+  Future<void> _takePhoto() async {
+    if (!await AppPermissions.requestCamera()) return;
+    final photo = await _picker.pickImage(source: ImageSource.camera);
+    if (photo == null) return;
+    setState(() => _photos.add(photo));
   }
 
   @override
@@ -324,20 +369,33 @@ class _WatchlistCreateScreenState extends ConsumerState<WatchlistCreateScreen> {
               ),
               const SizedBox(width: 8),
               OutlinedButton.icon(
-                onPressed: () async {
-                  if (!await AppPermissions.requestCamera()) return;
-                  await _picker.pickImage(source: ImageSource.camera);
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.salesWatchlistPhotosAfterSave)),
-                    );
-                  }
-                },
+                onPressed: _takePhoto,
                 icon: const Icon(Icons.photo_camera),
                 label: Text(l10n.commonPhoto),
               ),
             ],
           ),
+          if (_voices.isNotEmpty || _photos.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (var i = 0; i < _voices.length; i++)
+                  InputChip(
+                    avatar: const Icon(Icons.mic, size: 18),
+                    label: Text('${l10n.commonVoice} · ${_voices[i].seconds}s'),
+                    onDeleted: () => setState(() => _voices.removeAt(i)),
+                  ),
+                for (var i = 0; i < _photos.length; i++)
+                  InputChip(
+                    avatar: const Icon(Icons.photo, size: 18),
+                    label: Text('${l10n.commonPhoto} ${i + 1}'),
+                    onDeleted: () => setState(() => _photos.removeAt(i)),
+                  ),
+              ],
+            ),
+          ],
           const SizedBox(height: 24),
           FilledButton(
             onPressed: _working || _gps == null ? null : _save,

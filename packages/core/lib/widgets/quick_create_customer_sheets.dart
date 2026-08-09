@@ -32,11 +32,13 @@ class QuickCreateCustomerHost {
   final bool showSalesPersonPicker;
 
   /// When set, an offline shop create is saved as a watchlist prospect
-  /// (queued locally) instead of being blocked.
+  /// (queued locally) instead of being blocked. A photo taken before saving
+  /// is handed over so the host can queue it against the prospect.
   final Future<void> Function({
     required String gps,
     String? placeName,
     String? noteText,
+    File? photoFile,
   })? createOfflineProspect;
 }
 
@@ -150,6 +152,7 @@ class _QuickShopCreateSheetState extends State<QuickShopCreateSheet> {
         gps: _gps!,
         placeName: name,
         noteText: phone.isEmpty ? null : phone,
+        photoFile: _photo == null ? null : File(_photo!.path),
       );
       if (!mounted) return;
       final messenger = ScaffoldMessenger.of(context);
@@ -355,27 +358,25 @@ class _QuickShopCreateSheetState extends State<QuickShopCreateSheet> {
               onGpsChanged: (value) => setState(() => _gps = value),
             ),
           ),
-          if (!widget.offlineProspect) ...[
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () async {
-                      final p = await _picker.pickImage(source: ImageSource.camera, imageQuality: 85);
-                      if (p != null) setState(() => _photo = p);
-                    },
-                    icon: const Icon(Icons.camera_alt_outlined),
-                    label: Text(l10n.commonPhoto),
-                  ),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final p = await _picker.pickImage(source: ImageSource.camera, imageQuality: 85);
+                    if (p != null) setState(() => _photo = p);
+                  },
+                  icon: const Icon(Icons.camera_alt_outlined),
+                  label: Text(l10n.commonPhoto),
                 ),
-              ],
-            ),
-            if (_photo != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Image.file(File(_photo!.path), height: 120, fit: BoxFit.cover),
               ),
-          ],
+            ],
+          ),
+          if (_photo != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Image.file(File(_photo!.path), height: 120, fit: BoxFit.cover),
+            ),
           const SizedBox(height: 16),
           FilledButton(
             onPressed: _saving ? null : _save,

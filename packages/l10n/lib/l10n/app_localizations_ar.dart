@@ -1255,6 +1255,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'يُحفظ الصوت بعد إنشاء الإدخال (الرفع من التفاصيل).';
 
   @override
+  String get salesWatchlistMediaPartial =>
+      'تم الحفظ، لكن تعذّر رفع بعض المرفقات.';
+
+  @override
   String get salesWatchlistPhotosAfterSave =>
       'أضف الصور بعد الحفظ من شاشة التفاصيل.';
 

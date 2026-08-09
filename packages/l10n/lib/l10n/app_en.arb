@@ -628,6 +628,7 @@
   "salesWatchlistNoteOptional": "Note (optional)",
   "salesWatchlistSaveLocation": "Save location",
   "salesWatchlistVoicePending": "Voice saved after you create the entry (upload on detail).",
+  "salesWatchlistMediaPartial": "Saved, but some attachments could not be uploaded.",
   "salesWatchlistPhotosAfterSave": "Add photos after saving from detail screen.",
   "salesWatchlistDeleteTitle": "Delete watch-list entry?",
   "salesWatchlistSyncBeforeConvert": "Sync this item online before converting.",
