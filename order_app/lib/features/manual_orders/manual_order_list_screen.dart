@@ -64,10 +64,10 @@ class _ManualOrderListScreenState extends ConsumerState<ManualOrderListScreen> {
 
     return Scaffold(
       floatingActionButton: profile != null
-          ? FloatingActionButton.extended(
-              onPressed: () => context.push('/manual-orders/create'),
+          ? TranslucentFab(
+              onOpen: () => context.push('/manual-orders/create'),
               icon: const Icon(Icons.add),
-              label: Text(l10n.orderManualNewRequest),
+              label: l10n.orderManualNewRequest,
             )
           : null,
       body: _loading
@@ -79,6 +79,7 @@ class _ManualOrderListScreenState extends ConsumerState<ManualOrderListScreen> {
                   : RefreshIndicator(
                       onRefresh: _load,
                       child: ListView.builder(
+                        padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.fabClearance),
                         itemCount: _requests.length,
                         itemBuilder: (_, i) {
                           final item = _requests[i];

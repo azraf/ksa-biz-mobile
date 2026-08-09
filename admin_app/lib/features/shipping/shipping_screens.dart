@@ -191,9 +191,9 @@ class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
           IconButton(icon: const Icon(Icons.refresh), onPressed: _load),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreatePurchaseScreen())).then((_) => _load()),
-        child: const Icon(Icons.add),
+      floatingActionButton: TranslucentFab(
+        onOpen: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreatePurchaseScreen())).then((_) => _load()),
+        icon: const Icon(Icons.add),
       ),
       body: Column(
         children: [
@@ -218,6 +218,7 @@ class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : ListView.builder(
+                    padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.fabClearance),
                     itemCount: _purchases.length,
                     itemBuilder: (_, i) {
                       final p = _purchases[i];

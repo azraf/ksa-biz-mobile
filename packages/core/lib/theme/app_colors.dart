@@ -38,6 +38,9 @@ class AppSpacing {
   static const lg = 16.0;
   static const xl = 24.0;
   static const xxl = 32.0;
+
+  /// Bottom list padding so the last rows can scroll clear of a FAB.
+  static const fabClearance = 88.0;
 }
 
 class AppRadii {

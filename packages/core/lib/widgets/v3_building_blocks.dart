@@ -2,6 +2,57 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 
+/// Action button that stays translucent so list content underneath remains
+/// visible: 35% opacity idle, 80% while its [onOpen] action (a bottom sheet
+/// or pushed screen) is open. Pair the list with
+/// `padding: EdgeInsetsDirectional.only(bottom: AppSpacing.fabClearance)`.
+class TranslucentFab extends StatefulWidget {
+  const TranslucentFab({
+    super.key,
+    required this.icon,
+    this.label,
+    required this.onOpen,
+  });
+
+  final Widget icon;
+  final String? label;
+
+  /// Awaited; the button stays at 80% opacity until it completes.
+  final Future<void> Function() onOpen;
+
+  @override
+  State<TranslucentFab> createState() => _TranslucentFabState();
+}
+
+class _TranslucentFabState extends State<TranslucentFab> {
+  bool _active = false;
+
+  Future<void> _handlePressed() async {
+    setState(() => _active = true);
+    try {
+      await widget.onOpen();
+    } finally {
+      if (mounted) setState(() => _active = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final label = widget.label;
+    return AnimatedOpacity(
+      opacity: _active ? 0.8 : 0.35,
+      duration: AppDurations.fast,
+      child: label == null
+          ? FloatingActionButton(onPressed: _handlePressed, child: widget.icon)
+          : FloatingActionButton.extended(
+              onPressed: _handlePressed,
+              icon: widget.icon,
+              label: Text(label),
+            ),
+    );
+  }
+}
+
 /// Rounded tinted square with an icon — the v3 leading element for cards.
 class IconBadge extends StatelessWidget {
   const IconBadge({super.key, required this.icon, this.size = 44});

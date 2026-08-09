@@ -26,12 +26,13 @@ class WarehouseStockScreen extends ConsumerWidget {
               ),
             ],
           ),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StockAdjustmentScreen())),
+          floatingActionButton: TranslucentFab(
+            onOpen: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StockAdjustmentScreen())),
             icon: const Icon(Icons.tune),
-            label: const Text('Adjust'),
+            label: 'Adjust',
           ),
           body: ListView.builder(
+            padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.fabClearance),
             itemCount: snap.data!.length,
             itemBuilder: (_, i) {
               final s = snap.data![i];

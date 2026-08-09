@@ -154,10 +154,10 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/watchlist/create'),
+      floatingActionButton: TranslucentFab(
+        onOpen: () => context.push('/watchlist/create'),
         icon: const Icon(Icons.add_location_alt),
-        label: Text(l10n.salesWatchlistAddLocation),
+        label: l10n.salesWatchlistAddLocation,
       ),
       body: _loading
           ? LoadingView(message: l10n.salesWatchlistLoading)
@@ -174,6 +174,7 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
                   : RefreshIndicator(
                       onRefresh: _load,
                       child: ListView.builder(
+                        padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.fabClearance),
                         itemCount: _items.length,
                         itemBuilder: (_, i) {
                           final item = _items[i];

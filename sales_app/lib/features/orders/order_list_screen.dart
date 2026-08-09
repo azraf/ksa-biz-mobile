@@ -151,10 +151,10 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
     final visible = _filteredOrders();
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/orders/create'),
+      floatingActionButton: TranslucentFab(
+        onOpen: () => context.push('/orders/create'),
         icon: const Icon(Icons.add),
-        label: Text(l10n.commonNewOrder),
+        label: l10n.commonNewOrder,
       ),
       body: Column(
         children: [
@@ -201,6 +201,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
           Expanded(
             child: _loading
                 ? ListView.builder(
+                    padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.fabClearance),
                     itemCount: 6,
                     itemBuilder: (_, _) => const SkeletonListTile(),
                   )
@@ -215,6 +216,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
                         : RefreshIndicator(
                             onRefresh: () => _load(page: 1, reset: true),
                             child: ListView.builder(
+                              padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.fabClearance),
                               controller: _scrollController,
                               itemCount: visible.length + (_loadingMore ? 1 : 0),
                               itemBuilder: (_, i) {

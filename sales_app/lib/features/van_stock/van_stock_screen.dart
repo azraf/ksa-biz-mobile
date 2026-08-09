@@ -88,10 +88,14 @@ class _VanStockScreenState extends ConsumerState<VanStockScreen> {
     }
   }
 
-  void _showActions() {
+  Future<void> _showActions() {
     final l10n = AppLocalizations.of(context);
-  showModalBottomSheet<void>(
+    // Translucent sheet + no scrim so the stock list stays readable behind it.
+    return showModalBottomSheet<void>(
       context: context,
+      backgroundColor:
+          Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
+      barrierColor: Colors.transparent,
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -159,6 +163,7 @@ class _VanStockScreenState extends ConsumerState<VanStockScreen> {
           Expanded(
             child: _loading
                 ? ListView.builder(
+                    padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.fabClearance),
                     itemCount: 6,
                     itemBuilder: (_, _) => const SkeletonListTile(),
                   )
@@ -169,6 +174,7 @@ class _VanStockScreenState extends ConsumerState<VanStockScreen> {
                         : RefreshIndicator(
                             onRefresh: _load,
                             child: ListView.builder(
+                              padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.fabClearance),
                               itemCount: _stock.length,
                               itemBuilder: (_, i) {
                                 final item = _stock[i];
@@ -197,10 +203,10 @@ class _VanStockScreenState extends ConsumerState<VanStockScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showActions,
+      floatingActionButton: TranslucentFab(
+        onOpen: _showActions,
         icon: const Icon(Icons.add),
-        label: Text(l10n.salesVanActionsTitle),
+        label: l10n.salesVanActionsTitle,
       ),
     );
   }

@@ -74,10 +74,10 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
     }
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/orders/create'),
+      floatingActionButton: TranslucentFab(
+        onOpen: () => context.push('/orders/create'),
         icon: const Icon(Icons.add),
-        label: Text(l10n.commonNewOrder),
+        label: l10n.commonNewOrder,
       ),
       body: _loading
           ? const LoadingView()
@@ -88,6 +88,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
                   : RefreshIndicator(
                       onRefresh: _load,
                       child: ListView.builder(
+                        padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.fabClearance),
                         itemCount: _orders.length,
                         itemBuilder: (_, i) {
                           final order = _orders[i];
