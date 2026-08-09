@@ -1721,4 +1721,15 @@ class AppLocalizationsBn extends AppLocalizations {
   String customerDuplicatePhoneBody(String name) {
     return '\"$name\" ইতিমধ্যে এই ফোন নম্বর ব্যবহার করছে।';
   }
+
+  @override
+  String get updateAvailableTitle => 'আপডেট উপলব্ধ';
+
+  @override
+  String get updateNow => 'আপডেট';
+
+  @override
+  String updateAvailableBody(int current, int latest) {
+    return 'নতুন সংস্করণ ইনস্টলের জন্য প্রস্তুত (বিল্ড $current → $latest)।';
+  }
 }

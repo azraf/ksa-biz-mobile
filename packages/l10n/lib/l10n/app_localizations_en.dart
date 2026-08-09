@@ -1717,4 +1717,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String customerDuplicatePhoneBody(String name) {
     return '\"$name\" already uses this phone number.';
   }
+
+  @override
+  String get updateAvailableTitle => 'Update available';
+
+  @override
+  String get updateNow => 'Update';
+
+  @override
+  String updateAvailableBody(int current, int latest) {
+    return 'A newer version is ready to install (build $current → $latest).';
+  }
 }

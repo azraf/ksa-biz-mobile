@@ -737,5 +737,8 @@
   "accountNone": "لا يوجد حساب دخول",
   "accountNoneHint": "أنشئ بيانات دخول ليتمكن هذا العميل من استخدام OrderApp أو البوابة الإلكترونية.",
   "accountCreated": "تم إنشاء حساب الدخول",
-  "customerDuplicatePhoneBody": "\"{name}\" يستخدم رقم الهاتف هذا بالفعل."
+  "customerDuplicatePhoneBody": "\"{name}\" يستخدم رقم الهاتف هذا بالفعل.",
+  "updateAvailableTitle": "يتوفر تحديث",
+  "updateNow": "تحديث",
+  "updateAvailableBody": "إصدار أحدث جاهز للتثبيت (البنية {current} → {latest})."
 }

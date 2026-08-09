@@ -1709,4 +1709,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String customerDuplicatePhoneBody(String name) {
     return '\"$name\" يستخدم رقم الهاتف هذا بالفعل.';
   }
+
+  @override
+  String get updateAvailableTitle => 'يتوفر تحديث';
+
+  @override
+  String get updateNow => 'تحديث';
+
+  @override
+  String updateAvailableBody(int current, int latest) {
+    return 'إصدار أحدث جاهز للتثبيت (البنية $current → $latest).';
+  }
 }

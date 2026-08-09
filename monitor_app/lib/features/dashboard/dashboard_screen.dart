@@ -74,6 +74,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          AppUpdateNotice(api: ref.read(apiClientProvider)),
           const SectionHeader(title: 'Business overview'),
           KpiCard(
             title: 'Sales (this month)',

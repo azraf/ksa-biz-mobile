@@ -813,5 +813,18 @@
         "type": "String"
       }
     }
+  },
+  "updateAvailableTitle": "Update available",
+  "updateNow": "Update",
+  "updateAvailableBody": "A newer version is ready to install (build {current} → {latest}).",
+  "@updateAvailableBody": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "latest": {
+        "type": "int"
+      }
+    }
   }
 }

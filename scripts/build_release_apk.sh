@@ -103,10 +103,15 @@ fi
 
 BUILD_ARGS=("${KSA_DART_DEFINE_ARGS[@]:-}")
 
+# App key + build number feed the in-app update banner (AppUpdateNotice).
+APP_KEY="${APP_NAME%_app}"
+
 mkdir -p "$SYMBOLS_DIR"
 flutter build apk --release --split-per-abi \
   --target-platform android-arm,android-arm64 \
   --split-debug-info="$SYMBOLS_DIR" \
+  --dart-define=KSA_BUILD_NUMBER="$BUILD_NUMBER" \
+  --dart-define=KSA_APP_KEY="$APP_KEY" \
   "${BUILD_ARGS[@]}" "$@"
 
 if [[ ! -f "$FLUTTER_APK_ARM64" || ! -f "$FLUTTER_APK_ARM32" ]]; then

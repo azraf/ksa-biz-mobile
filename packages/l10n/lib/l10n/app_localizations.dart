@@ -3213,6 +3213,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'\"{name}\" already uses this phone number.'**
   String customerDuplicatePhoneBody(String name);
+
+  /// No description provided for @updateAvailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get updateAvailableTitle;
+
+  /// No description provided for @updateNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get updateNow;
+
+  /// No description provided for @updateAvailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A newer version is ready to install (build {current} → {latest}).'**
+  String updateAvailableBody(int current, int latest);
 }
 
 class _AppLocalizationsDelegate

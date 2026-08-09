@@ -88,6 +88,7 @@ class _OrderHomeScreenState extends ConsumerState<OrderHomeScreen> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          AppUpdateNotice(api: ref.read(apiClientProvider)),
           KpiCard(
             title: l10n.orderHomeThisMonth,
             value: currency.format(_monthTotal),

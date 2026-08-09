@@ -737,5 +737,8 @@
   "accountNone": "কোনো লগইন অ্যাকাউন্ট নেই",
   "accountNoneHint": "এই কাস্টমার যেন OrderApp বা ওয়েব পোর্টাল ব্যবহার করতে পারে সেজন্য লগইন তথ্য তৈরি করুন।",
   "accountCreated": "লগইন অ্যাকাউন্ট তৈরি হয়েছে",
-  "customerDuplicatePhoneBody": "\"{name}\" ইতিমধ্যে এই ফোন নম্বর ব্যবহার করছে।"
+  "customerDuplicatePhoneBody": "\"{name}\" ইতিমধ্যে এই ফোন নম্বর ব্যবহার করছে।",
+  "updateAvailableTitle": "আপডেট উপলব্ধ",
+  "updateNow": "আপডেট",
+  "updateAvailableBody": "নতুন সংস্করণ ইনস্টলের জন্য প্রস্তুত (বিল্ড {current} → {latest})।"
 }

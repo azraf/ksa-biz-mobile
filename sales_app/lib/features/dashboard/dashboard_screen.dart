@@ -146,6 +146,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          AppUpdateNotice(api: ref.read(apiClientProvider)),
           if (_duesFromCache && _duesIsStale && _duesCachedAt != null)
             NoticeCard(
               kind: NoticeKind.info,

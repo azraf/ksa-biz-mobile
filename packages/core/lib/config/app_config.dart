@@ -22,6 +22,11 @@ class AppConfig {
   static const googleMapsApiKey =
       String.fromEnvironment('GOOGLE_MAPS_API_KEY', defaultValue: '');
 
+  /// Injected by scripts/build_release_apk.sh; 0 / empty in debug builds,
+  /// which disables the in-app update banner.
+  static const buildNumber = int.fromEnvironment('KSA_BUILD_NUMBER');
+  static const appKey = String.fromEnvironment('KSA_APP_KEY', defaultValue: '');
+
   /// True when a non-empty Maps key was passed via `--dart-define`.
   static bool get hasGoogleMapsApiKey => googleMapsApiKey.trim().isNotEmpty;
 
