@@ -1752,6 +1752,14 @@ class AppLocalizationsAr extends AppLocalizations {
       'أنشئ بيانات دخول ليتمكن هذا العميل من استخدام OrderApp أو البوابة الإلكترونية.';
 
   @override
+  String get accountCreateDisabledHint =>
+      'فقط المسؤول يمكنه إنشاء حساب دخول لهذا العميل. اطلب من المسؤول تفعيله.';
+
+  @override
+  String get accountAllowSalespersonCreate =>
+      'يمكن لمندوب المبيعات إنشاء حساب دخول';
+
+  @override
   String get accountCreated => 'تم إنشاء حساب الدخول';
 
   @override

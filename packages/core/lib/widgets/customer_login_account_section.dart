@@ -15,6 +15,7 @@ class CustomerLoginAccountSection extends StatelessWidget {
     required this.customer,
     required this.customerRepository,
     this.onUpdated,
+    this.isAdmin = false,
   });
 
   final String customerType;
@@ -22,6 +23,24 @@ class CustomerLoginAccountSection extends StatelessWidget {
   final dynamic customer;
   final CustomerRepository customerRepository;
   final VoidCallback? onUpdated;
+
+  /// Admins can always create a login and can toggle whether salespeople may;
+  /// non-admins only see the create action when the flag is on (the API
+  /// enforces this server-side regardless).
+  final bool isAdmin;
+
+  bool get _allowCreate {
+    if (customer is CustomerShopModel) {
+      return (customer as CustomerShopModel).allowUserAccountCreation;
+    }
+    if (customer is CustomerVanModel) {
+      return (customer as CustomerVanModel).allowUserAccountCreation;
+    }
+    if (customer is CustomerImporterModel) {
+      return (customer as CustomerImporterModel).allowUserAccountCreation;
+    }
+    return false;
+  }
 
   CustomerLinkedUserModel? get _user {
     if (customer is CustomerShopModel) return (customer as CustomerShopModel).user;
@@ -118,8 +137,37 @@ class CustomerLoginAccountSection extends StatelessWidget {
       );
     }
 
+    // No linked login yet. Salespeople may only create one when the admin
+    // enabled it for this customer.
+    if (!isAdmin && !_allowCreate) {
+      return Card(
+        child: ListTile(
+          leading: const Icon(Icons.person_off_outlined),
+          title: Text(l10n.accountNone),
+          subtitle: Text(l10n.accountCreateDisabledHint),
+        ),
+      );
+    }
+
     return Card(
-      child: ListTile(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isAdmin)
+            SwitchListTile(
+              secondary: const Icon(Icons.manage_accounts_outlined),
+              title: Text(l10n.accountAllowSalespersonCreate),
+              value: _allowCreate,
+              onChanged: (value) async {
+                await customerRepository.setAllowUserAccountCreation(
+                  customerType: customerType,
+                  customerId: customerId,
+                  allow: value,
+                );
+                onUpdated?.call();
+              },
+            ),
+          ListTile(
         leading: const Icon(Icons.person_add_alt_1_outlined),
         title: Text(l10n.accountNone),
         subtitle: Text(l10n.accountNoneHint),
@@ -167,7 +215,9 @@ class CustomerLoginAccountSection extends StatelessWidget {
               );
             }
           },
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }

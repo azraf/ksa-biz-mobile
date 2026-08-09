@@ -327,6 +327,20 @@ class CustomerRepository {
     return CustomerImporterModel.fromJson(response['data'] as Map<String, dynamic>);
   }
 
+  /// Admin only: allow/deny salesperson login creation for one customer.
+  Future<void> setAllowUserAccountCreation({
+    required String customerType,
+    required int customerId,
+    required bool allow,
+  }) async {
+    final path = switch (customerType) {
+      'customer_van' => '/customer-vans/$customerId',
+      'customer_importer' => '/customer-importers/$customerId',
+      _ => '/customer-shops/$customerId',
+    };
+    await _api.patch(path, body: {'allow_user_account_creation': allow});
+  }
+
   Future<CustomerShopModel> updateShopGps(int shopId, String gps) async {
     final response = await _api.patch('/customer-shops/$shopId', body: {'gps': gps});
     return CustomerShopModel.fromJson(response['data'] as Map<String, dynamic>);

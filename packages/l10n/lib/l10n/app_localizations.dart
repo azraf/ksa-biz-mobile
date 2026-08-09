@@ -3292,6 +3292,18 @@ abstract class AppLocalizations {
   /// **'Create credentials so this customer can use OrderApp or the web portal.'**
   String get accountNoneHint;
 
+  /// No description provided for @accountCreateDisabledHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Only an admin can create a login for this customer. Ask an admin to enable it.'**
+  String get accountCreateDisabledHint;
+
+  /// No description provided for @accountAllowSalespersonCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Salesperson may create login'**
+  String get accountAllowSalespersonCreate;
+
   /// No description provided for @accountCreated.
   ///
   /// In en, this message translates to:

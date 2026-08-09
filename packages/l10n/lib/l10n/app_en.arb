@@ -820,6 +820,8 @@
   "accountSection": "Login account",
   "accountNone": "No login account",
   "accountNoneHint": "Create credentials so this customer can use OrderApp or the web portal.",
+  "accountCreateDisabledHint": "Only an admin can create a login for this customer. Ask an admin to enable it.",
+  "accountAllowSalespersonCreate": "Salesperson may create login",
   "accountCreated": "Login account created",
   "customerDuplicatePhoneBody": "\"{name}\" already uses this phone number.",
   "@customerDuplicatePhoneBody": {

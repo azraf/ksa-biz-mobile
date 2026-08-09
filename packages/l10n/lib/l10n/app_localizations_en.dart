@@ -1760,6 +1760,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Create credentials so this customer can use OrderApp or the web portal.';
 
   @override
+  String get accountCreateDisabledHint =>
+      'Only an admin can create a login for this customer. Ask an admin to enable it.';
+
+  @override
+  String get accountAllowSalespersonCreate => 'Salesperson may create login';
+
+  @override
   String get accountCreated => 'Login account created';
 
   @override

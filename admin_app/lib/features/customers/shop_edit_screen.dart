@@ -203,6 +203,7 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
               customer: shop,
               customerRepository: ref.read(customerRepositoryProvider),
               onUpdated: _reloadShop,
+              isAdmin: true,
             ),
             const SizedBox(height: 12),
             CustomerDiarySection(

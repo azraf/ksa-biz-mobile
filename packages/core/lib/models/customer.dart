@@ -37,6 +37,7 @@ class CustomerVanModel extends Equatable {
     this.salesPersonName,
     this.metrics = const CustomerMetricsFields(),
     this.user,
+    this.allowUserAccountCreation = false,
   });
 
   final int id;
@@ -53,6 +54,7 @@ class CustomerVanModel extends Equatable {
   final String? salesPersonName;
   final CustomerMetricsFields metrics;
   final CustomerLinkedUserModel? user;
+  final bool allowUserAccountCreation;
 
   factory CustomerVanModel.fromJson(Map<String, dynamic> json) {
     return CustomerVanModel(
@@ -75,11 +77,14 @@ class CustomerVanModel extends Equatable {
               : null),
       metrics: CustomerMetricsFields.fromJson(json),
       user: parseCustomerLinkedUser(json['user']),
+      allowUserAccountCreation:
+          json['allow_user_account_creation'] as bool? ?? false,
     );
   }
 
   @override
-  List<Object?> get props => [id, name, mobile, email, user];
+  List<Object?> get props =>
+      [id, name, mobile, email, user, allowUserAccountCreation];
 }
 
 class CustomerImporterModel extends Equatable {
@@ -97,6 +102,7 @@ class CustomerImporterModel extends Equatable {
     this.salesPersonName,
     this.metrics = const CustomerMetricsFields(),
     this.user,
+    this.allowUserAccountCreation = false,
   });
 
   final int id;
@@ -112,6 +118,7 @@ class CustomerImporterModel extends Equatable {
   final String? salesPersonName;
   final CustomerMetricsFields metrics;
   final CustomerLinkedUserModel? user;
+  final bool allowUserAccountCreation;
 
   factory CustomerImporterModel.fromJson(Map<String, dynamic> json) {
     return CustomerImporterModel(
@@ -133,11 +140,14 @@ class CustomerImporterModel extends Equatable {
               : null),
       metrics: CustomerMetricsFields.fromJson(json),
       user: parseCustomerLinkedUser(json['user']),
+      allowUserAccountCreation:
+          json['allow_user_account_creation'] as bool? ?? false,
     );
   }
 
   @override
-  List<Object?> get props => [id, name, mobile, email, user];
+  List<Object?> get props =>
+      [id, name, mobile, email, user, allowUserAccountCreation];
 }
 
 class OrderModificationModel extends Equatable {

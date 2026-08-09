@@ -751,6 +751,8 @@
   "accountSection": "حساب الدخول",
   "accountNone": "لا يوجد حساب دخول",
   "accountNoneHint": "أنشئ بيانات دخول ليتمكن هذا العميل من استخدام OrderApp أو البوابة الإلكترونية.",
+  "accountCreateDisabledHint": "فقط المسؤول يمكنه إنشاء حساب دخول لهذا العميل. اطلب من المسؤول تفعيله.",
+  "accountAllowSalespersonCreate": "يمكن لمندوب المبيعات إنشاء حساب دخول",
   "accountCreated": "تم إنشاء حساب الدخول",
   "customerDuplicatePhoneBody": "\"{name}\" يستخدم رقم الهاتف هذا بالفعل.",
   "updateAvailableTitle": "يتوفر تحديث",

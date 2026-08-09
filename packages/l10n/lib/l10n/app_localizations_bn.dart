@@ -1765,6 +1765,13 @@ class AppLocalizationsBn extends AppLocalizations {
       'এই কাস্টমার যেন OrderApp বা ওয়েব পোর্টাল ব্যবহার করতে পারে সেজন্য লগইন তথ্য তৈরি করুন।';
 
   @override
+  String get accountCreateDisabledHint =>
+      'শুধুমাত্র অ্যাডমিন এই কাস্টমারের লগইন তৈরি করতে পারবেন। চালু করতে অ্যাডমিনকে বলুন।';
+
+  @override
+  String get accountAllowSalespersonCreate => 'সেলসপারসন লগইন তৈরি করতে পারবে';
+
+  @override
   String get accountCreated => 'লগইন অ্যাকাউন্ট তৈরি হয়েছে';
 
   @override

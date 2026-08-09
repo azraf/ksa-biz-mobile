@@ -464,6 +464,7 @@ class _AdminCustomerDetailScreenState extends ConsumerState<_AdminCustomerDetail
                 customer: customer,
                 customerRepository: ref.read(customerRepositoryProvider),
                 onUpdated: _reload,
+                isAdmin: true,
               ),
               const SizedBox(height: 16),
               CustomerDiarySection(

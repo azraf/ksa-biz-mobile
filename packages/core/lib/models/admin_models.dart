@@ -75,6 +75,7 @@ class CustomerShopModel extends Equatable {
     this.metrics = const CustomerMetricsFields(),
     this.images = const [],
     this.user,
+    this.allowUserAccountCreation = false,
   });
 
   final int id;
@@ -94,6 +95,9 @@ class CustomerShopModel extends Equatable {
   final CustomerMetricsFields metrics;
   final List<MediaModel> images;
   final CustomerLinkedUserModel? user;
+
+  /// Admin-set flag: salesperson may create a login for this customer.
+  final bool allowUserAccountCreation;
 
   factory CustomerShopModel.fromJson(Map<String, dynamic> json) =>
       CustomerShopModel(
@@ -124,6 +128,8 @@ class CustomerShopModel extends Equatable {
             .map((e) => MediaModel.fromJson(e as Map<String, dynamic>))
             .toList(),
         user: parseCustomerLinkedUser(json['user']),
+        allowUserAccountCreation:
+            json['allow_user_account_creation'] as bool? ?? false,
       );
 
   Map<String, dynamic> toJson() => {
@@ -133,7 +139,7 @@ class CustomerShopModel extends Equatable {
       };
 
   @override
-  List<Object?> get props => [id, name, isSystem, user];
+  List<Object?> get props => [id, name, isSystem, user, allowUserAccountCreation];
 }
 
 class CustomerShopContactModel extends Equatable {
