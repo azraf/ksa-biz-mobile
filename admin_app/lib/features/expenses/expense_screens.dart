@@ -15,7 +15,12 @@ class ExpenseCategoriesScreen extends ConsumerWidget {
     return FutureBuilder<List<ExpenseCategoryModel>>(
       future: ref.read(expenseRepositoryProvider).listCategories(withChildren: true),
       builder: (context, snap) {
-        if (!snap.hasData) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        if (!snap.hasData) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Expense Categories')),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
         return Scaffold(
           appBar: AppBar(title: const Text('Expense Categories')),
           body: ListView(

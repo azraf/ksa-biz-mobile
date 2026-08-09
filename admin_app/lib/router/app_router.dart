@@ -55,6 +55,8 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       return null;
     },
+    errorBuilder: (context, state) =>
+        Scaffold(appBar: AppBar(), body: const ErrorView(message: 'Page not found')),
     routes: [
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       StatefulShellRoute.indexedStack(
@@ -259,17 +261,26 @@ class AdminHomeShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Shell app bar only when nothing is pushed; pushed screens bring their
+    // own. The Sales (1) and Inventory (3) tab roots also draw their own
+    // AppBar (CrudListScreen / WarehouseStockScreen), so the shell stays
+    // bare there too.
+    final canPop = GoRouter.of(context).canPop();
+    final branchRootHasOwnBar =
+        navigationShell.currentIndex == 1 || navigationShell.currentIndex == 3;
     return Scaffold(
       drawer: const AppDrawer(),
-      appBar: AppBar(
-        title: Text(_titleForIndex(navigationShell.currentIndex)),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person_outline),
-            onPressed: () => _showProfileMenu(context, ref),
-          ),
-        ],
-      ),
+      appBar: canPop || branchRootHasOwnBar
+          ? null
+          : AppBar(
+              title: Text(_titleForIndex(navigationShell.currentIndex)),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.person_outline),
+                  onPressed: () => _showProfileMenu(context, ref),
+                ),
+              ],
+            ),
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,

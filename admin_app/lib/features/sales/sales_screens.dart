@@ -257,6 +257,13 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Order #${widget.orderId}')),
+      body: _body(context),
+    );
+  }
+
+  Widget _body(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_error != null) {
       return Center(
@@ -562,6 +569,13 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Create Order')),
+      body: _body(context),
+    );
+  }
+
+  Widget _body(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
 
     return ListView(
@@ -654,7 +668,12 @@ class InvoicesScreen extends ConsumerWidget {
     return FutureBuilder<List<InvoiceModel>>(
       future: _load(ref),
       builder: (context, snap) {
-        if (!snap.hasData) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        if (!snap.hasData) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Invoices')),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
         return Scaffold(
           appBar: AppBar(title: const Text('Invoices')),
           body: ListView.builder(

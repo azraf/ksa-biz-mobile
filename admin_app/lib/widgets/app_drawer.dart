@@ -128,7 +128,9 @@ class AppDrawer extends ConsumerWidget {
         title: Text(title),
         onTap: () {
           Navigator.pop(context);
-          context.go(route);
+          // push (not go) so the opened page can pop back and the shell
+          // hides its bar under the page's own AppBar.
+          context.push(route);
         },
       );
 }

@@ -48,7 +48,12 @@ class _DiscountApprovalScreenState extends ConsumerState<DiscountApprovalScreen>
   @override
   Widget build(BuildContext context) {
     final currency = NumberFormat.currency(symbol: 'SAR ');
-    if (_loading) return const Scaffold(body: LoadingView());
+    if (_loading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Discount approval')),
+        body: const LoadingView(),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Discount approval')),

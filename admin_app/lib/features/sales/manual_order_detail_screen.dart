@@ -152,8 +152,18 @@ class _AdminManualOrderDetailScreenState extends ConsumerState<AdminManualOrderD
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Scaffold(body: LoadingView());
-    if (_error != null) return Scaffold(body: ErrorView(message: _error!, onRetry: _load));
+    if (_loading) {
+      return Scaffold(
+        appBar: AppBar(title: Text('Manual #${widget.id}')),
+        body: const LoadingView(),
+      );
+    }
+    if (_error != null) {
+      return Scaffold(
+        appBar: AppBar(title: Text('Manual #${widget.id}')),
+        body: ErrorView(message: _error!, onRetry: _load),
+      );
+    }
     final request = _request!;
     final shopPhone = shopContactPhone(request.customerShop);
 

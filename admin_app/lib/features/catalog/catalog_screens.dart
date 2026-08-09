@@ -201,7 +201,12 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_loading) {
+      return Scaffold(
+        appBar: AppBar(title: Text(widget.productId == null ? 'New Product' : 'Edit Product')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       appBar: AppBar(title: Text(widget.productId == null ? 'New Product' : 'Edit Product')),
       body: ListView(

@@ -255,7 +255,10 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loadingPersons) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        appBar: AppBar(title: const Text('Bulk load van')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
     }
 
     return Scaffold(

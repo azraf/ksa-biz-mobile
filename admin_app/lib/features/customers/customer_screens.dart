@@ -21,7 +21,10 @@ class ShopDetailScreen extends ConsumerWidget {
       future: ref.read(customerRepositoryProvider).getShop(shopId),
       builder: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return Scaffold(
+            appBar: AppBar(),
+            body: const Center(child: CircularProgressIndicator()),
+          );
         }
         if (snap.hasError || snap.data == null) {
           return Scaffold(
@@ -42,7 +45,12 @@ class CustomerTypesScreen extends ConsumerWidget {
     return FutureBuilder<List<CustomerTypeModel>>(
       future: ref.read(customerRepositoryProvider).customerTypes(),
       builder: (context, snap) {
-        if (!snap.hasData) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        if (!snap.hasData) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Customer Types')),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
         return Scaffold(
           appBar: AppBar(title: const Text('Customer Types')),
           body: ListView.builder(

@@ -53,6 +53,13 @@ class _AdminOrderEditScreenState extends ConsumerState<AdminOrderEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Edit Order #${widget.orderId}')),
+      body: _body(context),
+    );
+  }
+
+  Widget _body(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_error != null) return ErrorView(message: _error!, onRetry: _load);
     final order = _order!;
