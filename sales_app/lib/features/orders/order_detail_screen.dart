@@ -7,6 +7,7 @@ import 'package:l10n/l10n.dart';
 
 import '../../providers/repositories.dart';
 import '../../widgets/customer_diary_sheet.dart';
+import '../customers/customer_diary_section.dart';
 import 'collect_payment_screen.dart';
 
 class OrderDetailScreen extends ConsumerStatefulWidget {
@@ -82,7 +83,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
 
   Future<void> _collectPayment() async {
     final order = _order!;
-    final due = order.amountDue > 0 ? order.amountDue : order.totalBill - order.amountPaid;
+    final due = order.outstandingDue;
     final ok = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
@@ -212,10 +213,11 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     final order = _order!;
     final currency = NumberFormat.currency(symbol: 'SAR ');
     final pending = isPendingSyncOrder(order.id);
-    final awaitingApproval = order.isPending;
-    final canEdit = order.isEditable && !pending && !awaitingApproval;
+    final awaitingApproval = order.isDraft;
+    // Drafts are editable now — edits move no stock until confirmation.
+    final canEdit = order.isEditable && !pending;
     final canCancel = order.isEditable && !pending;
-    final due = order.amountDue > 0 ? order.amountDue : order.totalBill - order.amountPaid;
+    final due = order.outstandingDue;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -258,6 +260,14 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (order.invoiceNumber != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      '${l10n.commonInvoiceLabel} ${order.invoiceNumber}',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                  ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -281,12 +291,46 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           ListTile(
             title: Text(l10n.commonCustomer),
             subtitle: Text(order.customerShopName ?? l10n.commonDiary),
+            onTap: () => _openCustomer(order),
             trailing: IconButton(
               icon: const Icon(Icons.notes_outlined),
               tooltip: l10n.commonDiary,
               onPressed: () => _openDiary(order),
             ),
           ),
+        if (order.salesPerson != null || order.salesPersonId != null)
+          ListTile(
+            leading: const Icon(Icons.badge_outlined),
+            title: Text(l10n.commonSalesperson),
+            subtitle: Text(order.salesPerson?.name ?? '#${order.salesPersonId}'),
+          ),
+        if (order.manualOrderRequests.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          SectionHeader(title: l10n.salesTitleManualOrders),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: order.manualOrderRequests
+                .map((r) => ActionChip(
+                      avatar: const Icon(Icons.assignment_outlined, size: 18),
+                      label: Text('${l10n.commonManualOrderRequest} #${r.id}'),
+                      onPressed: () => context.push('/manual-orders/${r.id}'),
+                    ))
+                .toList(),
+          ),
+        ],
+        // Order diary — photos, notes, voice and video pinned to this order.
+        // Hidden for pending-sync orders: a diary note can't reference an
+        // order id the server hasn't issued yet.
+        if (order.id > 0 && _customerDiaryTarget(order) != null) ...[
+          const SizedBox(height: 8),
+          SectionHeader(title: l10n.orderDiaryTitle),
+          CustomerDiarySection(
+            customerType: _customerDiaryTarget(order)!.$1,
+            customerId: _customerDiaryTarget(order)!.$2,
+            orderId: order.id,
+          ),
+        ],
         if (awaitingApproval) ...[
           FilledButton.icon(
             onPressed: _confirmOrder,
@@ -388,6 +432,18 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     if (order.customerVanId != null) return ('customer_van', order.customerVanId!);
     if (order.customerImporterId != null) return ('customer_importer', order.customerImporterId!);
     return null;
+  }
+
+  void _openCustomer(OrderModel order) {
+    final target = _customerDiaryTarget(order);
+    // Quick-created offline customers carry negative ids until synced.
+    if (target == null || target.$2 <= 0) return;
+    final segment = switch (target.$1) {
+      'customer_shop' => 'shop',
+      'customer_van' => 'van',
+      _ => 'importer',
+    };
+    context.push('/customers/$segment/${target.$2}');
   }
 
   Widget _row(String label, String value, {bool bold = false}) {

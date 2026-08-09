@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:l10n/l10n.dart';
 
 import '../../providers/repositories.dart';
+import '../customers/customer_diary_section.dart';
 import '../../widgets/crud_screens.dart';
 import '../../widgets/field_config.dart';
 import '../../widgets/line_items_editor.dart';
@@ -228,7 +230,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
 
   Future<void> _collectPayment() async {
     final order = _order!;
-    final due = order.amountDue > 0 ? order.amountDue : order.totalBill - order.amountPaid;
+    final due = order.outstandingDue;
     final ok = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
@@ -272,10 +274,10 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     final order = _order!;
     final currency = NumberFormat.currency(symbol: 'SAR ');
     final pendingSync = order.id < 0;
-    final awaitingApproval = order.isPending;
+    final awaitingApproval = order.isDraft;
     final canEdit = order.isEditable && !pendingSync && !awaitingApproval;
     final canCancel = order.isEditable && !pendingSync;
-    final due = order.amountDue > 0 ? order.amountDue : order.totalBill - order.amountPaid;
+    final due = order.outstandingDue;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -315,10 +317,12 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Order #${order.id}', style: Theme.of(context).textTheme.titleMedium),
+                    Text(order.invoiceNumber ?? 'Order #${order.id}',
+                        style: Theme.of(context).textTheme.titleMedium),
                     StatusChip(label: order.paymentStatus),
                   ],
                 ),
+                if (order.invoiceNumber != null) Text('Order #${order.id}'),
                 Text('Status: ${order.status}'),
                 Text(currency.format(order.totalBill), style: Theme.of(context).textTheme.headlineSmall),
                 const Divider(),
@@ -330,6 +334,46 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             ),
           ),
         ),
+        if (order.customerShopName != null)
+          ListTile(
+            leading: const Icon(Icons.storefront_outlined),
+            title: Text(AppLocalizations.of(context).commonCustomer),
+            subtitle: Text(order.customerShopName!),
+            // Only shops have an admin detail route; vans/importers stay flat.
+            onTap: order.customerShopId != null && order.customerShopId! > 0
+                ? () => context.push('/customers/shops/${order.customerShopId}')
+                : null,
+          ),
+        if (order.salesPerson != null || order.salesPersonId != null)
+          ListTile(
+            leading: const Icon(Icons.badge_outlined),
+            title: Text(AppLocalizations.of(context).commonSalesperson),
+            subtitle: Text(order.salesPerson?.name ?? '#${order.salesPersonId}'),
+          ),
+        if (order.manualOrderRequests.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          SectionHeader(title: AppLocalizations.of(context).salesTitleManualOrders),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: order.manualOrderRequests
+                .map((r) => ActionChip(
+                      avatar: const Icon(Icons.assignment_outlined, size: 18),
+                      label: Text('#${r.id} · ${r.status}'),
+                      onPressed: () => context.push('/sales/manual-orders/${r.id}'),
+                    ))
+                .toList(),
+          ),
+        ],
+        if (order.id > 0 && _diaryTarget(order) != null) ...[
+          const SizedBox(height: 8),
+          SectionHeader(title: AppLocalizations.of(context).orderDiaryTitle),
+          CustomerDiarySection(
+            customerType: _diaryTarget(order)!.$1,
+            customerId: _diaryTarget(order)!.$2,
+            orderId: order.id,
+          ),
+        ],
         if (awaitingApproval) ...[
           FilledButton.icon(
             onPressed: _confirmPendingOrder,
@@ -398,6 +442,13 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         ],
       ],
     );
+  }
+
+  (String, int)? _diaryTarget(OrderModel order) {
+    if (order.customerShopId != null) return ('customer_shop', order.customerShopId!);
+    if (order.customerVanId != null) return ('customer_van', order.customerVanId!);
+    if (order.customerImporterId != null) return ('customer_importer', order.customerImporterId!);
+    return null;
   }
 
   Widget _row(String label, String value, {bool bold = false}) {

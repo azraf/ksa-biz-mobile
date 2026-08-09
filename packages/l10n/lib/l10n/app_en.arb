@@ -108,6 +108,7 @@
       }
     }
   },
+  "commonInvoiceLabel": "Invoice",
   "commonOrderNumber": "Order #{id}",
   "@commonOrderNumber": {
     "placeholders": {
@@ -671,11 +672,23 @@
   "orderManualEmpty": "No manual order requests yet",
   "orderManualShopOnlyCreate": "Only shop accounts can create manual requests",
   "orderManualNotesRequired": "Please enter order notes",
+  "orderManualAddMedia": "Photos, voice or video (optional)",
+  "orderManualGallery": "Gallery",
+  "orderManualNoteOrMediaRequired": "Add a note or at least one attachment",
+  "orderManualQueuedOffline": "Saved offline — will send when connected",
+  "orderManualLinkedOrders": "Linked orders",
+  "commonLinkToOrders": "Link to order(s)",
+  "commonNoOrdersForCustomer": "No orders found for this customer",
+  "commonOrdersLinked": "Orders linked",
   "orderCustomerProfileNotLoaded": "Customer profile not loaded",
   "statusConfirmed": "Confirmed",
   "statusModified": "Modified",
   "statusCancelled": "Cancelled",
   "statusPending": "Pending",
+  "statusDraft": "Draft",
+  "planPurposeField": "Purpose",
+  "orderDraftEditableNotice": "This order is a draft \u2014 you can still edit it until the salesperson confirms it.",
+  "commonEdit": "Edit",
   "statusPartial": "Partial",
   "statusPaid": "Paid",
   "statusAssigned": "Assigned",
@@ -823,6 +836,77 @@
         "type": "int"
       },
       "latest": {
+        "type": "int"
+      }
+    }
+  },
+  "commonSalesperson": "Salesperson",
+  "commonVideo": "Video",
+  "commonVideoTooLarge": "Video is too large (max {maxMb} MB)",
+  "commonViewAll": "View all",
+  "statusPlanned": "Planned",
+  "statusDone": "Done",
+  "statusMissed": "Missed",
+  "salesNavPlan": "Plan",
+  "salesTitlePlan": "Plan",
+  "salesSyncItemVisit": "Visit",
+  "planTabVisits": "Visits",
+  "planTabDues": "Dues",
+  "planNewVisit": "New visit",
+  "planEditVisit": "Edit visit",
+  "planScheduleVisit": "Schedule visit",
+  "planPurposeDueCollection": "Due collection",
+  "planPurposeRegularVisit": "Regular visit",
+  "planPurposeDelivery": "Delivery",
+  "planPurposePromotionalVisit": "Promotional visit",
+  "planPurposeNewClientSearch": "New client search",
+  "planPurposeOther": "Other",
+  "planMarkDone": "Mark done",
+  "planMarkMissed": "Mark missed",
+  "planCancelVisit": "Cancel visit",
+  "planOutcomeNote": "Outcome note (optional)",
+  "planDuration": "Duration (minutes)",
+  "planPickCustomer": "Pick customer",
+  "planPickWatchlist": "Pick watch-list prospect",
+  "planCollectionCandidates": "Worth a collection visit",
+  "planPlanVisit": "Plan visit",
+  "planTodayVisits": "{count} visit(s) today",
+  "planNoVisits": "No visits match these filters.",
+  "planVisitSaved": "Visit saved.",
+  "planSyncFirst": "Sync this visit before changing its status.",
+  "planReminderTitle": "Planned visits",
+  "planReminderBody": "You have {count} visit(s) planned",
+  "orderDiaryTitle": "Order diary",
+  "orderSaveAsDraft": "Save as draft",
+  "purchaseSavePost": "Save & post",
+  "customerMoneyTitle": "Money summary",
+  "customerMoneyOrders": "Orders",
+  "customerMoneyPurchased": "Purchased",
+  "customerMoneyPaid": "Paid",
+  "customerMoneyDiscounts": "Discounts",
+  "customerMoneyDue": "Outstanding",
+  "customerMoneyOverdue": "Overdue",
+  "customerMoneyNextPayment": "Next payment",
+  "customerMoneyLastPayment": "Last payment",
+  "customerOrdersTitle": "Orders",
+  "customerOrdersEmpty": "No orders yet.",
+  "@commonVideoTooLarge": {
+    "placeholders": {
+      "maxMb": {
+        "type": "int"
+      }
+    }
+  },
+  "@planTodayVisits": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@planReminderBody": {
+    "placeholders": {
+      "count": {
         "type": "int"
       }
     }

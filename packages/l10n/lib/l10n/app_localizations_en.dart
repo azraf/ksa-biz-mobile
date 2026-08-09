@@ -163,6 +163,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get commonInvoiceLabel => 'Invoice';
+
+  @override
   String commonOrderNumber(int id) {
     return 'Order #$id';
   }
@@ -1377,6 +1380,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orderManualNotesRequired => 'Please enter order notes';
 
   @override
+  String get orderManualAddMedia => 'Photos, voice or video (optional)';
+
+  @override
+  String get orderManualGallery => 'Gallery';
+
+  @override
+  String get orderManualNoteOrMediaRequired =>
+      'Add a note or at least one attachment';
+
+  @override
+  String get orderManualQueuedOffline =>
+      'Saved offline — will send when connected';
+
+  @override
+  String get orderManualLinkedOrders => 'Linked orders';
+
+  @override
+  String get commonLinkToOrders => 'Link to order(s)';
+
+  @override
+  String get commonNoOrdersForCustomer => 'No orders found for this customer';
+
+  @override
+  String get commonOrdersLinked => 'Orders linked';
+
+  @override
   String get orderCustomerProfileNotLoaded => 'Customer profile not loaded';
 
   @override
@@ -1390,6 +1419,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statusPending => 'Pending';
+
+  @override
+  String get statusDraft => 'Draft';
+
+  @override
+  String get planPurposeField => 'Purpose';
+
+  @override
+  String get orderDraftEditableNotice =>
+      'This order is a draft — you can still edit it until the salesperson confirms it.';
+
+  @override
+  String get commonEdit => 'Edit';
 
   @override
   String get statusPartial => 'Partial';
@@ -1728,4 +1770,160 @@ class AppLocalizationsEn extends AppLocalizations {
   String updateAvailableBody(int current, int latest) {
     return 'A newer version is ready to install (build $current → $latest).';
   }
+
+  @override
+  String get commonSalesperson => 'Salesperson';
+
+  @override
+  String get commonVideo => 'Video';
+
+  @override
+  String commonVideoTooLarge(int maxMb) {
+    return 'Video is too large (max $maxMb MB)';
+  }
+
+  @override
+  String get commonViewAll => 'View all';
+
+  @override
+  String get statusPlanned => 'Planned';
+
+  @override
+  String get statusDone => 'Done';
+
+  @override
+  String get statusMissed => 'Missed';
+
+  @override
+  String get salesNavPlan => 'Plan';
+
+  @override
+  String get salesTitlePlan => 'Plan';
+
+  @override
+  String get salesSyncItemVisit => 'Visit';
+
+  @override
+  String get planTabVisits => 'Visits';
+
+  @override
+  String get planTabDues => 'Dues';
+
+  @override
+  String get planNewVisit => 'New visit';
+
+  @override
+  String get planEditVisit => 'Edit visit';
+
+  @override
+  String get planScheduleVisit => 'Schedule visit';
+
+  @override
+  String get planPurposeDueCollection => 'Due collection';
+
+  @override
+  String get planPurposeRegularVisit => 'Regular visit';
+
+  @override
+  String get planPurposeDelivery => 'Delivery';
+
+  @override
+  String get planPurposePromotionalVisit => 'Promotional visit';
+
+  @override
+  String get planPurposeNewClientSearch => 'New client search';
+
+  @override
+  String get planPurposeOther => 'Other';
+
+  @override
+  String get planMarkDone => 'Mark done';
+
+  @override
+  String get planMarkMissed => 'Mark missed';
+
+  @override
+  String get planCancelVisit => 'Cancel visit';
+
+  @override
+  String get planOutcomeNote => 'Outcome note (optional)';
+
+  @override
+  String get planDuration => 'Duration (minutes)';
+
+  @override
+  String get planPickCustomer => 'Pick customer';
+
+  @override
+  String get planPickWatchlist => 'Pick watch-list prospect';
+
+  @override
+  String get planCollectionCandidates => 'Worth a collection visit';
+
+  @override
+  String get planPlanVisit => 'Plan visit';
+
+  @override
+  String planTodayVisits(int count) {
+    return '$count visit(s) today';
+  }
+
+  @override
+  String get planNoVisits => 'No visits match these filters.';
+
+  @override
+  String get planVisitSaved => 'Visit saved.';
+
+  @override
+  String get planSyncFirst => 'Sync this visit before changing its status.';
+
+  @override
+  String get planReminderTitle => 'Planned visits';
+
+  @override
+  String planReminderBody(int count) {
+    return 'You have $count visit(s) planned';
+  }
+
+  @override
+  String get orderDiaryTitle => 'Order diary';
+
+  @override
+  String get orderSaveAsDraft => 'Save as draft';
+
+  @override
+  String get purchaseSavePost => 'Save & post';
+
+  @override
+  String get customerMoneyTitle => 'Money summary';
+
+  @override
+  String get customerMoneyOrders => 'Orders';
+
+  @override
+  String get customerMoneyPurchased => 'Purchased';
+
+  @override
+  String get customerMoneyPaid => 'Paid';
+
+  @override
+  String get customerMoneyDiscounts => 'Discounts';
+
+  @override
+  String get customerMoneyDue => 'Outstanding';
+
+  @override
+  String get customerMoneyOverdue => 'Overdue';
+
+  @override
+  String get customerMoneyNextPayment => 'Next payment';
+
+  @override
+  String get customerMoneyLastPayment => 'Last payment';
+
+  @override
+  String get customerOrdersTitle => 'Orders';
+
+  @override
+  String get customerOrdersEmpty => 'No orders yet.';
 }

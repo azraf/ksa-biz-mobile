@@ -376,6 +376,12 @@ abstract class AppLocalizations {
   /// **'Shop #{id}'**
   String commonShopFallback(int id);
 
+  /// No description provided for @commonInvoiceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice'**
+  String get commonInvoiceLabel;
+
   /// No description provided for @commonOrderNumber.
   ///
   /// In en, this message translates to:
@@ -2584,6 +2590,54 @@ abstract class AppLocalizations {
   /// **'Please enter order notes'**
   String get orderManualNotesRequired;
 
+  /// No description provided for @orderManualAddMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos, voice or video (optional)'**
+  String get orderManualAddMedia;
+
+  /// No description provided for @orderManualGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get orderManualGallery;
+
+  /// No description provided for @orderManualNoteOrMediaRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a note or at least one attachment'**
+  String get orderManualNoteOrMediaRequired;
+
+  /// No description provided for @orderManualQueuedOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved offline — will send when connected'**
+  String get orderManualQueuedOffline;
+
+  /// No description provided for @orderManualLinkedOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked orders'**
+  String get orderManualLinkedOrders;
+
+  /// No description provided for @commonLinkToOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Link to order(s)'**
+  String get commonLinkToOrders;
+
+  /// No description provided for @commonNoOrdersForCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'No orders found for this customer'**
+  String get commonNoOrdersForCustomer;
+
+  /// No description provided for @commonOrdersLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders linked'**
+  String get commonOrdersLinked;
+
   /// No description provided for @orderCustomerProfileNotLoaded.
   ///
   /// In en, this message translates to:
@@ -2613,6 +2667,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pending'**
   String get statusPending;
+
+  /// No description provided for @statusDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft'**
+  String get statusDraft;
+
+  /// No description provided for @planPurposeField.
+  ///
+  /// In en, this message translates to:
+  /// **'Purpose'**
+  String get planPurposeField;
+
+  /// No description provided for @orderDraftEditableNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'This order is a draft — you can still edit it until the salesperson confirms it.'**
+  String get orderDraftEditableNotice;
+
+  /// No description provided for @commonEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get commonEdit;
 
   /// No description provided for @statusPartial.
   ///
@@ -3231,6 +3309,306 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A newer version is ready to install (build {current} → {latest}).'**
   String updateAvailableBody(int current, int latest);
+
+  /// No description provided for @commonSalesperson.
+  ///
+  /// In en, this message translates to:
+  /// **'Salesperson'**
+  String get commonSalesperson;
+
+  /// No description provided for @commonVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get commonVideo;
+
+  /// No description provided for @commonVideoTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Video is too large (max {maxMb} MB)'**
+  String commonVideoTooLarge(int maxMb);
+
+  /// No description provided for @commonViewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View all'**
+  String get commonViewAll;
+
+  /// No description provided for @statusPlanned.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned'**
+  String get statusPlanned;
+
+  /// No description provided for @statusDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get statusDone;
+
+  /// No description provided for @statusMissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed'**
+  String get statusMissed;
+
+  /// No description provided for @salesNavPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan'**
+  String get salesNavPlan;
+
+  /// No description provided for @salesTitlePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan'**
+  String get salesTitlePlan;
+
+  /// No description provided for @salesSyncItemVisit.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit'**
+  String get salesSyncItemVisit;
+
+  /// No description provided for @planTabVisits.
+  ///
+  /// In en, this message translates to:
+  /// **'Visits'**
+  String get planTabVisits;
+
+  /// No description provided for @planTabDues.
+  ///
+  /// In en, this message translates to:
+  /// **'Dues'**
+  String get planTabDues;
+
+  /// No description provided for @planNewVisit.
+  ///
+  /// In en, this message translates to:
+  /// **'New visit'**
+  String get planNewVisit;
+
+  /// No description provided for @planEditVisit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit visit'**
+  String get planEditVisit;
+
+  /// No description provided for @planScheduleVisit.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule visit'**
+  String get planScheduleVisit;
+
+  /// No description provided for @planPurposeDueCollection.
+  ///
+  /// In en, this message translates to:
+  /// **'Due collection'**
+  String get planPurposeDueCollection;
+
+  /// No description provided for @planPurposeRegularVisit.
+  ///
+  /// In en, this message translates to:
+  /// **'Regular visit'**
+  String get planPurposeRegularVisit;
+
+  /// No description provided for @planPurposeDelivery.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery'**
+  String get planPurposeDelivery;
+
+  /// No description provided for @planPurposePromotionalVisit.
+  ///
+  /// In en, this message translates to:
+  /// **'Promotional visit'**
+  String get planPurposePromotionalVisit;
+
+  /// No description provided for @planPurposeNewClientSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'New client search'**
+  String get planPurposeNewClientSearch;
+
+  /// No description provided for @planPurposeOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get planPurposeOther;
+
+  /// No description provided for @planMarkDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark done'**
+  String get planMarkDone;
+
+  /// No description provided for @planMarkMissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark missed'**
+  String get planMarkMissed;
+
+  /// No description provided for @planCancelVisit.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel visit'**
+  String get planCancelVisit;
+
+  /// No description provided for @planOutcomeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Outcome note (optional)'**
+  String get planOutcomeNote;
+
+  /// No description provided for @planDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration (minutes)'**
+  String get planDuration;
+
+  /// No description provided for @planPickCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick customer'**
+  String get planPickCustomer;
+
+  /// No description provided for @planPickWatchlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick watch-list prospect'**
+  String get planPickWatchlist;
+
+  /// No description provided for @planCollectionCandidates.
+  ///
+  /// In en, this message translates to:
+  /// **'Worth a collection visit'**
+  String get planCollectionCandidates;
+
+  /// No description provided for @planPlanVisit.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan visit'**
+  String get planPlanVisit;
+
+  /// No description provided for @planTodayVisits.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} visit(s) today'**
+  String planTodayVisits(int count);
+
+  /// No description provided for @planNoVisits.
+  ///
+  /// In en, this message translates to:
+  /// **'No visits match these filters.'**
+  String get planNoVisits;
+
+  /// No description provided for @planVisitSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit saved.'**
+  String get planVisitSaved;
+
+  /// No description provided for @planSyncFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync this visit before changing its status.'**
+  String get planSyncFirst;
+
+  /// No description provided for @planReminderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned visits'**
+  String get planReminderTitle;
+
+  /// No description provided for @planReminderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You have {count} visit(s) planned'**
+  String planReminderBody(int count);
+
+  /// No description provided for @orderDiaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Order diary'**
+  String get orderDiaryTitle;
+
+  /// No description provided for @orderSaveAsDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as draft'**
+  String get orderSaveAsDraft;
+
+  /// No description provided for @purchaseSavePost.
+  ///
+  /// In en, this message translates to:
+  /// **'Save & post'**
+  String get purchaseSavePost;
+
+  /// No description provided for @customerMoneyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Money summary'**
+  String get customerMoneyTitle;
+
+  /// No description provided for @customerMoneyOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders'**
+  String get customerMoneyOrders;
+
+  /// No description provided for @customerMoneyPurchased.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchased'**
+  String get customerMoneyPurchased;
+
+  /// No description provided for @customerMoneyPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get customerMoneyPaid;
+
+  /// No description provided for @customerMoneyDiscounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Discounts'**
+  String get customerMoneyDiscounts;
+
+  /// No description provided for @customerMoneyDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Outstanding'**
+  String get customerMoneyDue;
+
+  /// No description provided for @customerMoneyOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get customerMoneyOverdue;
+
+  /// No description provided for @customerMoneyNextPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Next payment'**
+  String get customerMoneyNextPayment;
+
+  /// No description provided for @customerMoneyLastPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Last payment'**
+  String get customerMoneyLastPayment;
+
+  /// No description provided for @customerOrdersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders'**
+  String get customerOrdersTitle;
+
+  /// No description provided for @customerOrdersEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No orders yet.'**
+  String get customerOrdersEmpty;
 }
 
 class _AppLocalizationsDelegate

@@ -122,6 +122,11 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        if (order.invoiceNumber != null)
+          ListTile(
+            title: const Text('Invoice'),
+            subtitle: Text(order.invoiceNumber!),
+          ),
         ListTile(
           title: Text(currency.format(order.totalBill)),
           subtitle: Text('Payment: ${order.paymentStatus}'),

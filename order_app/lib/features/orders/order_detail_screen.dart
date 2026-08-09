@@ -1,6 +1,7 @@
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:l10n/l10n.dart';
 
@@ -58,7 +59,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       padding: const EdgeInsets.all(16),
       children: [
         ListTile(
-          title: Text(l10n.commonOrderNumber(order.id)),
+          title: Text(order.invoiceNumber ?? l10n.commonOrderNumber(order.id)),
           subtitle: Text(
             '${localizedStatusLabel(context, order.status)} · ${localizedStatusLabel(context, order.paymentStatus)}',
           ),
@@ -67,13 +68,20 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             style: Theme.of(context).textTheme.titleLarge,
           ),
         ),
-        if (order.isPending)
+        if (order.isDraft) ...[
           NoticeCard(
             kind: NoticeKind.warning,
-            icon: Icons.hourglass_top,
-            title: l10n.statusPending,
-            subtitle: 'Your order is awaiting salesperson approval.',
+            icon: Icons.edit_note_outlined,
+            title: l10n.statusDraft,
+            subtitle: l10n.orderDraftEditableNotice,
           ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: () => context.push('/orders/${order.id}/edit'),
+            icon: const Icon(Icons.edit_outlined),
+            label: Text(l10n.commonEdit),
+          ),
+        ],
         const Divider(),
         Text(l10n.commonItems, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),

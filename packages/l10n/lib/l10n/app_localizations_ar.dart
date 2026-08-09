@@ -163,6 +163,9 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get commonInvoiceLabel => 'الفاتورة';
+
+  @override
   String commonOrderNumber(int id) {
     return 'طلب #$id';
   }
@@ -1372,6 +1375,32 @@ class AppLocalizationsAr extends AppLocalizations {
   String get orderManualNotesRequired => 'يرجى إدخال ملاحظات الطلب';
 
   @override
+  String get orderManualAddMedia => 'صور أو صوت أو فيديو (اختياري)';
+
+  @override
+  String get orderManualGallery => 'المعرض';
+
+  @override
+  String get orderManualNoteOrMediaRequired =>
+      'أضف ملاحظة أو مرفقًا واحدًا على الأقل';
+
+  @override
+  String get orderManualQueuedOffline =>
+      'تم الحفظ دون اتصال — سيُرسل عند الاتصال';
+
+  @override
+  String get orderManualLinkedOrders => 'الطلبات المرتبطة';
+
+  @override
+  String get commonLinkToOrders => 'ربط بطلب (طلبات)';
+
+  @override
+  String get commonNoOrdersForCustomer => 'لا توجد طلبات لهذا العميل';
+
+  @override
+  String get commonOrdersLinked => 'تم ربط الطلبات';
+
+  @override
   String get orderCustomerProfileNotLoaded => 'لم يُحمّل ملف العميل';
 
   @override
@@ -1385,6 +1414,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get statusPending => 'معلق';
+
+  @override
+  String get statusDraft => 'مسودة';
+
+  @override
+  String get planPurposeField => 'الغرض';
+
+  @override
+  String get orderDraftEditableNotice =>
+      'هذا الطلب مسودة — يمكنك تعديله حتى يؤكده مندوب المبيعات.';
+
+  @override
+  String get commonEdit => 'تعديل';
 
   @override
   String get statusPartial => 'جزئي';
@@ -1720,4 +1762,160 @@ class AppLocalizationsAr extends AppLocalizations {
   String updateAvailableBody(int current, int latest) {
     return 'إصدار أحدث جاهز للتثبيت (البنية $current → $latest).';
   }
+
+  @override
+  String get commonSalesperson => 'مندوب المبيعات';
+
+  @override
+  String get commonVideo => 'فيديو';
+
+  @override
+  String commonVideoTooLarge(int maxMb) {
+    return 'الفيديو كبير جدًا (الحد الأقصى $maxMb م.ب)';
+  }
+
+  @override
+  String get commonViewAll => 'عرض الكل';
+
+  @override
+  String get statusPlanned => 'مخطط';
+
+  @override
+  String get statusDone => 'تم';
+
+  @override
+  String get statusMissed => 'فائت';
+
+  @override
+  String get salesNavPlan => 'الخطة';
+
+  @override
+  String get salesTitlePlan => 'الخطة';
+
+  @override
+  String get salesSyncItemVisit => 'زيارة';
+
+  @override
+  String get planTabVisits => 'الزيارات';
+
+  @override
+  String get planTabDues => 'المستحقات';
+
+  @override
+  String get planNewVisit => 'زيارة جديدة';
+
+  @override
+  String get planEditVisit => 'تعديل الزيارة';
+
+  @override
+  String get planScheduleVisit => 'جدولة زيارة';
+
+  @override
+  String get planPurposeDueCollection => 'تحصيل مستحقات';
+
+  @override
+  String get planPurposeRegularVisit => 'زيارة اعتيادية';
+
+  @override
+  String get planPurposeDelivery => 'توصيل';
+
+  @override
+  String get planPurposePromotionalVisit => 'زيارة ترويجية';
+
+  @override
+  String get planPurposeNewClientSearch => 'البحث عن عملاء جدد';
+
+  @override
+  String get planPurposeOther => 'أخرى';
+
+  @override
+  String get planMarkDone => 'تمت';
+
+  @override
+  String get planMarkMissed => 'فائتة';
+
+  @override
+  String get planCancelVisit => 'إلغاء الزيارة';
+
+  @override
+  String get planOutcomeNote => 'ملاحظة النتيجة (اختياري)';
+
+  @override
+  String get planDuration => 'المدة (دقائق)';
+
+  @override
+  String get planPickCustomer => 'اختر العميل';
+
+  @override
+  String get planPickWatchlist => 'اختر عميلًا محتملًا';
+
+  @override
+  String get planCollectionCandidates => 'تستحق زيارة تحصيل';
+
+  @override
+  String get planPlanVisit => 'خطط زيارة';
+
+  @override
+  String planTodayVisits(int count) {
+    return '$count زيارة اليوم';
+  }
+
+  @override
+  String get planNoVisits => 'لا توجد زيارات مطابقة.';
+
+  @override
+  String get planVisitSaved => 'تم حفظ الزيارة.';
+
+  @override
+  String get planSyncFirst => 'زامن هذه الزيارة قبل تغيير حالتها.';
+
+  @override
+  String get planReminderTitle => 'زيارات مخططة';
+
+  @override
+  String planReminderBody(int count) {
+    return 'لديك $count زيارة مخططة';
+  }
+
+  @override
+  String get orderDiaryTitle => 'يوميات الطلب';
+
+  @override
+  String get orderSaveAsDraft => 'حفظ كمسودة';
+
+  @override
+  String get purchaseSavePost => 'حفظ وترحيل';
+
+  @override
+  String get customerMoneyTitle => 'الملخص المالي';
+
+  @override
+  String get customerMoneyOrders => 'الطلبات';
+
+  @override
+  String get customerMoneyPurchased => 'إجمالي المشتريات';
+
+  @override
+  String get customerMoneyPaid => 'المدفوع';
+
+  @override
+  String get customerMoneyDiscounts => 'الخصومات';
+
+  @override
+  String get customerMoneyDue => 'المستحق';
+
+  @override
+  String get customerMoneyOverdue => 'متأخر';
+
+  @override
+  String get customerMoneyNextPayment => 'الدفعة التالية';
+
+  @override
+  String get customerMoneyLastPayment => 'آخر دفعة';
+
+  @override
+  String get customerOrdersTitle => 'الطلبات';
+
+  @override
+  String get customerOrdersEmpty => 'لا توجد طلبات بعد.';
 }

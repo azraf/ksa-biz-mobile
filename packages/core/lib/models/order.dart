@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import 'discount_approval_request.dart';
+import 'manual_order_request.dart';
 import 'order_item.dart';
 import 'payment.dart';
 import 'sales_person.dart';
@@ -9,6 +10,7 @@ class OrderModel extends Equatable {
   const OrderModel({
     required this.id,
     required this.customerTypeId,
+    this.invoiceNumber,
     this.salesPersonId,
     this.customerShopId,
     this.customerVanId,
@@ -33,6 +35,7 @@ class OrderModel extends Equatable {
     this.items = const [],
     this.payments = const [],
     this.discountRequests = const [],
+    this.manualOrderRequests = const [],
     this.salesPerson,
     this.customerShopName,
     this.customerShopAreaName,
@@ -40,6 +43,9 @@ class OrderModel extends Equatable {
   });
 
   final int id;
+
+  /// Human-facing invoice number (SA-M…), null for offline/legacy rows.
+  final String? invoiceNumber;
   final int? salesPersonId;
   final int customerTypeId;
   final int? customerVanId;
@@ -65,19 +71,29 @@ class OrderModel extends Equatable {
   final List<OrderItemModel> items;
   final List<PaymentModel> payments;
   final List<DiscountApprovalRequestModel> discountRequests;
+
+  /// Instructions (manual order requests) linked to this order (M:N trace).
+  final List<ManualOrderRequestModel> manualOrderRequests;
   final SalesPersonModel? salesPerson;
   final String? customerShopName;
   final String? customerShopAreaName;
   final String? createdAt;
 
   bool get isCancelled => status == 'cancelled';
-  bool get isPending => status == 'pending';
+
+  /// Server value renamed pending→draft; 'pending' accepted for cached rows
+  /// written by older builds.
+  bool get isDraft => status == 'draft' || status == 'pending';
   bool get isEditable => !isCancelled;
   bool get hasPendingDiscount => discountRequests.any((r) => r.status == 'pending');
+
+  /// Server amount_due when set, else derived remainder (offline/legacy rows).
+  double get outstandingDue => amountDue > 0 ? amountDue : totalBill - amountPaid;
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     return OrderModel(
       id: json['id'] as int,
+      invoiceNumber: json['invoice_number'] as String?,
       salesPersonId: json['sales_person_id'] as int?,
       customerTypeId: json['customer_type_id'] as int,
       customerVanId: json['customer_van_id'] as int?,
@@ -108,6 +124,9 @@ class OrderModel extends Equatable {
           .toList(),
       discountRequests: (json['discount_approval_requests'] as List<dynamic>? ?? [])
           .map((e) => DiscountApprovalRequestModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      manualOrderRequests: (json['manual_order_requests'] as List<dynamic>? ?? [])
+          .map((e) => ManualOrderRequestModel.fromJson(e as Map<String, dynamic>))
           .toList(),
       salesPerson: json['sales_person'] is Map
           ? SalesPersonModel.fromJson(json['sales_person'] as Map<String, dynamic>)

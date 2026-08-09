@@ -163,6 +163,9 @@ class AppLocalizationsBn extends AppLocalizations {
   }
 
   @override
+  String get commonInvoiceLabel => 'ইনভয়েস';
+
+  @override
   String commonOrderNumber(int id) {
     return 'অর্ডার #$id';
   }
@@ -1380,6 +1383,33 @@ class AppLocalizationsBn extends AppLocalizations {
   String get orderManualNotesRequired => 'অর্ডার নোট লিখুন';
 
   @override
+  String get orderManualAddMedia => 'ছবি, ভয়েস বা ভিডিও (ঐচ্ছিক)';
+
+  @override
+  String get orderManualGallery => 'গ্যালারি';
+
+  @override
+  String get orderManualNoteOrMediaRequired =>
+      'একটি নোট বা অন্তত একটি সংযুক্তি যোগ করুন';
+
+  @override
+  String get orderManualQueuedOffline =>
+      'অফলাইনে সংরক্ষিত — সংযোগ হলে পাঠানো হবে';
+
+  @override
+  String get orderManualLinkedOrders => 'সংযুক্ত অর্ডার';
+
+  @override
+  String get commonLinkToOrders => 'অর্ডারের সাথে সংযুক্ত করুন';
+
+  @override
+  String get commonNoOrdersForCustomer =>
+      'এই গ্রাহকের কোনো অর্ডার পাওয়া যায়নি';
+
+  @override
+  String get commonOrdersLinked => 'অর্ডার সংযুক্ত হয়েছে';
+
+  @override
   String get orderCustomerProfileNotLoaded => 'গ্রাহক প্রোফাইল লোড হয়নি';
 
   @override
@@ -1393,6 +1423,19 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get statusPending => 'মুলতুবি';
+
+  @override
+  String get statusDraft => 'খসড়া';
+
+  @override
+  String get planPurposeField => 'উদ্দেশ্য';
+
+  @override
+  String get orderDraftEditableNotice =>
+      'এই অর্ডারটি একটি খসড়া — বিক্রয়কর্মী নিশ্চিত করার আগ পর্যন্ত আপনি এটি সম্পাদনা করতে পারবেন।';
+
+  @override
+  String get commonEdit => 'সম্পাদনা';
 
   @override
   String get statusPartial => 'আংশিক';
@@ -1732,4 +1775,160 @@ class AppLocalizationsBn extends AppLocalizations {
   String updateAvailableBody(int current, int latest) {
     return 'নতুন সংস্করণ ইনস্টলের জন্য প্রস্তুত (বিল্ড $current → $latest)।';
   }
+
+  @override
+  String get commonSalesperson => 'বিক্রয়কর্মী';
+
+  @override
+  String get commonVideo => 'ভিডিও';
+
+  @override
+  String commonVideoTooLarge(int maxMb) {
+    return 'ভিডিওটি খুব বড় (সর্বোচ্চ $maxMb এমবি)';
+  }
+
+  @override
+  String get commonViewAll => 'সব দেখুন';
+
+  @override
+  String get statusPlanned => 'পরিকল্পিত';
+
+  @override
+  String get statusDone => 'সম্পন্ন';
+
+  @override
+  String get statusMissed => 'মিস হয়েছে';
+
+  @override
+  String get salesNavPlan => 'পরিকল্পনা';
+
+  @override
+  String get salesTitlePlan => 'পরিকল্পনা';
+
+  @override
+  String get salesSyncItemVisit => 'ভিজিট';
+
+  @override
+  String get planTabVisits => 'ভিজিট';
+
+  @override
+  String get planTabDues => 'বকেয়া';
+
+  @override
+  String get planNewVisit => 'নতুন ভিজিট';
+
+  @override
+  String get planEditVisit => 'ভিজিট সম্পাদনা';
+
+  @override
+  String get planScheduleVisit => 'ভিজিট নির্ধারণ করুন';
+
+  @override
+  String get planPurposeDueCollection => 'বকেয়া আদায়';
+
+  @override
+  String get planPurposeRegularVisit => 'নিয়মিত ভিজিট';
+
+  @override
+  String get planPurposeDelivery => 'ডেলিভারি';
+
+  @override
+  String get planPurposePromotionalVisit => 'প্রমোশনাল ভিজিট';
+
+  @override
+  String get planPurposeNewClientSearch => 'নতুন ক্লায়েন্ট খোঁজা';
+
+  @override
+  String get planPurposeOther => 'অন্যান্য';
+
+  @override
+  String get planMarkDone => 'সম্পন্ন করুন';
+
+  @override
+  String get planMarkMissed => 'মিস হিসেবে চিহ্নিত';
+
+  @override
+  String get planCancelVisit => 'ভিজিট বাতিল';
+
+  @override
+  String get planOutcomeNote => 'ফলাফল নোট (ঐচ্ছিক)';
+
+  @override
+  String get planDuration => 'সময়কাল (মিনিট)';
+
+  @override
+  String get planPickCustomer => 'কাস্টমার নির্বাচন';
+
+  @override
+  String get planPickWatchlist => 'ওয়াচ-লিস্ট প্রসপেক্ট নির্বাচন';
+
+  @override
+  String get planCollectionCandidates => 'আদায় ভিজিটের জন্য উপযুক্ত';
+
+  @override
+  String get planPlanVisit => 'ভিজিট পরিকল্পনা';
+
+  @override
+  String planTodayVisits(int count) {
+    return 'আজ $countটি ভিজিট';
+  }
+
+  @override
+  String get planNoVisits => 'এই ফিল্টারে কোনো ভিজিট নেই।';
+
+  @override
+  String get planVisitSaved => 'ভিজিট সংরক্ষিত হয়েছে।';
+
+  @override
+  String get planSyncFirst => 'স্ট্যাটাস পরিবর্তনের আগে এই ভিজিটটি সিঙ্ক করুন।';
+
+  @override
+  String get planReminderTitle => 'পরিকল্পিত ভিজিট';
+
+  @override
+  String planReminderBody(int count) {
+    return 'আপনার $countটি ভিজিট পরিকল্পিত আছে';
+  }
+
+  @override
+  String get orderDiaryTitle => 'অর্ডার ডায়েরি';
+
+  @override
+  String get orderSaveAsDraft => 'খসড়া হিসেবে সংরক্ষণ';
+
+  @override
+  String get purchaseSavePost => 'সংরক্ষণ ও পোস্ট';
+
+  @override
+  String get customerMoneyTitle => 'আর্থিক সারসংক্ষেপ';
+
+  @override
+  String get customerMoneyOrders => 'অর্ডার';
+
+  @override
+  String get customerMoneyPurchased => 'মোট ক্রয়';
+
+  @override
+  String get customerMoneyPaid => 'পরিশোধিত';
+
+  @override
+  String get customerMoneyDiscounts => 'ডিসকাউন্ট';
+
+  @override
+  String get customerMoneyDue => 'বকেয়া';
+
+  @override
+  String get customerMoneyOverdue => 'মেয়াদোত্তীর্ণ';
+
+  @override
+  String get customerMoneyNextPayment => 'পরবর্তী পেমেন্ট';
+
+  @override
+  String get customerMoneyLastPayment => 'সর্বশেষ পেমেন্ট';
+
+  @override
+  String get customerOrdersTitle => 'অর্ডার';
+
+  @override
+  String get customerOrdersEmpty => 'এখনও কোনো অর্ডার নেই।';
 }
