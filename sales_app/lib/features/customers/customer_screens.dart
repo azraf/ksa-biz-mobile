@@ -29,7 +29,10 @@ class CustomersHubScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final spId = requireSalesPersonId(ref.watch(authProvider));
     if (spId == null) {
-      return ErrorView(message: l10n.salesSelectSalespersonFirst);
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.salesCustomersTitle)),
+        body: ErrorView(message: l10n.salesSelectSalespersonFirst),
+      );
     }
 
     return Scaffold(

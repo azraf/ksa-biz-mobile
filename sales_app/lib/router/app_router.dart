@@ -73,6 +73,98 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(path: '/', builder: (context, state) => const DashboardScreen()),
+              // These screens live inside the shell so every page keeps the
+              // bottom nav; they draw their own AppBars (shell hides its own).
+              GoRoute(
+                path: '/notifications',
+                builder: (context, state) => const NotificationsScreen(),
+              ),
+              GoRoute(
+                path: '/profile',
+                builder: (context, state) => const ProfileScreen(),
+              ),
+              GoRoute(
+                path: '/watchlist',
+                builder: (context, state) => const WatchlistListScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'create',
+                    builder: (_, _) => const WatchlistCreateScreen(),
+                  ),
+                  GoRoute(
+                    path: ':id',
+                    builder: (_, state) => WatchlistDetailScreen(
+                      id: int.parse(state.pathParameters['id']!),
+                    ),
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: '/customers',
+                builder: (context, state) => const CustomersHubScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'shop/:id',
+                    builder: (_, state) {
+                      final args = state.extra as CustomerDetailRouteArgs?;
+                      return CustomerDetailScreen(
+                        customerType: 'customer_shop',
+                        customerId: int.parse(state.pathParameters['id']!),
+                        initialCustomer: args?.customer,
+                      );
+                    },
+                    routes: [
+                      GoRoute(
+                        path: 'orders',
+                        builder: (_, state) => CustomerOrdersScreen(
+                          customerType: 'customer_shop',
+                          customerId: int.parse(state.pathParameters['id']!),
+                        ),
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'van/:id',
+                    builder: (_, state) {
+                      final args = state.extra as CustomerDetailRouteArgs?;
+                      return CustomerDetailScreen(
+                        customerType: 'customer_van',
+                        customerId: int.parse(state.pathParameters['id']!),
+                        initialCustomer: args?.customer,
+                      );
+                    },
+                    routes: [
+                      GoRoute(
+                        path: 'orders',
+                        builder: (_, state) => CustomerOrdersScreen(
+                          customerType: 'customer_van',
+                          customerId: int.parse(state.pathParameters['id']!),
+                        ),
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'importer/:id',
+                    builder: (_, state) {
+                      final args = state.extra as CustomerDetailRouteArgs?;
+                      return CustomerDetailScreen(
+                        customerType: 'customer_importer',
+                        customerId: int.parse(state.pathParameters['id']!),
+                        initialCustomer: args?.customer,
+                      );
+                    },
+                    routes: [
+                      GoRoute(
+                        path: 'orders',
+                        builder: (_, state) => CustomerOrdersScreen(
+                          customerType: 'customer_importer',
+                          customerId: int.parse(state.pathParameters['id']!),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ],
           ),
           StatefulShellBranch(
@@ -146,7 +238,6 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'candidates',
-                    parentNavigatorKey: _rootNavigatorKey,
                     builder: (_, _) => const CollectionCandidatesScreen(),
                   ),
                 ],
@@ -157,100 +248,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       // Old deep link — dues now lives inside the Plan hub.
       GoRoute(path: '/dues', redirect: (_, _) => '/plan?tab=dues'),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/notifications',
-        builder: (context, state) => const NotificationsScreen(),
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/profile',
-        builder: (context, state) => const ProfileScreen(),
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/watchlist',
-        builder: (context, state) => const WatchlistListScreen(),
-        routes: [
-          GoRoute(
-            path: 'create',
-            builder: (_, _) => const WatchlistCreateScreen(),
-          ),
-          GoRoute(
-            path: ':id',
-            builder: (_, state) => WatchlistDetailScreen(
-              id: int.parse(state.pathParameters['id']!),
-            ),
-          ),
-        ],
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/customers',
-        builder: (context, state) => const CustomersHubScreen(),
-        routes: [
-          GoRoute(
-            path: 'shop/:id',
-            builder: (_, state) {
-              final args = state.extra as CustomerDetailRouteArgs?;
-              return CustomerDetailScreen(
-                customerType: 'customer_shop',
-                customerId: int.parse(state.pathParameters['id']!),
-                initialCustomer: args?.customer,
-              );
-            },
-            routes: [
-              GoRoute(
-                path: 'orders',
-                builder: (_, state) => CustomerOrdersScreen(
-                  customerType: 'customer_shop',
-                  customerId: int.parse(state.pathParameters['id']!),
-                ),
-              ),
-            ],
-          ),
-          GoRoute(
-            path: 'van/:id',
-            builder: (_, state) {
-              final args = state.extra as CustomerDetailRouteArgs?;
-              return CustomerDetailScreen(
-                customerType: 'customer_van',
-                customerId: int.parse(state.pathParameters['id']!),
-                initialCustomer: args?.customer,
-              );
-            },
-            routes: [
-              GoRoute(
-                path: 'orders',
-                builder: (_, state) => CustomerOrdersScreen(
-                  customerType: 'customer_van',
-                  customerId: int.parse(state.pathParameters['id']!),
-                ),
-              ),
-            ],
-          ),
-          GoRoute(
-            path: 'importer/:id',
-            builder: (_, state) {
-              final args = state.extra as CustomerDetailRouteArgs?;
-              return CustomerDetailScreen(
-                customerType: 'customer_importer',
-                customerId: int.parse(state.pathParameters['id']!),
-                initialCustomer: args?.customer,
-              );
-            },
-            routes: [
-              GoRoute(
-                path: 'orders',
-                builder: (_, state) => CustomerOrdersScreen(
-                  customerType: 'customer_importer',
-                  customerId: int.parse(state.pathParameters['id']!),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
     ],
   );
 });
@@ -283,7 +280,17 @@ class HomeShell extends ConsumerWidget {
   }
 
   bool _showBackButton(BuildContext context) {
-    return Navigator.of(context).canPop();
+    return GoRouter.of(context).canPop();
+  }
+
+  /// Screens moved into the shell that draw their own AppBar — the shell
+  /// hides its bar there to avoid a double header.
+  bool _screenHasOwnAppBar(String location) {
+    return location.startsWith('/customers') ||
+        location.startsWith('/watchlist') ||
+        location.startsWith('/notifications') ||
+        location.startsWith('/profile') ||
+        location.startsWith('/plan/candidates');
   }
 
   @override
@@ -294,18 +301,20 @@ class HomeShell extends ConsumerWidget {
     final showBack = _showBackButton(context);
 
     return Scaffold(
-      appBar: AppBar(
-        leading: showBack
-            ? BackButton(onPressed: () => context.pop())
-            : null,
-        title: Text(title),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person_outline),
-            onPressed: () => context.push('/profile'),
-          ),
-        ],
-      ),
+      appBar: _screenHasOwnAppBar(location)
+          ? null
+          : AppBar(
+              leading: showBack
+                  ? BackButton(onPressed: () => context.pop())
+                  : null,
+              title: Text(title),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.person_outline),
+                  onPressed: () => context.push('/profile'),
+                ),
+              ],
+            ),
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
