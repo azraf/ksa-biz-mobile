@@ -1581,4 +1581,132 @@ class AppLocalizationsAr extends AppLocalizations {
   String tokenExpiresAtValue(String date) {
     return 'إعادة تسجيل الدخول مطلوبة بحلول $date';
   }
+
+  @override
+  String get gpsOptional => 'GPS (اختياري)';
+
+  @override
+  String get gpsCapture => 'التقاط';
+
+  @override
+  String get gpsPermissionRequired => 'إذن الموقع مطلوب لتحديد GPS.';
+
+  @override
+  String get gpsEnableServices => 'يرجى تفعيل خدمات الموقع.';
+
+  @override
+  String get gpsOptionsTooltip => 'خيارات GPS';
+
+  @override
+  String get gpsClear => 'مسح موقع GPS';
+
+  @override
+  String get gpsReplace => 'استبدال بالموقع الحالي';
+
+  @override
+  String get gpsClearConfirm => 'هل أنت متأكد من مسح الموقع المحفوظ؟';
+
+  @override
+  String get gpsReplaceConfirm =>
+      'هل أنت متأكد من استبدال الموقع المحفوظ بالموقع الحالي؟';
+
+  @override
+  String get commonConfirm => 'تأكيد';
+
+  @override
+  String get customerContactPerson => 'الشخص المسؤول (اختياري)';
+
+  @override
+  String get customerCreatedPartial =>
+      'تم الإنشاء، لكن تعذّر حفظ بعض البيانات. أضفها من صفحة العميل.';
+
+  @override
+  String get customerDuplicatePhoneTitle => 'تكرار محتمل';
+
+  @override
+  String get commonOpenExisting => 'فتح الموجود';
+
+  @override
+  String get commonCreateAnyway => 'إنشاء على أي حال';
+
+  @override
+  String get customerAssignSalesPerson => 'تعيين مندوب مبيعات (اختياري)';
+
+  @override
+  String get watchlistSaveProspect => 'حفظ كعميل محتمل (دون اتصال)';
+
+  @override
+  String get watchlistProspectSaved =>
+      'تم الحفظ في قائمة المتابعة — حوّله إلى متجر عند الاتصال.';
+
+  @override
+  String get watchlistProspectNeedsGps =>
+      'يلزم تحديد GPS لحفظ عميل محتمل دون اتصال.';
+
+  @override
+  String get accountCreateLogin => 'إنشاء حساب دخول';
+
+  @override
+  String get accountUsesContactDetails =>
+      'تُستخدم بيانات الاتصال أعلاه لتسجيل الدخول';
+
+  @override
+  String get accountSignInHint => 'يمكن للعميل تسجيل الدخول بالبريد أو الهاتف';
+
+  @override
+  String get accountLoginEmailOptional => 'بريد الدخول (اختياري)';
+
+  @override
+  String get accountLoginPhoneOptional => 'هاتف الدخول (اختياري)';
+
+  @override
+  String get accountConfirmPassword => 'تأكيد كلمة المرور';
+
+  @override
+  String get accountPhoneOrEmailRequired =>
+      'الهاتف أو البريد مطلوب لحساب الدخول';
+
+  @override
+  String get accountPasswordMin => 'كلمة المرور 8 أحرف على الأقل';
+
+  @override
+  String get accountPasswordsNoMatch => 'كلمتا المرور غير متطابقتين';
+
+  @override
+  String get accountCreateSubmit => 'إنشاء الحساب';
+
+  @override
+  String get accountUsesContactForLogin =>
+      'تُستخدم بيانات اتصال العميل لتسجيل الدخول';
+
+  @override
+  String get accountPasswordCheck =>
+      'تحقق من كلمة المرور (8 أحرف على الأقل ومتطابقة)';
+
+  @override
+  String get accountResetPasswordTitle => 'إعادة تعيين كلمة مرور الدخول';
+
+  @override
+  String get accountResetPassword => 'إعادة تعيين كلمة المرور';
+
+  @override
+  String get accountPasswordResetDone => 'تمت إعادة تعيين كلمة مرور الدخول';
+
+  @override
+  String get accountSection => 'حساب الدخول';
+
+  @override
+  String get accountNone => 'لا يوجد حساب دخول';
+
+  @override
+  String get accountNoneHint =>
+      'أنشئ بيانات دخول ليتمكن هذا العميل من استخدام OrderApp أو البوابة الإلكترونية.';
+
+  @override
+  String get accountCreated => 'تم إنشاء حساب الدخول';
+
+  @override
+  String customerDuplicatePhoneBody(String name) {
+    return '\"$name\" يستخدم رقم الهاتف هذا بالفعل.';
+  }
 }

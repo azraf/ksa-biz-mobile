@@ -22,7 +22,7 @@ class UsersScreen extends ConsumerWidget {
   }
 
   void _edit(BuildContext context, WidgetRef ref, AdminUserModel? user) async {
-    final roles = await ref.read(adminRepositoriesProvider).listRoles();
+    await ref.read(adminRepositoriesProvider).listRoles();
     if (!context.mounted) return;
     Navigator.push(context, MaterialPageRoute(builder: (_) => CrudFormScreen(
       title: user == null ? 'New User' : 'Edit User',

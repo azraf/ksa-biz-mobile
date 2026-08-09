@@ -2979,6 +2979,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Re-login required by {date}'**
   String tokenExpiresAtValue(String date);
+
+  /// No description provided for @gpsOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS (optional)'**
+  String get gpsOptional;
+
+  /// No description provided for @gpsCapture.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture'**
+  String get gpsCapture;
+
+  /// No description provided for @gpsPermissionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission is required for GPS.'**
+  String get gpsPermissionRequired;
+
+  /// No description provided for @gpsEnableServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enable location services.'**
+  String get gpsEnableServices;
+
+  /// No description provided for @gpsOptionsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS options'**
+  String get gpsOptionsTooltip;
+
+  /// No description provided for @gpsClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear GPS location'**
+  String get gpsClear;
+
+  /// No description provided for @gpsReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace with current location'**
+  String get gpsReplace;
+
+  /// No description provided for @gpsClearConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to clear the saved location?'**
+  String get gpsClearConfirm;
+
+  /// No description provided for @gpsReplaceConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to replace the saved location with current location?'**
+  String get gpsReplaceConfirm;
+
+  /// No description provided for @commonConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get commonConfirm;
+
+  /// No description provided for @customerContactPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact person (optional)'**
+  String get customerContactPerson;
+
+  /// No description provided for @customerCreatedPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Created, but some details could not be saved. Add them from the customer page.'**
+  String get customerCreatedPartial;
+
+  /// No description provided for @customerDuplicatePhoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Possible duplicate'**
+  String get customerDuplicatePhoneTitle;
+
+  /// No description provided for @commonOpenExisting.
+  ///
+  /// In en, this message translates to:
+  /// **'Open existing'**
+  String get commonOpenExisting;
+
+  /// No description provided for @commonCreateAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Create anyway'**
+  String get commonCreateAnyway;
+
+  /// No description provided for @customerAssignSalesPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign salesperson (optional)'**
+  String get customerAssignSalesPerson;
+
+  /// No description provided for @watchlistSaveProspect.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as prospect (offline)'**
+  String get watchlistSaveProspect;
+
+  /// No description provided for @watchlistProspectSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to watchlist — convert to shop when online.'**
+  String get watchlistProspectSaved;
+
+  /// No description provided for @watchlistProspectNeedsGps.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS is required to save an offline prospect.'**
+  String get watchlistProspectNeedsGps;
+
+  /// No description provided for @accountCreateLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Create login account'**
+  String get accountCreateLogin;
+
+  /// No description provided for @accountUsesContactDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses contact details above for login'**
+  String get accountUsesContactDetails;
+
+  /// No description provided for @accountSignInHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer can sign in with email or phone'**
+  String get accountSignInHint;
+
+  /// No description provided for @accountLoginEmailOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Login email (optional)'**
+  String get accountLoginEmailOptional;
+
+  /// No description provided for @accountLoginPhoneOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Login phone (optional)'**
+  String get accountLoginPhoneOptional;
+
+  /// No description provided for @accountConfirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get accountConfirmPassword;
+
+  /// No description provided for @accountPhoneOrEmailRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone or email is required for login account'**
+  String get accountPhoneOrEmailRequired;
+
+  /// No description provided for @accountPasswordMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 8 characters'**
+  String get accountPasswordMin;
+
+  /// No description provided for @accountPasswordsNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get accountPasswordsNoMatch;
+
+  /// No description provided for @accountCreateSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get accountCreateSubmit;
+
+  /// No description provided for @accountUsesContactForLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses the customer contact details for login'**
+  String get accountUsesContactForLogin;
+
+  /// No description provided for @accountPasswordCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Check password (min 8 chars, must match)'**
+  String get accountPasswordCheck;
+
+  /// No description provided for @accountResetPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset login password'**
+  String get accountResetPasswordTitle;
+
+  /// No description provided for @accountResetPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset password'**
+  String get accountResetPassword;
+
+  /// No description provided for @accountPasswordResetDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Login password reset'**
+  String get accountPasswordResetDone;
+
+  /// No description provided for @accountSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Login account'**
+  String get accountSection;
+
+  /// No description provided for @accountNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No login account'**
+  String get accountNone;
+
+  /// No description provided for @accountNoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Create credentials so this customer can use OrderApp or the web portal.'**
+  String get accountNoneHint;
+
+  /// No description provided for @accountCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Login account created'**
+  String get accountCreated;
+
+  /// No description provided for @customerDuplicatePhoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" already uses this phone number.'**
+  String customerDuplicatePhoneBody(String name);
 }
 
 class _AppLocalizationsDelegate

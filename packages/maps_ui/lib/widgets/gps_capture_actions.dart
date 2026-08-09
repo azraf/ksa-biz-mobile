@@ -1,8 +1,27 @@
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:l10n/l10n.dart';
 
 enum _GpsMenuAction { clear, replace }
+
+/// Best-effort GPS capture with no UI: returns "lat,lng" or null.
+/// Never prompts beyond the OS permission dialog; safe to call on sheet open.
+Future<String?> captureGpsSilently() async {
+  try {
+    if (!await AppPermissions.requestLocation()) return null;
+    if (!await Geolocator.isLocationServiceEnabled()) return null;
+    final position = await Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        timeLimit: Duration(seconds: 10),
+      ),
+    );
+    return '${position.latitude},${position.longitude}';
+  } catch (_) {
+    return null;
+  }
+}
 
 /// GPS capture control: direct capture when empty; menu with clear/replace when set.
 class GpsCaptureActions extends StatelessWidget {
@@ -11,25 +30,26 @@ class GpsCaptureActions extends StatelessWidget {
     required this.gps,
     required this.onGpsChanged,
     this.onImmediatePersist,
-    this.captureLabel = 'Capture',
-    this.locationRequiredMessage = 'Location permission is required for GPS.',
-    this.locationServicesMessage = 'Please enable location services.',
+    this.captureLabel,
+    this.locationRequiredMessage,
+    this.locationServicesMessage,
   });
 
   final String? gps;
   final ValueChanged<String?> onGpsChanged;
   final Future<void> Function(String? gps)? onImmediatePersist;
-  final String captureLabel;
-  final String locationRequiredMessage;
-  final String locationServicesMessage;
+  final String? captureLabel;
+  final String? locationRequiredMessage;
+  final String? locationServicesMessage;
 
   bool get _hasValidGps => GpsParser.parseGps(gps) != null;
 
   Future<String?> _captureCurrentLocation(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
     if (!await AppPermissions.requestLocation()) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(locationRequiredMessage)),
+          SnackBar(content: Text(locationRequiredMessage ?? l10n.gpsPermissionRequired)),
         );
       }
       return null;
@@ -37,7 +57,7 @@ class GpsCaptureActions extends StatelessWidget {
     if (!await Geolocator.isLocationServiceEnabled()) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(locationServicesMessage)),
+          SnackBar(content: Text(locationServicesMessage ?? l10n.gpsEnableServices)),
         );
       }
       return null;
@@ -50,6 +70,7 @@ class GpsCaptureActions extends StatelessWidget {
     BuildContext context, {
     required String message,
   }) async {
+    final l10n = AppLocalizations.of(context);
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -57,11 +78,11 @@ class GpsCaptureActions extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Confirm'),
+            child: Text(l10n.commonConfirm),
           ),
         ],
       ),
@@ -83,7 +104,7 @@ class GpsCaptureActions extends StatelessWidget {
   Future<void> _onReplacePressed(BuildContext context) async {
     final confirmed = await _confirm(
       context,
-      message: 'Are you sure you want to replace the saved location with current location?',
+      message: AppLocalizations.of(context).gpsReplaceConfirm,
     );
     if (!confirmed || !context.mounted) return;
     await _onCapturePressed(context);
@@ -92,7 +113,7 @@ class GpsCaptureActions extends StatelessWidget {
   Future<void> _onClearPressed(BuildContext context) async {
     final confirmed = await _confirm(
       context,
-      message: 'Are you sure you want to clear the saved location?',
+      message: AppLocalizations.of(context).gpsClearConfirm,
     );
     if (!confirmed || !context.mounted) return;
     await _applyGps(context, null);
@@ -109,16 +130,17 @@ class GpsCaptureActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     if (!_hasValidGps) {
       return OutlinedButton(
         onPressed: () => _onCapturePressed(context),
-        child: Text(captureLabel),
+        child: Text(captureLabel ?? l10n.gpsCapture),
       );
     }
 
     return IconButton(
       icon: const Icon(Icons.edit_location_alt),
-      tooltip: 'GPS options',
+      tooltip: l10n.gpsOptionsTooltip,
       onPressed: () async {
         final action = await showModalBottomSheet<_GpsMenuAction>(
           context: context,
@@ -128,12 +150,12 @@ class GpsCaptureActions extends StatelessWidget {
               children: [
                 ListTile(
                   leading: const Icon(Icons.clear),
-                  title: const Text('Clear GPS location'),
+                  title: Text(l10n.gpsClear),
                   onTap: () => Navigator.pop(ctx, _GpsMenuAction.clear),
                 ),
                 ListTile(
                   leading: const Icon(Icons.my_location),
-                  title: const Text('Replace with current location'),
+                  title: Text(l10n.gpsReplace),
                   onTap: () => Navigator.pop(ctx, _GpsMenuAction.replace),
                 ),
               ],

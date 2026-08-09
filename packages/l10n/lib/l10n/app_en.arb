@@ -265,7 +265,9 @@
   "salesDashboardCachedDues": "Showing cached dues from {fetchedAt}",
   "@salesDashboardCachedDues": {
     "placeholders": {
-      "fetchedAt": { "type": "String" }
+      "fetchedAt": {
+        "type": "String"
+      }
     }
   },
   "salesHello": "Hello, {name}",
@@ -369,8 +371,12 @@
   "salesOfflineSyncProgress": "Syncing {completed} of {total}…",
   "@salesOfflineSyncProgress": {
     "placeholders": {
-      "completed": {"type": "int"},
-      "total": {"type": "int"}
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "salesOfflineServerUnreachable": "Connected but server is unreachable",
@@ -378,13 +384,17 @@
   "salesOfflineUploadFailed": "{count, plural, =1{1 upload failed} other{{count} uploads failed}}",
   "@salesOfflineUploadFailed": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "salesOfflineUploading": "Uploading… {percent}%",
   "@salesOfflineUploading": {
     "placeholders": {
-      "percent": {"type": "int"}
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "salesErrorOffline": "No internet connection. Showing saved data when available.",
@@ -440,7 +450,9 @@
   "salesSyncRetries": "Retries: {count}",
   "@salesSyncRetries": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "salesSyncDismiss": "Dismiss",
@@ -449,7 +461,9 @@
   "salesLastSyncedAt": "Last synced {time}",
   "@salesLastSyncedAt": {
     "placeholders": {
-      "time": {"type": "String"}
+      "time": {
+        "type": "String"
+      }
     }
   },
   "salesCardCustomers": "Customers",
@@ -633,7 +647,9 @@
   "salesWatchlistArchivedReason": "Archived: {reason}",
   "@salesWatchlistArchivedReason": {
     "placeholders": {
-      "reason": { "type": "String" }
+      "reason": {
+        "type": "String"
+      }
     }
   },
   "orderAppName": "ARM Orders",
@@ -693,7 +709,6 @@
   "commonSortByArea": "Area",
   "commonSortBySalesPerson": "Sales person",
   "commonCreateCustomer": "Create customer",
-  "commonCreateOrder": "Create order",
   "commonAddWatchlistPlace": "Add place",
   "salesCustomerCreateGoOnline": "Go online to create a customer",
   "adminShopQuickAdd": "Quick add shop",
@@ -749,6 +764,52 @@
   "@tokenExpiresAtValue": {
     "placeholders": {
       "date": {
+        "type": "String"
+      }
+    }
+  },
+  "gpsOptional": "GPS (optional)",
+  "gpsCapture": "Capture",
+  "gpsPermissionRequired": "Location permission is required for GPS.",
+  "gpsEnableServices": "Please enable location services.",
+  "gpsOptionsTooltip": "GPS options",
+  "gpsClear": "Clear GPS location",
+  "gpsReplace": "Replace with current location",
+  "gpsClearConfirm": "Are you sure you want to clear the saved location?",
+  "gpsReplaceConfirm": "Are you sure you want to replace the saved location with current location?",
+  "commonConfirm": "Confirm",
+  "customerContactPerson": "Contact person (optional)",
+  "customerCreatedPartial": "Created, but some details could not be saved. Add them from the customer page.",
+  "customerDuplicatePhoneTitle": "Possible duplicate",
+  "commonOpenExisting": "Open existing",
+  "commonCreateAnyway": "Create anyway",
+  "customerAssignSalesPerson": "Assign salesperson (optional)",
+  "watchlistSaveProspect": "Save as prospect (offline)",
+  "watchlistProspectSaved": "Saved to watchlist — convert to shop when online.",
+  "watchlistProspectNeedsGps": "GPS is required to save an offline prospect.",
+  "accountCreateLogin": "Create login account",
+  "accountUsesContactDetails": "Uses contact details above for login",
+  "accountSignInHint": "Customer can sign in with email or phone",
+  "accountLoginEmailOptional": "Login email (optional)",
+  "accountLoginPhoneOptional": "Login phone (optional)",
+  "accountConfirmPassword": "Confirm password",
+  "accountPhoneOrEmailRequired": "Phone or email is required for login account",
+  "accountPasswordMin": "Password must be at least 8 characters",
+  "accountPasswordsNoMatch": "Passwords do not match",
+  "accountCreateSubmit": "Create account",
+  "accountUsesContactForLogin": "Uses the customer contact details for login",
+  "accountPasswordCheck": "Check password (min 8 chars, must match)",
+  "accountResetPasswordTitle": "Reset login password",
+  "accountResetPassword": "Reset password",
+  "accountPasswordResetDone": "Login password reset",
+  "accountSection": "Login account",
+  "accountNone": "No login account",
+  "accountNoneHint": "Create credentials so this customer can use OrderApp or the web portal.",
+  "accountCreated": "Login account created",
+  "customerDuplicatePhoneBody": "\"{name}\" already uses this phone number.",
+  "@customerDuplicatePhoneBody": {
+    "placeholders": {
+      "name": {
         "type": "String"
       }
     }

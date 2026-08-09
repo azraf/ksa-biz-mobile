@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:l10n/l10n.dart';
 
 import '../models/admin_models.dart';
 import '../models/customer.dart';
@@ -45,10 +46,11 @@ class CustomerLoginAccountSection extends StatelessWidget {
   }
 
   Future<void> _resetPassword(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
     await showCreateCustomerUserSheet(
       context: context,
-      title: 'Reset login password',
-      submitLabel: 'Reset password',
+      title: l10n.accountResetPasswordTitle,
+      submitLabel: l10n.accountResetPassword,
       passwordOnly: true,
       onSubmit: ({
         email,
@@ -79,7 +81,7 @@ class CustomerLoginAccountSection extends StatelessWidget {
         onUpdated?.call();
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Login password reset')),
+            SnackBar(content: Text(l10n.accountPasswordResetDone)),
           );
         }
       },
@@ -88,6 +90,7 @@ class CustomerLoginAccountSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final user = _user;
     if (user != null) {
       return Card(
@@ -95,7 +98,7 @@ class CustomerLoginAccountSection extends StatelessWidget {
           children: [
             ListTile(
               leading: const Icon(Icons.verified_user_outlined),
-              title: const Text('Login account'),
+              title: Text(l10n.accountSection),
               subtitle: Text(
                 [
                   if (user.email != null && user.email!.isNotEmpty) user.email!,
@@ -107,7 +110,7 @@ class CustomerLoginAccountSection extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: () => _resetPassword(context),
-                child: const Text('Reset password'),
+                child: Text(l10n.accountResetPassword),
               ),
             ),
           ],
@@ -118,8 +121,8 @@ class CustomerLoginAccountSection extends StatelessWidget {
     return Card(
       child: ListTile(
         leading: const Icon(Icons.person_add_alt_1_outlined),
-        title: const Text('No login account'),
-        subtitle: const Text('Create credentials so this customer can use OrderApp or the web portal.'),
+        title: Text(l10n.accountNone),
+        subtitle: Text(l10n.accountNoneHint),
         trailing: const Icon(Icons.chevron_right),
         onTap: () => showCreateCustomerUserSheet(
           context: context,
@@ -160,7 +163,7 @@ class CustomerLoginAccountSection extends StatelessWidget {
             onUpdated?.call();
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Login account created')),
+                SnackBar(content: Text(l10n.accountCreated)),
               );
             }
           },

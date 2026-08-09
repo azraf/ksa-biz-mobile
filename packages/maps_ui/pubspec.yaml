@@ -12,6 +12,8 @@ dependencies:
   core:
     path: ../core
   geolocator: ^13.0.2
+  l10n:
+    path: ../l10n
   google_maps_flutter: ^2.18.0
 
 dev_dependencies:

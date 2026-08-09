@@ -61,6 +61,7 @@ core.QuickCreateCustomerHost _quickCreateHost(WidgetRef ref) {
     isOnline: () => ref.read(onlineStatusProvider),
     attachShopPhoto: (file, shopId) =>
         ref.read(mediaCaptureFacadeProvider).attachShopPhoto(file, shopId),
+    showSalesPersonPicker: true,
   );
 }
 

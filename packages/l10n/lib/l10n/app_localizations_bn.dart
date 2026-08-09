@@ -1592,4 +1592,133 @@ class AppLocalizationsBn extends AppLocalizations {
   String tokenExpiresAtValue(String date) {
     return '$date এর মধ্যে পুনরায় লগইন প্রয়োজন';
   }
+
+  @override
+  String get gpsOptional => 'জিপিএস (ঐচ্ছিক)';
+
+  @override
+  String get gpsCapture => 'ক্যাপচার';
+
+  @override
+  String get gpsPermissionRequired => 'জিপিএসের জন্য লোকেশন অনুমতি প্রয়োজন।';
+
+  @override
+  String get gpsEnableServices => 'অনুগ্রহ করে লোকেশন সার্ভিস চালু করুন।';
+
+  @override
+  String get gpsOptionsTooltip => 'জিপিএস অপশন';
+
+  @override
+  String get gpsClear => 'জিপিএস লোকেশন মুছুন';
+
+  @override
+  String get gpsReplace => 'বর্তমান লোকেশন দিয়ে প্রতিস্থাপন করুন';
+
+  @override
+  String get gpsClearConfirm => 'সংরক্ষিত লোকেশন মুছে ফেলতে চান?';
+
+  @override
+  String get gpsReplaceConfirm =>
+      'সংরক্ষিত লোকেশন বর্তমান লোকেশন দিয়ে প্রতিস্থাপন করতে চান?';
+
+  @override
+  String get commonConfirm => 'নিশ্চিত করুন';
+
+  @override
+  String get customerContactPerson => 'যোগাযোগের ব্যক্তি (ঐচ্ছিক)';
+
+  @override
+  String get customerCreatedPartial =>
+      'তৈরি হয়েছে, তবে কিছু তথ্য সংরক্ষণ করা যায়নি। কাস্টমার পেজ থেকে যোগ করুন।';
+
+  @override
+  String get customerDuplicatePhoneTitle => 'সম্ভাব্য ডুপ্লিকেট';
+
+  @override
+  String get commonOpenExisting => 'বিদ্যমানটি খুলুন';
+
+  @override
+  String get commonCreateAnyway => 'তবুও তৈরি করুন';
+
+  @override
+  String get customerAssignSalesPerson => 'সেলসপারসন নির্ধারণ (ঐচ্ছিক)';
+
+  @override
+  String get watchlistSaveProspect => 'প্রসপেক্ট হিসেবে সংরক্ষণ (অফলাইন)';
+
+  @override
+  String get watchlistProspectSaved =>
+      'ওয়াচলিস্টে সংরক্ষিত — অনলাইনে এলে দোকানে রূপান্তর করুন।';
+
+  @override
+  String get watchlistProspectNeedsGps =>
+      'অফলাইন প্রসপেক্ট সংরক্ষণে জিপিএস প্রয়োজন।';
+
+  @override
+  String get accountCreateLogin => 'লগইন অ্যাকাউন্ট তৈরি করুন';
+
+  @override
+  String get accountUsesContactDetails =>
+      'লগইনের জন্য উপরের যোগাযোগ তথ্য ব্যবহার হবে';
+
+  @override
+  String get accountSignInHint =>
+      'কাস্টমার ইমেইল বা ফোন দিয়ে সাইন ইন করতে পারবেন';
+
+  @override
+  String get accountLoginEmailOptional => 'লগইন ইমেইল (ঐচ্ছিক)';
+
+  @override
+  String get accountLoginPhoneOptional => 'লগইন ফোন (ঐচ্ছিক)';
+
+  @override
+  String get accountConfirmPassword => 'পাসওয়ার্ড নিশ্চিত করুন';
+
+  @override
+  String get accountPhoneOrEmailRequired =>
+      'লগইন অ্যাকাউন্টের জন্য ফোন বা ইমেইল প্রয়োজন';
+
+  @override
+  String get accountPasswordMin => 'পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে';
+
+  @override
+  String get accountPasswordsNoMatch => 'পাসওয়ার্ড মিলছে না';
+
+  @override
+  String get accountCreateSubmit => 'অ্যাকাউন্ট তৈরি করুন';
+
+  @override
+  String get accountUsesContactForLogin =>
+      'লগইনের জন্য কাস্টমারের যোগাযোগ তথ্য ব্যবহার হবে';
+
+  @override
+  String get accountPasswordCheck =>
+      'পাসওয়ার্ড যাচাই করুন (কমপক্ষে ৮ অক্ষর, মিলতে হবে)';
+
+  @override
+  String get accountResetPasswordTitle => 'লগইন পাসওয়ার্ড রিসেট করুন';
+
+  @override
+  String get accountResetPassword => 'পাসওয়ার্ড রিসেট';
+
+  @override
+  String get accountPasswordResetDone => 'লগইন পাসওয়ার্ড রিসেট হয়েছে';
+
+  @override
+  String get accountSection => 'লগইন অ্যাকাউন্ট';
+
+  @override
+  String get accountNone => 'কোনো লগইন অ্যাকাউন্ট নেই';
+
+  @override
+  String get accountNoneHint =>
+      'এই কাস্টমার যেন OrderApp বা ওয়েব পোর্টাল ব্যবহার করতে পারে সেজন্য লগইন তথ্য তৈরি করুন।';
+
+  @override
+  String get accountCreated => 'লগইন অ্যাকাউন্ট তৈরি হয়েছে';
+
+  @override
+  String customerDuplicatePhoneBody(String name) {
+    return '\"$name\" ইতিমধ্যে এই ফোন নম্বর ব্যবহার করছে।';
+  }
 }

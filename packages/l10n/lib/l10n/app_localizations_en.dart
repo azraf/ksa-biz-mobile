@@ -1588,4 +1588,133 @@ class AppLocalizationsEn extends AppLocalizations {
   String tokenExpiresAtValue(String date) {
     return 'Re-login required by $date';
   }
+
+  @override
+  String get gpsOptional => 'GPS (optional)';
+
+  @override
+  String get gpsCapture => 'Capture';
+
+  @override
+  String get gpsPermissionRequired =>
+      'Location permission is required for GPS.';
+
+  @override
+  String get gpsEnableServices => 'Please enable location services.';
+
+  @override
+  String get gpsOptionsTooltip => 'GPS options';
+
+  @override
+  String get gpsClear => 'Clear GPS location';
+
+  @override
+  String get gpsReplace => 'Replace with current location';
+
+  @override
+  String get gpsClearConfirm =>
+      'Are you sure you want to clear the saved location?';
+
+  @override
+  String get gpsReplaceConfirm =>
+      'Are you sure you want to replace the saved location with current location?';
+
+  @override
+  String get commonConfirm => 'Confirm';
+
+  @override
+  String get customerContactPerson => 'Contact person (optional)';
+
+  @override
+  String get customerCreatedPartial =>
+      'Created, but some details could not be saved. Add them from the customer page.';
+
+  @override
+  String get customerDuplicatePhoneTitle => 'Possible duplicate';
+
+  @override
+  String get commonOpenExisting => 'Open existing';
+
+  @override
+  String get commonCreateAnyway => 'Create anyway';
+
+  @override
+  String get customerAssignSalesPerson => 'Assign salesperson (optional)';
+
+  @override
+  String get watchlistSaveProspect => 'Save as prospect (offline)';
+
+  @override
+  String get watchlistProspectSaved =>
+      'Saved to watchlist — convert to shop when online.';
+
+  @override
+  String get watchlistProspectNeedsGps =>
+      'GPS is required to save an offline prospect.';
+
+  @override
+  String get accountCreateLogin => 'Create login account';
+
+  @override
+  String get accountUsesContactDetails =>
+      'Uses contact details above for login';
+
+  @override
+  String get accountSignInHint => 'Customer can sign in with email or phone';
+
+  @override
+  String get accountLoginEmailOptional => 'Login email (optional)';
+
+  @override
+  String get accountLoginPhoneOptional => 'Login phone (optional)';
+
+  @override
+  String get accountConfirmPassword => 'Confirm password';
+
+  @override
+  String get accountPhoneOrEmailRequired =>
+      'Phone or email is required for login account';
+
+  @override
+  String get accountPasswordMin => 'Password must be at least 8 characters';
+
+  @override
+  String get accountPasswordsNoMatch => 'Passwords do not match';
+
+  @override
+  String get accountCreateSubmit => 'Create account';
+
+  @override
+  String get accountUsesContactForLogin =>
+      'Uses the customer contact details for login';
+
+  @override
+  String get accountPasswordCheck => 'Check password (min 8 chars, must match)';
+
+  @override
+  String get accountResetPasswordTitle => 'Reset login password';
+
+  @override
+  String get accountResetPassword => 'Reset password';
+
+  @override
+  String get accountPasswordResetDone => 'Login password reset';
+
+  @override
+  String get accountSection => 'Login account';
+
+  @override
+  String get accountNone => 'No login account';
+
+  @override
+  String get accountNoneHint =>
+      'Create credentials so this customer can use OrderApp or the web portal.';
+
+  @override
+  String get accountCreated => 'Login account created';
+
+  @override
+  String customerDuplicatePhoneBody(String name) {
+    return '\"$name\" already uses this phone number.';
+  }
 }

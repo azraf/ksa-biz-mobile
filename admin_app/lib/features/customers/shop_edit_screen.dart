@@ -139,8 +139,6 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
             notCapturedLabel: 'Not captured',
             trailing: GpsCaptureActions(
               gps: _gps,
-              captureLabel: 'Capture GPS',
-              locationRequiredMessage: 'Location permission is required for shop GPS.',
               onGpsChanged: (value) => setState(() => _gps = value),
             ),
           ),

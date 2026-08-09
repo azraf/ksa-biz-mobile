@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:l10n/l10n.dart';
 
 import 'password_text_field.dart';
 
@@ -97,18 +98,19 @@ class CustomerUserAccountFieldsState extends State<CustomerUserAccountFields> {
 
   String? validate() {
     if (!widget.createUser) return null;
+    final l10n = AppLocalizations.of(context);
     final email = resolvedLoginEmail();
     final phone = resolvedLoginPhone();
     final password = _passwordController.text;
     final confirm = _confirmController.text;
     if ((email == null || email.isEmpty) && (phone == null || phone.isEmpty)) {
-      return 'Phone or email is required for login account';
+      return l10n.accountPhoneOrEmailRequired;
     }
     if (password.length < 8) {
-      return 'Password must be at least 8 characters';
+      return l10n.accountPasswordMin;
     }
     if (password != confirm) {
-      return 'Passwords do not match';
+      return l10n.accountPasswordsNoMatch;
     }
     return null;
   }
@@ -122,16 +124,17 @@ class CustomerUserAccountFieldsState extends State<CustomerUserAccountFields> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text('Create login account'),
+          title: Text(l10n.accountCreateLogin),
           subtitle: Text(
             _reusesContactDetails && widget.createUser
-                ? 'Uses contact details above for login'
-                : 'Customer can sign in with email or phone',
+                ? l10n.accountUsesContactDetails
+                : l10n.accountSignInHint,
           ),
           value: widget.createUser,
           onChanged: widget.onCreateUserChanged,
@@ -140,22 +143,22 @@ class CustomerUserAccountFieldsState extends State<CustomerUserAccountFields> {
           if (!_hideLoginEmail)
             TextField(
               controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Login email (optional)'),
+              decoration: InputDecoration(labelText: l10n.accountLoginEmailOptional),
               keyboardType: TextInputType.emailAddress,
             ),
           if (!_hideLoginPhone)
             TextField(
               controller: _phoneController,
-              decoration: const InputDecoration(labelText: 'Login phone (optional)'),
+              decoration: InputDecoration(labelText: l10n.accountLoginPhoneOptional),
               keyboardType: TextInputType.phone,
             ),
           PasswordTextField(
             controller: _passwordController,
-            decoration: const InputDecoration(labelText: 'Password'),
+            decoration: InputDecoration(labelText: l10n.commonPassword),
           ),
           PasswordTextField(
             controller: _confirmController,
-            decoration: const InputDecoration(labelText: 'Confirm password'),
+            decoration: InputDecoration(labelText: l10n.accountConfirmPassword),
           ),
         ],
       ],
@@ -171,8 +174,8 @@ Future<void> showCreateCustomerUserSheet({
     required String password,
     required String passwordConfirmation,
   }) onSubmit,
-  String title = 'Create login account',
-  String submitLabel = 'Create account',
+  String? title,
+  String? submitLabel,
   bool passwordOnly = false,
   String? contactPhone,
   String? contactEmail,
@@ -211,15 +214,16 @@ Future<void> showCreateCustomerUserSheet({
             final phone = resolvedPhone();
             final password = passwordController.text;
             final confirm = confirmController.text;
+            final l10n = AppLocalizations.of(context);
             if (!passwordOnly && (email == null || email.isEmpty) && (phone == null || phone.isEmpty)) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Email or phone is required')),
+                SnackBar(content: Text(l10n.accountPhoneOrEmailRequired)),
               );
               return;
             }
             if (password.length < 8 || password != confirm) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Check password (min 8 chars, must match)')),
+                SnackBar(content: Text(l10n.accountPasswordCheck)),
               );
               return;
             }
@@ -241,6 +245,7 @@ Future<void> showCreateCustomerUserSheet({
             }
           }
 
+          final l10n = AppLocalizations.of(context);
           return Padding(
             padding: EdgeInsets.only(
               left: 16,
@@ -252,35 +257,35 @@ Future<void> showCreateCustomerUserSheet({
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(title, style: Theme.of(context).textTheme.titleLarge),
+                Text(title ?? l10n.accountCreateLogin, style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 12),
                 if (!passwordOnly) ...[
                   if (hideLoginPhone || hideLoginEmail)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Text(
-                        'Uses the customer contact details for login',
+                        l10n.accountUsesContactForLogin,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),
                   if (!hideLoginEmail)
                     TextField(
                       controller: emailController,
-                      decoration: const InputDecoration(labelText: 'Login email (optional)'),
+                      decoration: InputDecoration(labelText: l10n.accountLoginEmailOptional),
                     ),
                   if (!hideLoginPhone)
                     TextField(
                       controller: phoneController,
-                      decoration: const InputDecoration(labelText: 'Login phone (optional)'),
+                      decoration: InputDecoration(labelText: l10n.accountLoginPhoneOptional),
                     ),
                 ],
                 PasswordTextField(
                   controller: passwordController,
-                  decoration: const InputDecoration(labelText: 'Password'),
+                  decoration: InputDecoration(labelText: l10n.commonPassword),
                 ),
                 PasswordTextField(
                   controller: confirmController,
-                  decoration: const InputDecoration(labelText: 'Confirm password'),
+                  decoration: InputDecoration(labelText: l10n.accountConfirmPassword),
                 ),
                 const SizedBox(height: 16),
                 FilledButton(
@@ -291,7 +296,7 @@ Future<void> showCreateCustomerUserSheet({
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : Text(submitLabel),
+                      : Text(submitLabel ?? l10n.accountCreateSubmit),
                 ),
               ],
             ),
