@@ -43,6 +43,13 @@ Flat surfaces, no shadows: tinted scaffold, white/elevated cards with hairline b
 
 Plus upgraded `StatusChip` (token-based, dark-safe) and existing `SkeletonDashboard`/`SkeletonListTile` for loading states (prefer skeletons over full-screen spinners).
 
+Added in 3.1.0:
+
+- `CustomerMoneySummaryCard(summary)` (core) — lifetime totals/dues/next-payment rows for customer detail (sales + admin).
+- `CustomerDiarySection` (`packages/media/lib/widgets/customer_diary_section.dart`, deep-import — apps wrap it under the same class name) — the one diary widget: text/photo/voice/video, offline-queued, optional `orderId` for order-scoped diaries. `CustomerDiaryPanel` (core) gained `voicePlayerBuilder`/`attachmentsBuilder`/`extraActions` injection points.
+- `InlineMapCard(gps)` (maps_ui) — lite-mode embedded map for detail screens; renders nothing without a Maps key or valid gps.
+- Visit planner (sales_app `features/plan/`): `table_calendar` month view + agenda, purpose colours via `visit_purpose_style.dart` (must mirror the backend `PURPOSE_COLOURS` map), offline visits through `OfflineVisitRepository` + sync entity `visit`, daily reminder digests via `VisitReminderService` (inexact, 08:00).
+
 ## Rules
 
 1. Colors only via `Theme.of(context).colorScheme` or `AppColors` tokens.

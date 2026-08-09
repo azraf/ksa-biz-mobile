@@ -6,9 +6,11 @@ import 'package:l10n/l10n.dart';
 
 import '../features/auth/login_screen.dart';
 import '../features/auth/select_sales_person_screen.dart';
+import '../features/customers/customer_orders_screen.dart';
 import '../features/customers/customer_screens.dart';
 import '../features/dashboard/dashboard_screen.dart';
-import '../features/dues/dues_screen.dart';
+import '../features/plan/collection_candidates_screen.dart';
+import '../features/plan/plan_hub_screen.dart';
 import '../features/manual_orders/convert_order_screen.dart';
 import '../features/manual_orders/manual_order_detail_screen.dart';
 import '../features/manual_orders/manual_order_list_screen.dart';
@@ -137,11 +139,24 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/dues', builder: (context, state) => const DuesScreen()),
+              GoRoute(
+                path: '/plan',
+                builder: (context, state) =>
+                    PlanHubScreen(initialTab: state.uri.queryParameters['tab']),
+                routes: [
+                  GoRoute(
+                    path: 'candidates',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (_, _) => const CollectionCandidatesScreen(),
+                  ),
+                ],
+              ),
             ],
           ),
         ],
       ),
+      // Old deep link — dues now lives inside the Plan hub.
+      GoRoute(path: '/dues', redirect: (_, _) => '/plan?tab=dues'),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/notifications',
@@ -184,6 +199,15 @@ final routerProvider = Provider<GoRouter>((ref) {
                 initialCustomer: args?.customer,
               );
             },
+            routes: [
+              GoRoute(
+                path: 'orders',
+                builder: (_, state) => CustomerOrdersScreen(
+                  customerType: 'customer_shop',
+                  customerId: int.parse(state.pathParameters['id']!),
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: 'van/:id',
@@ -195,6 +219,15 @@ final routerProvider = Provider<GoRouter>((ref) {
                 initialCustomer: args?.customer,
               );
             },
+            routes: [
+              GoRoute(
+                path: 'orders',
+                builder: (_, state) => CustomerOrdersScreen(
+                  customerType: 'customer_van',
+                  customerId: int.parse(state.pathParameters['id']!),
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: 'importer/:id',
@@ -206,6 +239,15 @@ final routerProvider = Provider<GoRouter>((ref) {
                 initialCustomer: args?.customer,
               );
             },
+            routes: [
+              GoRoute(
+                path: 'orders',
+                builder: (_, state) => CustomerOrdersScreen(
+                  customerType: 'customer_importer',
+                  customerId: int.parse(state.pathParameters['id']!),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -235,7 +277,7 @@ class HomeShell extends ConsumerWidget {
       1 => l10n.salesTitleManualOrders,
       2 => l10n.salesTitleOrders,
       3 => l10n.salesTitleVanStock,
-      4 => l10n.salesTitleDues,
+      4 => l10n.salesTitlePlan,
       _ => l10n.salesAppName,
     };
   }
@@ -295,9 +337,9 @@ class HomeShell extends ConsumerWidget {
             label: l10n.salesNavVan,
           ),
           NavigationDestination(
-            icon: const Icon(Icons.payments_outlined),
-            selectedIcon: const Icon(Icons.payments),
-            label: l10n.salesNavDues,
+            icon: const Icon(Icons.event_note_outlined),
+            selectedIcon: const Icon(Icons.event_note),
+            label: l10n.salesNavPlan,
           ),
         ],
       ),

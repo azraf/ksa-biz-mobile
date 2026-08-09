@@ -11,6 +11,7 @@ import 'package:maps_ui/maps_ui.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/repositories.dart';
 import '../../widgets/quick_create_customer.dart';
+import '../plan/visit_form_sheet.dart';
 import 'customer_diary_section.dart';
 
 class CustomerDetailRouteArgs {
@@ -513,11 +514,41 @@ class CustomerDetailScreen extends ConsumerStatefulWidget {
 
 class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
   late dynamic _customer;
+  CustomerFinancialSummary? _summary;
+  List<OrderModel> _recentOrders = const [];
+  bool _ordersLoaded = false;
 
   @override
   void initState() {
     super.initState();
     _customer = widget.initialCustomer;
+    _loadMoney();
+  }
+
+  /// Money summary (shops only — the API defines no van/importer summary) and
+  /// the first few orders. Server-side data: hidden while absent or offline.
+  Future<void> _loadMoney() async {
+    if (widget.customerType == 'customer_shop') {
+      try {
+        final summary = await ref.read(customerRepositoryProvider).shopSummary(widget.customerId);
+        if (mounted) setState(() => _summary = summary);
+      } catch (_) {}
+    }
+    try {
+      final result = await ref.read(orderRepositoryProvider).list(
+            query: OrderListQuery(
+              customerType: widget.customerType,
+              customerId: widget.customerId,
+              perPage: 5,
+            ),
+          );
+      if (mounted) {
+        setState(() {
+          _recentOrders = result.items;
+          _ordersLoaded = true;
+        });
+      }
+    } catch (_) {}
   }
 
   Future<void> _reloadCustomer() async {
@@ -589,7 +620,30 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
             const SizedBox(height: 8),
             GpsLocationRow(gps: gps),
             const SizedBox(height: 8),
+            InlineMapCard(gps: gps),
+            const SizedBox(height: 8),
             OpenInMapsButton(gps: gps),
+          ],
+          if (_summary != null) ...[
+            const SizedBox(height: 16),
+            CustomerMoneySummaryCard(summary: _summary!),
+          ],
+          if (_ordersLoaded) ...[
+            const SizedBox(height: 16),
+            SectionHeader(
+              title: l10n.customerOrdersTitle,
+              actionLabel: l10n.commonViewAll,
+              onAction: () => context.push(
+                '/customers/${_routeSegment()}/${widget.customerId}/orders',
+              ),
+            ),
+            if (_recentOrders.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(l10n.customerOrdersEmpty),
+              ),
+            for (final order in _recentOrders)
+              OrderCard(order: order, onTap: () => context.push('/orders/${order.id}')),
           ],
           const SizedBox(height: 16),
           CustomerLoginAccountSection(
@@ -600,6 +654,20 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
             onUpdated: _reloadCustomer,
           ),
           const SizedBox(height: 16),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.event_outlined),
+            label: Text(l10n.planScheduleVisit),
+            onPressed: () => showVisitFormSheet(
+              context,
+              ref,
+              prefill: VisitPrefill(
+                customerType: widget.customerType,
+                customerId: widget.customerId,
+                customerName: _name(customer),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           Text(l10n.salesCustomerDiary, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           CustomerDiarySection(customerType: widget.customerType, customerId: widget.customerId),
@@ -607,6 +675,12 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
       ),
     );
   }
+
+  String _routeSegment() => switch (widget.customerType) {
+        'customer_van' => 'van',
+        'customer_importer' => 'importer',
+        _ => 'shop',
+      };
 
   String _name(dynamic customer) {
     if (customer is CustomerShopModel) return customer.name;

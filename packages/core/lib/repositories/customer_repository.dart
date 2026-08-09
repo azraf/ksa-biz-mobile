@@ -2,6 +2,7 @@ import '../api/api_client.dart';
 import '../models/admin_models.dart';
 import '../models/customer.dart';
 import '../models/customer_assignment_models.dart';
+import '../models/customer_financial_summary.dart';
 import '../models/paginated_response.dart';
 import '../models/sales_person.dart';
 import '../models/user.dart';
@@ -111,6 +112,11 @@ class CustomerRepository {
     if (customerType != null) query['customer_type'] = customerType;
     final response = await _api.get('/sales-customers', query: query);
     return PaginatedResponse.fromJson(response, SalesCustomerRow.fromJson);
+  }
+
+  Future<CustomerFinancialSummary> shopSummary(int shopId) async {
+    final response = await _api.get('/customer-shops/$shopId/summary');
+    return CustomerFinancialSummary.fromJson(response['data'] as Map<String, dynamic>);
   }
 
   Future<CustomerShopModel> createShop({

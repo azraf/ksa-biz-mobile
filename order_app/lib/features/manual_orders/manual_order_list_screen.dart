@@ -38,15 +38,6 @@ class _ManualOrderListScreenState extends ConsumerState<ManualOrderListScreen> {
       return;
     }
 
-    if (!profile.isShop) {
-      setState(() {
-        _requests = [];
-        _loading = false;
-        _error = null;
-      });
-      return;
-    }
-
     setState(() {
       _loading = true;
       _error = null;
@@ -71,15 +62,8 @@ class _ManualOrderListScreenState extends ConsumerState<ManualOrderListScreen> {
     final l10n = AppLocalizations.of(context);
     final profile = ref.watch(customerContextProvider).profile;
 
-    if (profile != null && !profile.isShop) {
-      return EmptyView(
-        message: l10n.orderManualShopOnly,
-        icon: Icons.info_outline,
-      );
-    }
-
     return Scaffold(
-      floatingActionButton: profile?.isShop == true
+      floatingActionButton: profile != null
           ? FloatingActionButton.extended(
               onPressed: () => context.push('/manual-orders/create'),
               icon: const Icon(Icons.add),
@@ -100,7 +84,8 @@ class _ManualOrderListScreenState extends ConsumerState<ManualOrderListScreen> {
                           final item = _requests[i];
                           return ListTile(
                             title: Text(
-                              item.customerShop?.name ?? l10n.commonShopFallback(item.customerShopId),
+                              item.customerName ??
+                                  l10n.commonShopFallback(item.customerShopId ?? item.id),
                             ),
                             subtitle: Text(
                               [

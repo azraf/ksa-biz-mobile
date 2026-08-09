@@ -16,6 +16,7 @@ import '../features/inventory/inventory_screens.dart';
 import '../features/more/more_hub_screen.dart';
 import '../features/reports/report_screens.dart';
 import '../features/sales/manual_order_detail_screen.dart';
+import '../features/sales/team_calendar_screen.dart';
 import '../features/sales/order_edit_screen.dart';
 import '../features/sales/sales_screens.dart';
 import '../features/shipping/shipping_screens.dart';
@@ -100,6 +101,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ]),
                   GoRoute(path: 'invoices', builder: (_, _) => const InvoicesScreen()),
                   GoRoute(path: 'persons', builder: (_, _) => const SalesPersonsScreen()),
+                  GoRoute(path: 'team-calendar', builder: (_, _) => const TeamCalendarScreen()),
                 ],
               ),
             ],

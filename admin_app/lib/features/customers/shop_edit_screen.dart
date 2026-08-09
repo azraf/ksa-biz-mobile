@@ -143,6 +143,18 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
             ),
           ),
           const SizedBox(height: 8),
+          InlineMapCard(gps: _gps),
+          const SizedBox(height: 8),
+          if (_shop != null)
+            FutureBuilder<CustomerFinancialSummary>(
+              future: ref.read(customerRepositoryProvider).shopSummary(_shop!.id),
+              builder: (context, snap) => snap.hasData
+                  ? Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: CustomerMoneySummaryCard(summary: snap.data!),
+                    )
+                  : const SizedBox.shrink(),
+            ),
           Row(
             children: [
               Expanded(

@@ -16,6 +16,10 @@ String localizedSyncItemTitle(BuildContext context, SyncQueueItem item) {
       return l10n.salesSyncItemWatchlist;
     case 'diary':
       return l10n.salesSyncItemDiary;
+    case 'manual_order':
+      return l10n.commonManualOrderRequest;
+    case 'visit':
+      return l10n.salesSyncItemVisit;
     default:
       return '${item.entityType} · ${item.operation}';
   }

@@ -26,6 +26,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   int _openManualOrders = 0;
   int _vanProducts = 0;
   int _lowStock = 0;
+  int _todayVisits = 0;
   bool _forceRefresh = false;
   bool _duesFromCache = false;
   bool _duesIsStale = false;
@@ -54,6 +55,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       _error = null;
       _needsSalesPersonSelection = null;
     });
+
+    // Cached and offline-safe; hidden as 0 on any failure.
+    try {
+      final now = DateTime.now();
+      final visits = await ref.read(offlineVisitRepositoryProvider).list(from: now, to: now);
+      if (mounted) {
+        setState(() => _todayVisits = visits.where((v) => v.isPlanned).length);
+      }
+    } catch (_) {}
 
     try {
       final reportRepo = ref.read(reportRepositoryProvider);
@@ -175,11 +185,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Text(auth.salesPerson!.name, style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 16),
           KpiCard(
+            title: l10n.salesTitlePlan,
+            value: l10n.planTodayVisits(_todayVisits),
+            subtitle: l10n.planTabVisits,
+            icon: Icons.event_available,
+            onTap: () => context.go('/plan'),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          KpiCard(
             title: l10n.salesCardOutstandingDues,
             value: currency.format(_totalDue),
             subtitle: l10n.salesCardUnpaidOrders(_unpaidOrders),
             icon: Icons.payments,
-            onTap: () => context.go('/dues'),
+            onTap: () => context.go('/plan?tab=dues'),
           ),
           const SizedBox(height: AppSpacing.md),
           KpiCard(

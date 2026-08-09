@@ -108,6 +108,7 @@ class StatusChip extends StatelessWidget {
       case 'partial':
         return (AppColors.warningContainer(context), AppColors.warning(context));
       case 'pending':
+      case 'draft':
       case 'assigned':
         return (AppColors.pendingContainer(context), AppColors.pending(context));
       default:

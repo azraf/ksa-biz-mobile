@@ -88,6 +88,7 @@ final syncServiceProvider = Provider<SyncService>((ref) {
     connectivity: ref.watch(connectivityServiceProvider),
     orderRepository: ref.watch(orderRepositoryProvider),
     expenseRepository: ExpenseRepository(ref.watch(apiClientProvider)),
+    manualOrderRepository: ref.watch(manualOrderRepositoryProvider),
     mediaUploadRepository: ref.watch(mediaUploadRepositoryProvider),
     apiReachability: ref.watch(apiReachabilityServiceProvider),
   );

@@ -12,6 +12,8 @@ import 'package:l10n/l10n.dart';
 import 'package:maps_ui/maps_ui.dart';
 import 'package:media/media.dart';
 
+import '../plan/visit_form_sheet.dart';
+
 import '../../providers/auth_provider.dart';
 import '../../providers/connectivity_provider.dart';
 import '../../providers/repositories.dart';
@@ -708,6 +710,24 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
                 label: Text(l10n.commonPhoto),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          // Prospecting round anchored to this watch-list item; local-only
+          // items must sync first (no server id to attach the visit to).
+          OutlinedButton.icon(
+            onPressed: _working || item.isLocalOnly
+                ? null
+                : () => showVisitFormSheet(
+                      context,
+                      ref,
+                      prefill: VisitPrefill(
+                        watchlistItemId: item.id,
+                        customerName: item.placeName,
+                        purpose: 'new_client_search',
+                      ),
+                    ),
+            icon: const Icon(Icons.event_outlined),
+            label: Text(l10n.planScheduleVisit),
           ),
           const SizedBox(height: 24),
           if (item.isActive)

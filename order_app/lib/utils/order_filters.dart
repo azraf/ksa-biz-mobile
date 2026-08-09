@@ -17,6 +17,12 @@ List<ManualOrderRequestModel> filterManualOrdersForCustomer(
   List<ManualOrderRequestModel> requests,
   CustomerProfile profile,
 ) {
-  if (!profile.isShop) return [];
-  return requests.where((r) => r.customerShopId == profile.entityId).toList();
+  return requests.where((r) {
+    return switch (profile.role) {
+      'customer_shop' => r.customerShopId == profile.entityId,
+      'customer_van' => r.customerVanId == profile.entityId,
+      'customer_importer' => r.customerImporterId == profile.entityId,
+      _ => false,
+    };
+  }).toList();
 }

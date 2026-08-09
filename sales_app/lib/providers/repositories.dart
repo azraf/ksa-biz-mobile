@@ -127,6 +127,19 @@ final offlineWatchlistRepositoryProvider = Provider<OfflineWatchlistRepository>(
   );
 });
 
+final visitScheduleRepositoryProvider = Provider<VisitScheduleRepository>((ref) {
+  return VisitScheduleRepository(ref.watch(apiClientProvider));
+});
+
+final offlineVisitRepositoryProvider = Provider<OfflineVisitRepository>((ref) {
+  final connectivity = ref.watch(connectivityServiceProvider);
+  return OfflineVisitRepository(
+    remote: ref.watch(visitScheduleRepositoryProvider),
+    db: ref.watch(localDatabaseProvider),
+    isOnline: () => connectivity.isOnline,
+  );
+});
+
 final offlineDiaryRepositoryProvider = Provider<OfflineDiaryRepository>((ref) {
   final connectivity = ref.watch(connectivityServiceProvider);
   return OfflineDiaryRepository(
@@ -163,6 +176,7 @@ final syncServiceProvider = Provider<SyncService>((ref) {
     syncRepository: ref.watch(syncRepositoryProvider),
     watchlistRepository: ref.watch(watchlistRepositoryProvider),
     diaryRepository: ref.watch(customerDiaryRepositoryProvider),
+    visitRepository: ref.watch(visitScheduleRepositoryProvider),
     mediaUploadRepository: ref.watch(mediaUploadRepositoryProvider),
     apiReachability: ref.watch(apiReachabilityServiceProvider),
   );

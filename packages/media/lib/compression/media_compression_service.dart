@@ -11,7 +11,7 @@ import 'package:core/core.dart';
 import '../models/compressed_media.dart';
 
 class MediaCompressionService {
-  static const int imageQuality = 82;
+  static const int imageQuality = 80;
   static const int maxImageEdge = 2048;
   static const int maxFileBytes = 25 * 1024 * 1024;
 

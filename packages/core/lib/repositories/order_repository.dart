@@ -11,6 +11,11 @@ class OrderListQuery {
     this.salesPersonId,
     this.status,
     this.paymentStatus,
+    this.customerType,
+    this.customerId,
+    this.search,
+    this.fromDate,
+    this.toDate,
     this.sort = 'created_at',
     this.page = 1,
     this.perPage = 20,
@@ -19,6 +24,15 @@ class OrderListQuery {
   final int? salesPersonId;
   final String? status;
   final String? paymentStatus;
+
+  /// Internal 'customer_shop' style or server short form — mapped in toQuery.
+  final String? customerType;
+  final int? customerId;
+
+  /// Order number search.
+  final String? search;
+  final String? fromDate;
+  final String? toDate;
   final String sort;
   final int page;
   final int perPage;
@@ -33,6 +47,14 @@ class OrderListQuery {
     if (salesPersonId != null) q['sales_person_id'] = '$salesPersonId';
     if (status != null) q['status'] = status!;
     if (paymentStatus != null) q['payment_status'] = paymentStatus!;
+    if (customerType != null && customerId != null) {
+      // Server accepts the short form; the single place server names live.
+      q['customer_type'] = customerType!.replaceFirst('customer_', '');
+      q['customer_id'] = '$customerId';
+    }
+    if (search != null && search!.isNotEmpty) q['search'] = search!;
+    if (fromDate != null) q['from_date'] = fromDate!;
+    if (toDate != null) q['to_date'] = toDate!;
     return q;
   }
 }

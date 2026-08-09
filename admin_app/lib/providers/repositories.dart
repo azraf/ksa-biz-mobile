@@ -119,6 +119,10 @@ final manualOrderRepositoryProvider = Provider<ManualOrderRepository>((ref) {
   return ManualOrderRepository(ref.watch(apiClientProvider));
 });
 
+final visitScheduleRepositoryProvider = Provider<VisitScheduleRepository>((ref) {
+  return VisitScheduleRepository(ref.watch(apiClientProvider));
+});
+
 final inventoryRepositoryProvider = Provider<InventoryRepository>((ref) {
   return InventoryRepository(ref.watch(apiClientProvider));
 });
@@ -133,6 +137,15 @@ final watchlistRepositoryProvider = Provider<WatchlistRepository>((ref) {
 
 final customerDiaryRepositoryProvider = Provider<CustomerDiaryRepository>((ref) {
   return CustomerDiaryRepository(ref.watch(apiClientProvider));
+});
+
+final offlineDiaryRepositoryProvider = Provider<OfflineDiaryRepository>((ref) {
+  final connectivity = ref.watch(connectivityServiceProvider);
+  return OfflineDiaryRepository(
+    remote: ref.watch(customerDiaryRepositoryProvider),
+    db: ref.watch(localDatabaseProvider),
+    isOnline: () => connectivity.isOnline,
+  );
 });
 
 final mediaUploadRepositoryProvider = Provider<MediaUploadRepository>((ref) {

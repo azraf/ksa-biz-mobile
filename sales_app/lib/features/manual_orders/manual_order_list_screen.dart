@@ -122,7 +122,7 @@ class _ManualOrderListScreenState extends ConsumerState<ManualOrderListScreen> w
                     final item = items[i];
                     return ListTile(
                       title: Text(
-                        item.customerShop?.name ?? l10n.commonShopFallback(item.customerShopId),
+                        item.customerName ?? l10n.commonShopFallback(item.customerShopId ?? item.id),
                       ),
                       subtitle: Text(
                         '${item.source} · ${localizedStatusLabel(context, item.status)}',

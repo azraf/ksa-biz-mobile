@@ -66,6 +66,7 @@ class AppDrawer extends ConsumerWidget {
           _tile(context, 'Sales Persons', Icons.people, '/sales/persons'),
           _tile(context, 'Orders', Icons.receipt_long, '/sales/orders'),
           _tile(context, 'Manual Orders', Icons.phone_in_talk, '/sales/manual-orders'),
+          _tile(context, 'Team calendar', Icons.calendar_month, '/sales/team-calendar'),
           _tile(context, 'Invoices', Icons.description, '/sales/invoices'),
           _section(context, 'Shipping'),
           _tile(context, 'Countries', Icons.public, '/shipping/countries'),

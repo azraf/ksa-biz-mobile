@@ -136,7 +136,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     });
   }
 
-  Future<void> _submit() async {
+  Future<void> _submit({bool asDraft = false}) async {
     final salesPersonId = requireSalesPersonId(ref.read(authProvider));
     if (salesPersonId == null || _selectedType == null || _selectedCustomer == null || _items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).salesOrderSelectCustomerItems)));
@@ -147,6 +147,8 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
       'sales_person_id': salesPersonId,
       'customer_type_id': _selectedType!.id,
       'payment_status': 'pending',
+      // Drafts reserve no stock and stay editable until confirmed.
+      if (asDraft) 'as_draft': true,
       'items': _items.map((e) => e.toJson()).toList(),
     };
 
@@ -299,6 +301,12 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
         FilledButton(
           onPressed: _submitting ? null : _submit,
           child: _submitting ? const CircularProgressIndicator() : Text(l10n.commonCreateOrder),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: _submitting ? null : () => _submit(asDraft: true),
+          icon: const Icon(Icons.edit_note_outlined),
+          label: Text(l10n.orderSaveAsDraft),
         ),
       ],
     );

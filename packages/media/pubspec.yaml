@@ -21,6 +21,11 @@ dependencies:
   video_player: ^2.9.5
   chewie: ^1.11.3
   http: ^1.2.0
+  # Shared CustomerDiarySection captures photos/video and records voice.
+  image_picker: ^1.1.2
+  record: ^6.0.0
+  l10n:
+    path: ../l10n
 
 dev_dependencies:
   flutter_test:

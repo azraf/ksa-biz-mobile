@@ -79,7 +79,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
         case _OrderFilter.unpaid:
           return order.paymentStatus != 'paid' && order.paymentStatus != 'cancelled';
         case _OrderFilter.pendingApproval:
-          return order.isPending;
+          return order.isDraft;
         case _OrderFilter.all:
           return true;
       }
@@ -107,7 +107,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
       }
       final result = await ref.read(offlineOrderRepositoryProvider).list(
             salesPersonId: salesPersonId,
-            status: _filter == _OrderFilter.pendingApproval ? 'pending' : null,
+            status: _filter == _OrderFilter.pendingApproval ? 'draft' : null,
             sort: _sortMode.orderApiSortParam(),
             page: page,
           );
@@ -180,7 +180,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
                 _filterChip(l10n.salesOrderFilterWeek, _OrderFilter.week),
                 _filterChip(l10n.salesOrderFilterPendingSync, _OrderFilter.pendingSync),
                 _filterChip(l10n.salesOrderFilterUnpaid, _OrderFilter.unpaid),
-                _filterChip(l10n.statusPending, _OrderFilter.pendingApproval),
+                _filterChip(l10n.statusDraft, _OrderFilter.pendingApproval),
                 ListSortButton(
                   modes: const [
                     ListSortMode.date,

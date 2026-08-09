@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:l10n/l10n.dart';
+import 'package:media/media.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/repositories.dart';
@@ -78,10 +79,14 @@ class _ConvertOrderScreenState extends ConsumerState<ConvertOrderScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           Text(
-            _request?.customerShop?.name ?? l10n.salesConvertShopOrder,
+            _request?.customerName ?? l10n.salesConvertShopOrder,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           if (_request?.notes != null) Text(_request!.notes!),
+          if (_request != null && _request!.allMedia.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            MediaGallerySection(remoteItems: _request!.allMedia, title: l10n.commonRecordings),
+          ],
           const SizedBox(height: 16),
           Row(
             children: [

@@ -113,7 +113,7 @@ class OfflineOrderRepository {
     final pending = {
       ...payload,
       'id': localId,
-      'status': 'confirmed',
+      'status': payload['as_draft'] == true ? 'draft' : 'confirmed',
       'payment_status': payload['payment_status'] ?? 'pending',
       'total_bill': totalBill,
       'items': normalizedItems,

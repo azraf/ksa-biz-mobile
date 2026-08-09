@@ -13,6 +13,7 @@ import '../features/manual_orders/manual_order_detail_screen.dart';
 import '../features/manual_orders/manual_order_list_screen.dart';
 import '../features/orders/create_order_screen.dart';
 import '../features/orders/order_detail_screen.dart';
+import '../features/orders/order_edit_screen.dart';
 import '../features/orders/order_list_screen.dart';
 import '../features/home/order_home_screen.dart';
 import '../features/profile/profile_screen.dart';
@@ -77,6 +78,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                     path: ':id',
                     builder: (_, state) =>
                         OrderDetailScreen(id: int.parse(state.pathParameters['id']!)),
+                    routes: [
+                      GoRoute(
+                        path: 'edit',
+                        builder: (_, state) =>
+                            OrderEditScreen(id: int.parse(state.pathParameters['id']!)),
+                      ),
+                    ],
                   ),
                 ],
               ),

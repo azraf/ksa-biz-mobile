@@ -8,7 +8,9 @@ import 'sales_person.dart';
 class ManualOrderRequestModel extends Equatable {
   const ManualOrderRequestModel({
     required this.id,
-    required this.customerShopId,
+    this.customerShopId,
+    this.customerVanId,
+    this.customerImporterId,
     required this.source,
     required this.status,
     this.notes,
@@ -18,15 +20,21 @@ class ManualOrderRequestModel extends Equatable {
     this.claimedBySalesPersonId,
     this.convertedOrderId,
     this.customerShop,
+    this.customerVanName,
+    this.customerImporterName,
     this.assignedSalesPerson,
     this.claimedBySalesPerson,
     this.convertedOrder,
     this.recordings = const [],
+    this.media = const [],
+    this.linkedOrders = const [],
     this.createdAt,
   });
 
   final int id;
-  final int customerShopId;
+  final int? customerShopId;
+  final int? customerVanId;
+  final int? customerImporterId;
   final String source;
   final String status;
   final String? notes;
@@ -36,19 +44,37 @@ class ManualOrderRequestModel extends Equatable {
   final int? claimedBySalesPersonId;
   final int? convertedOrderId;
   final CustomerShopModel? customerShop;
+  final String? customerVanName;
+  final String? customerImporterName;
   final SalesPersonModel? assignedSalesPerson;
   final SalesPersonModel? claimedBySalesPerson;
   final OrderModel? convertedOrder;
   final List<MediaModel> recordings;
+
+  /// Every attachment (photos + recordings) from the `media` relation.
+  final List<MediaModel> media;
+
+  /// Orders this instruction has been linked to (M:N trace).
+  final List<OrderModel> linkedOrders;
   final String? createdAt;
 
   bool get isEditable => !['converted', 'cancelled'].contains(status);
   bool get isOpenPool => assignedSalesPersonId == null;
 
+  /// All attachments, preferring the full media list when present.
+  List<MediaModel> get allMedia => media.isNotEmpty ? media : recordings;
+
+  String? get customerName =>
+      customerShop?.name ??
+      customerVanName ??
+      customerImporterName;
+
   factory ManualOrderRequestModel.fromJson(Map<String, dynamic> json) {
     return ManualOrderRequestModel(
       id: json['id'] as int,
-      customerShopId: json['customer_shop_id'] as int,
+      customerShopId: json['customer_shop_id'] as int?,
+      customerVanId: json['customer_van_id'] as int?,
+      customerImporterId: json['customer_importer_id'] as int?,
       source: json['source'] as String? ?? '',
       status: json['status'] as String? ?? 'pending',
       notes: json['notes'] as String?,
@@ -59,6 +85,12 @@ class ManualOrderRequestModel extends Equatable {
       convertedOrderId: json['converted_order_id'] as int?,
       customerShop: json['customer_shop'] is Map
           ? CustomerShopModel.fromJson(json['customer_shop'] as Map<String, dynamic>)
+          : null,
+      customerVanName: json['customer_van'] is Map
+          ? (json['customer_van'] as Map<String, dynamic>)['name'] as String?
+          : null,
+      customerImporterName: json['customer_importer'] is Map
+          ? (json['customer_importer'] as Map<String, dynamic>)['name'] as String?
           : null,
       assignedSalesPerson: json['assigned_sales_person'] is Map
           ? SalesPersonModel.fromJson(json['assigned_sales_person'] as Map<String, dynamic>)
@@ -71,6 +103,12 @@ class ManualOrderRequestModel extends Equatable {
           : null,
       recordings: (json['recordings'] as List<dynamic>? ?? [])
           .map((e) => MediaModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      media: (json['media'] as List<dynamic>? ?? [])
+          .map((e) => MediaModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      linkedOrders: (json['orders'] as List<dynamic>? ?? [])
+          .map((e) => OrderModel.fromJson(e as Map<String, dynamic>))
           .toList(),
       createdAt: json['created_at']?.toString(),
     );

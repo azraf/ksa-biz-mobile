@@ -30,21 +30,38 @@ class ManualOrderRepository {
     return ManualOrderRequestModel.fromJson(response['data'] as Map<String, dynamic>);
   }
 
+  /// [customerType] is `customer_shop` / `customer_van` / `customer_importer`.
+  /// Customer logins can omit both — the server derives identity from the
+  /// token and forces `source=customer`.
   Future<ManualOrderRequestModel> create({
-    required int customerShopId,
+    String? customerType,
+    int? customerId,
     required String notes,
-    String source = 'app',
+    String source = 'customer',
     int? assignedSalesPersonId,
+    String? clientRequestId,
   }) async {
     final body = <String, dynamic>{
-      'customer_shop_id': customerShopId,
       'source': source,
       'notes': notes,
     };
+    if (customerType != null && customerId != null) {
+      body['${customerType}_id'] = customerId;
+    }
     if (assignedSalesPersonId != null) {
       body['assigned_sales_person_id'] = assignedSalesPersonId;
     }
+    if (clientRequestId != null) {
+      body['client_request_id'] = clientRequestId;
+    }
     final response = await _api.post('/manual-order-requests', body: body);
+    return ManualOrderRequestModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
+  Future<ManualOrderRequestModel> linkOrders(int id, List<int> orderIds) async {
+    final response = await _api.post('/manual-order-requests/$id/link-orders', body: {
+      'order_ids': orderIds,
+    });
     return ManualOrderRequestModel.fromJson(response['data'] as Map<String, dynamic>);
   }
 

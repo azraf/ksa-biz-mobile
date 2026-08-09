@@ -161,6 +161,7 @@ class PurchasesScreen extends ConsumerStatefulWidget {
 class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
   List<PurchaseModel> _purchases = [];
   bool _loading = true;
+  String? _status;
 
   @override
   void initState() {
@@ -171,7 +172,7 @@ class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final list = await ref.read(purchaseRepositoryProvider).list();
+      final list = await ref.read(purchaseRepositoryProvider).list(status: _status);
       setState(() {
         _purchases = list;
         _loading = false;
@@ -194,37 +195,80 @@ class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
         onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreatePurchaseScreen())).then((_) => _load()),
         child: const Icon(Icons.add),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: _purchases.length,
-              itemBuilder: (_, i) {
-                final p = _purchases[i];
-                return ListTile(
-                  title: Text('#${p.id} — ${p.purchaseType ?? 'local'}'),
-                  subtitle: Text('${p.status ?? 'draft'} · SAR ${(p.totalAmount ?? 0).toStringAsFixed(2)}'),
-                  trailing: p.status == 'draft'
-                      ? IconButton(
-                          icon: const Icon(Icons.check_circle_outline),
-                          onPressed: () async {
-                            try {
-                              await ref.read(purchaseRepositoryProvider).post(p.id);
-                              _load();
-                            } catch (e) {
-                              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-                            }
-                          },
-                        )
-                      : null,
-                );
-              },
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            child: Wrap(
+              spacing: 6,
+              children: [
+                for (final status in const ['draft', 'posted', 'cancelled'])
+                  FilterChip(
+                    label: Text(status),
+                    selected: _status == status,
+                    onSelected: (on) {
+                      setState(() => _status = on ? status : null);
+                      _load();
+                    },
+                  ),
+              ],
             ),
+          ),
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    itemCount: _purchases.length,
+                    itemBuilder: (_, i) {
+                      final p = _purchases[i];
+                      return ListTile(
+                        title: Text('#${p.id} — ${p.purchaseType ?? 'local'}'),
+                        subtitle: Text('${p.status ?? 'draft'} · SAR ${(p.totalAmount ?? 0).toStringAsFixed(2)}'),
+                        trailing: p.status == 'draft'
+                            ? Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit_outlined),
+                                    tooltip: 'Edit draft',
+                                    onPressed: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) => CreatePurchaseScreen(existing: p)),
+                                    ).then((_) => _load()),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.check_circle_outline),
+                                    tooltip: 'Post — moves stock',
+                                    onPressed: () async {
+                                      try {
+                                        await ref.read(purchaseRepositoryProvider).post(p.id);
+                                        _load();
+                                      } catch (e) {
+                                        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+                                      }
+                                    },
+                                  ),
+                                ],
+                              )
+                            : null,
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }
 
+/// Create — or edit an existing draft when [existing] is passed. Posting is
+/// the moment stock moves; drafts have no inventory effect.
 class CreatePurchaseScreen extends ConsumerStatefulWidget {
-  const CreatePurchaseScreen({super.key});
+  const CreatePurchaseScreen({super.key, this.existing});
+
+  final PurchaseModel? existing;
+
   @override
   ConsumerState<CreatePurchaseScreen> createState() => _CreatePurchaseScreenState();
 }
@@ -235,11 +279,54 @@ class _CreatePurchaseScreenState extends ConsumerState<CreatePurchaseScreen> {
   final _notes = TextEditingController();
   String _purchaseType = 'local';
   final List<Map<String, dynamic>> _items = [];
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final existing = widget.existing;
+    if (existing != null) {
+      _purchaseType = existing.purchaseType ?? 'local';
+      if (existing.date != null) _date.text = existing.date!.split('T').first;
+      _reference.text = existing.referenceNumber ?? '';
+      _notes.text = existing.notes ?? '';
+      _items.addAll(existing.items.map((item) => {
+            'product_id': item.productId,
+            'quantity': item.quantity,
+            'unit_cost': item.unitCost ?? item.unitPrice ?? 0,
+          }));
+    }
+  }
+
+  Future<void> _save({required bool post}) async {
+    setState(() => _saving = true);
+    final body = {
+      'purchase_type': _purchaseType,
+      'date': _date.text,
+      'reference_number': _reference.text.isEmpty ? null : _reference.text,
+      'notes': _notes.text.isEmpty ? null : _notes.text,
+      'items': _items,
+      if (post) 'post_immediately': true,
+    };
+    try {
+      if (widget.existing != null) {
+        await ref.read(purchaseRepositoryProvider).update(widget.existing!.id, body);
+      } else {
+        await ref.read(purchaseRepositoryProvider).create(body);
+      }
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _saving = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('New Purchase')),
+      appBar: AppBar(title: Text(widget.existing == null ? 'New Purchase' : 'Edit Draft #${widget.existing!.id}')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -301,24 +388,14 @@ class _CreatePurchaseScreenState extends ConsumerState<CreatePurchaseScreen> {
           ),
           const SizedBox(height: 24),
           FilledButton(
-            onPressed: _items.isEmpty
-                ? null
-                : () async {
-                    try {
-                      await ref.read(purchaseRepositoryProvider).create({
-                        'purchase_type': _purchaseType,
-                        'date': _date.text,
-                        'reference_number': _reference.text.isEmpty ? null : _reference.text,
-                        'notes': _notes.text.isEmpty ? null : _notes.text,
-                        'items': _items,
-                        'post_immediately': true,
-                      });
-                      if (context.mounted) Navigator.pop(context);
-                    } catch (e) {
-                      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-                    }
-                  },
+            onPressed: _items.isEmpty || _saving ? null : () => _save(post: true),
             child: const Text('Save & Post'),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: _items.isEmpty || _saving ? null : () => _save(post: false),
+            icon: const Icon(Icons.edit_note_outlined),
+            label: const Text('Save as draft'),
           ),
         ],
       ),

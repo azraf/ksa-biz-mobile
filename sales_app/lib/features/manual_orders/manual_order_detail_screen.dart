@@ -182,6 +182,24 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
     await _uploadFile(File(video.path), video.name, recordingType: 'recording_video');
   }
 
+  Future<void> _linkOrders() async {
+    final request = _request;
+    if (request == null) return;
+    final updated = await showLinkOrdersSheet(
+      context,
+      request: request,
+      orderRepository: ref.read(orderRepositoryProvider),
+      manualOrderRepository: ref.read(manualOrderRepositoryProvider),
+    );
+    if (updated != null && mounted) {
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.commonOrdersLinked)),
+      );
+      await _load();
+    }
+  }
+
   Future<void> _uploadFile(File file, String filename, {required String recordingType}) async {
     setState(() => _working = true);
     try {
@@ -224,7 +242,9 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
         padding: const EdgeInsets.all(16),
         children: [
           ListTile(
-            title: Text(shop?.name ?? l10n.commonShopFallback(request.customerShopId)),
+            title: Text(
+              request.customerName ?? l10n.commonShopFallback(request.customerShopId ?? request.id),
+            ),
             subtitle: Text(l10n.commonSourceLabel(request.source)),
             trailing: StatusChip(label: request.status),
           ),
@@ -237,9 +257,25 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
             ListTile(title: Text(l10n.commonReference), subtitle: Text(request.manualReference!)),
           if (request.callReference != null)
             ListTile(title: Text(l10n.commonCallReference), subtitle: Text(request.callReference!)),
-          if (request.recordings.isNotEmpty) ...[
+          if (request.allMedia.isNotEmpty) ...[
             const SizedBox(height: 8),
-            MediaGallerySection(remoteItems: request.recordings, title: l10n.commonRecordings),
+            MediaGallerySection(remoteItems: request.allMedia, title: l10n.commonRecordings),
+          ],
+          if (request.linkedOrders.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(l10n.orderManualLinkedOrders, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: request.linkedOrders
+                  .map((o) => ActionChip(
+                        avatar: const Icon(Icons.receipt_long_outlined, size: 18),
+                        label: Text('#${o.id} · ${localizedStatusLabel(context, o.status)}'),
+                        onPressed: () => context.push('/orders/${o.id}'),
+                      ))
+                  .toList(),
+            ),
           ],
           const SizedBox(height: 12),
           if (shop != null) ...[
@@ -296,6 +332,14 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
               onPressed: () => context.push('/manual-orders/${request.id}/convert'),
               child: Text(l10n.salesManualConvertOrder),
             ),
+          if (request.status != 'cancelled') ...[
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: _working ? null : _linkOrders,
+              icon: const Icon(Icons.link),
+              label: Text(l10n.commonLinkToOrders),
+            ),
+          ],
           if (request.convertedOrderId != null)
             OutlinedButton(
               onPressed: () => context.push('/orders/${request.convertedOrderId}'),

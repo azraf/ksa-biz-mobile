@@ -8,6 +8,7 @@ import 'package:l10n/l10n.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/repositories.dart';
 import '../orders/collect_payment_screen.dart';
+import '../plan/visit_form_sheet.dart';
 
 class DuesScreen extends ConsumerStatefulWidget {
   const DuesScreen({super.key});
@@ -75,7 +76,7 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
   }
 
   Future<void> _collectPayment(OrderModel order) async {
-    final due = order.amountDue > 0 ? order.amountDue : order.totalBill - order.amountPaid;
+    final due = order.outstandingDue;
     final ok = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
@@ -121,7 +122,7 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
             Builder(
               builder: (_) {
                 final order = OrderModel.fromJson(raw);
-                final due = order.amountDue > 0 ? order.amountDue : order.totalBill - order.amountPaid;
+                final due = order.outstandingDue;
                 return Card(
                   child: ListTile(
                     title: Text(l10n.commonOrderNumber(order.id)),
@@ -132,6 +133,24 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(currency.format(order.totalBill)),
+                        if (order.customerShopId != null)
+                          IconButton(
+                            icon: const Icon(Icons.event_outlined),
+                            tooltip: l10n.planScheduleVisit,
+                            onPressed: () => showVisitFormSheet(
+                              context,
+                              ref,
+                              prefill: VisitPrefill(
+                                customerType: 'customer_shop',
+                                customerId: order.customerShopId,
+                                customerName: order.customerShopName,
+                                purpose: 'due_collection',
+                                scheduledAt: DateTime.now()
+                                    .add(const Duration(days: 1))
+                                    .copyWith(hour: 9, minute: 0),
+                              ),
+                            ),
+                          ),
                         IconButton(
                           icon: const Icon(Icons.payments_outlined),
                           tooltip: l10n.salesDuesCollect,

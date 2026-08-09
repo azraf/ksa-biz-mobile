@@ -13,6 +13,14 @@ String localizedStatusLabel(BuildContext context, String status) {
       return l10n.statusCancelled;
     case 'pending':
       return l10n.statusPending;
+    case 'draft':
+      return l10n.statusDraft;
+    case 'planned':
+      return l10n.statusPlanned;
+    case 'done':
+      return l10n.statusDone;
+    case 'missed':
+      return l10n.statusMissed;
     case 'partial':
       return l10n.statusPartial;
     case 'paid':

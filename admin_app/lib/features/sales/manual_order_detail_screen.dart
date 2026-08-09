@@ -60,6 +60,23 @@ class _AdminManualOrderDetailScreenState extends ConsumerState<AdminManualOrderD
     }
   }
 
+  Future<void> _linkOrders() async {
+    final request = _request;
+    if (request == null) return;
+    final updated = await showLinkOrdersSheet(
+      context,
+      request: request,
+      orderRepository: ref.read(orderRepositoryProvider),
+      manualOrderRepository: ref.read(manualOrderRepositoryProvider),
+    );
+    if (updated != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Orders linked')),
+      );
+      await _load();
+    }
+  }
+
   Future<void> _pickAndUploadRecording() async {
     if (!await AppPermissions.requestPhotos()) {
       if (!mounted) return;
@@ -146,7 +163,7 @@ class _AdminManualOrderDetailScreenState extends ConsumerState<AdminManualOrderD
         padding: const EdgeInsets.all(16),
         children: [
           ListTile(
-            title: Text(request.customerShop?.name ?? 'Shop #${request.customerShopId}'),
+            title: Text(request.customerName ?? 'Request #${request.id}'),
             subtitle: Text('Source: ${request.source}'),
             trailing: StatusChip(label: request.status),
           ),
@@ -159,9 +176,24 @@ class _AdminManualOrderDetailScreenState extends ConsumerState<AdminManualOrderD
             ListTile(title: const Text('Reference'), subtitle: Text(request.manualReference!)),
           if (request.callReference != null)
             ListTile(title: const Text('Call reference'), subtitle: Text(request.callReference!)),
-          if (request.recordings.isNotEmpty) ...[
+          if (request.allMedia.isNotEmpty) ...[
             const SizedBox(height: 8),
-            MediaGallerySection(remoteItems: request.recordings, title: 'Recordings'),
+            MediaGallerySection(remoteItems: request.allMedia, title: 'Attachments'),
+          ],
+          if (request.linkedOrders.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text('Linked orders', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: request.linkedOrders
+                  .map((o) => Chip(
+                        avatar: const Icon(Icons.receipt_long_outlined, size: 18),
+                        label: Text('#${o.id} · ${o.status}'),
+                      ))
+                  .toList(),
+            ),
           ],
           const SizedBox(height: 12),
           Text('Add recording', style: Theme.of(context).textTheme.titleMedium),
@@ -192,6 +224,14 @@ class _AdminManualOrderDetailScreenState extends ConsumerState<AdminManualOrderD
               padding: const EdgeInsets.only(top: 8),
               child: Text('Last recording: $_recordingPath', style: Theme.of(context).textTheme.bodySmall),
             ),
+          if (request.status != 'cancelled') ...[
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: _working ? null : _linkOrders,
+              icon: const Icon(Icons.link),
+              label: const Text('Link to order(s)'),
+            ),
+          ],
           if (request.isEditable && request.convertedOrderId == null)
             FilledButton(
               onPressed: _working ? null : () async {

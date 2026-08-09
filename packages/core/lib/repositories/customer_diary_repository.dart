@@ -10,20 +10,27 @@ class CustomerDiaryRepository {
   Future<PaginatedResponse<CustomerDiaryNoteModel>> list({
     required String customerType,
     required int customerId,
+    int? orderId,
     int page = 1,
   }) async {
     final query = <String, String>{
-      'customer_type': customerType,
       'page': '$page',
       'per_page': '20',
     };
-    switch (customerType) {
-      case 'customer_shop':
-        query['customer_shop_id'] = '$customerId';
-      case 'customer_van':
-        query['customer_van_id'] = '$customerId';
-      case 'customer_importer':
-        query['customer_importer_id'] = '$customerId';
+
+    // Order-scoped feed: the server derives the customer from the order.
+    if (orderId != null) {
+      query['order_id'] = '$orderId';
+    } else {
+      query['customer_type'] = customerType;
+      switch (customerType) {
+        case 'customer_shop':
+          query['customer_shop_id'] = '$customerId';
+        case 'customer_van':
+          query['customer_van_id'] = '$customerId';
+        case 'customer_importer':
+          query['customer_importer_id'] = '$customerId';
+      }
     }
 
     final response = await _api.get('/customer-diary-notes', query: query);
@@ -35,6 +42,7 @@ class CustomerDiaryRepository {
     required int customerId,
     required String noteType,
     String? body,
+    int? orderId,
     int? salesPersonId,
     String? clientRequestId,
   }) async {
@@ -42,6 +50,7 @@ class CustomerDiaryRepository {
       'customer_type': customerType,
       'note_type': noteType,
       if (body != null) 'body': body,
+      if (orderId != null) 'order_id': orderId,
       if (salesPersonId != null) 'sales_person_id': salesPersonId,
       if (clientRequestId != null) 'client_request_id': clientRequestId,
     };

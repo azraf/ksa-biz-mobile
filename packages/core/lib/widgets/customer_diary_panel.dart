@@ -5,6 +5,10 @@ import '../models/customer_diary_note.dart';
 import '../utils/contact_launcher.dart';
 import '../utils/format_helpers.dart';
 
+/// Builds a widget for a note (in-app audio player, photo/video gallery).
+/// Injected because core cannot depend on the media package.
+typedef DiaryNoteWidgetBuilder = Widget Function(BuildContext context, CustomerDiaryNoteModel note);
+
 class CustomerDiaryPanel extends StatelessWidget {
   const CustomerDiaryPanel({
     super.key,
@@ -14,6 +18,9 @@ class CustomerDiaryPanel extends StatelessWidget {
     this.onAddVoice,
     this.onLoadMore,
     this.hasMore = false,
+    this.voicePlayerBuilder,
+    this.attachmentsBuilder,
+    this.extraActions,
   });
 
   final List<CustomerDiaryNoteModel> notes;
@@ -22,6 +29,16 @@ class CustomerDiaryPanel extends StatelessWidget {
   final VoidCallback? onAddVoice;
   final VoidCallback? onLoadMore;
   final bool hasMore;
+
+  /// When set, voice notes expand an inline player instead of launching the
+  /// URL in an external browser.
+  final DiaryNoteWidgetBuilder? voicePlayerBuilder;
+
+  /// Renders photo/video attachments beneath the note body.
+  final DiaryNoteWidgetBuilder? attachmentsBuilder;
+
+  /// Extra header buttons (photo/video capture) supplied by the caller.
+  final List<Widget>? extraActions;
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +64,7 @@ class CustomerDiaryPanel extends StatelessWidget {
                     icon: const Icon(Icons.mic_none, size: 18),
                     label: Text(l10n.commonVoice),
                   ),
+                ...?extraActions,
               ],
             ),
             if (loading) const LinearProgressIndicator(),
@@ -55,7 +73,11 @@ class CustomerDiaryPanel extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Text(l10n.commonDiaryEmpty),
               ),
-            ...notes.map((n) => _DiaryTile(note: n)),
+            ...notes.map((n) => _DiaryTile(
+                  note: n,
+                  voicePlayerBuilder: voicePlayerBuilder,
+                  attachmentsBuilder: attachmentsBuilder,
+                )),
             if (hasMore && onLoadMore != null)
               TextButton(onPressed: onLoadMore, child: Text(l10n.commonDiaryLoadMore)),
           ],
@@ -65,28 +87,64 @@ class CustomerDiaryPanel extends StatelessWidget {
   }
 }
 
-class _DiaryTile extends StatelessWidget {
-  const _DiaryTile({required this.note});
+class _DiaryTile extends StatefulWidget {
+  const _DiaryTile({required this.note, this.voicePlayerBuilder, this.attachmentsBuilder});
 
   final CustomerDiaryNoteModel note;
+  final DiaryNoteWidgetBuilder? voicePlayerBuilder;
+  final DiaryNoteWidgetBuilder? attachmentsBuilder;
+
+  @override
+  State<_DiaryTile> createState() => _DiaryTileState();
+}
+
+class _DiaryTileState extends State<_DiaryTile> {
+  // Player mounts on demand so long lists don't open an audio session per note.
+  bool _playerVisible = false;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final note = widget.note;
     final dateLabel = note.createdAt != null ? formatAppDateTime(note.createdAt) : '';
+
+    Widget? voice;
+    if (note.isVoice) {
+      if (_playerVisible && widget.voicePlayerBuilder != null) {
+        voice = widget.voicePlayerBuilder!(context, note);
+      } else {
+        voice = TextButton.icon(
+          onPressed: note.recording?.url == null
+              ? null
+              : () {
+                  if (widget.voicePlayerBuilder != null) {
+                    setState(() => _playerVisible = true);
+                  } else {
+                    // No in-app player supplied — legacy external fallback.
+                    ContactLauncher.openUrl(note.recording!.url!);
+                  }
+                },
+          icon: const Icon(Icons.play_arrow),
+          label: Text(l10n.commonDiaryPlayVoice),
+        );
+      }
+    }
+
+    final attachments = note.attachments.isNotEmpty && widget.attachmentsBuilder != null
+        ? widget.attachmentsBuilder!(context, note)
+        : null;
 
     return ListTile(
       contentPadding: EdgeInsets.zero,
       title: Text('$dateLabel · ${note.authorName}', style: Theme.of(context).textTheme.bodySmall),
-      subtitle: note.isVoice
-          ? TextButton.icon(
-              onPressed: note.recording?.url != null
-                  ? () => ContactLauncher.openUrl(note.recording!.url!)
-                  : null,
-              icon: const Icon(Icons.play_arrow),
-              label: Text(l10n.commonDiaryPlayVoice),
-            )
-          : Text(note.body ?? ''),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (note.body != null && note.body!.isNotEmpty) Text(note.body!),
+          if (voice != null) voice,
+          if (attachments != null) attachments,
+        ],
+      ),
     );
   }
 }

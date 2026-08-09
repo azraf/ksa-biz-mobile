@@ -6,9 +6,11 @@ import '../api/api_reachability_service.dart';
 import '../models/order.dart';
 import '../repositories/customer_diary_repository.dart';
 import '../repositories/expense_repository.dart';
+import '../repositories/manual_order_repository.dart';
 import '../repositories/media_upload_repository.dart';
 import '../repositories/order_repository.dart';
 import '../repositories/sync_repository.dart';
+import '../repositories/visit_schedule_repository.dart';
 import '../repositories/watchlist_repository.dart';
 import '../utils/client_request_id.dart';
 import 'local_database.dart';
@@ -31,6 +33,8 @@ class SyncService {
     this.syncRepository,
     this.watchlistRepository,
     this.diaryRepository,
+    this.manualOrderRepository,
+    this.visitRepository,
     this.mediaUploadRepository,
     this.apiReachability,
     this.apiBaseUrl,
@@ -45,6 +49,8 @@ class SyncService {
   final SyncRepository? syncRepository;
   final WatchlistRepository? watchlistRepository;
   final CustomerDiaryRepository? diaryRepository;
+  final ManualOrderRepository? manualOrderRepository;
+  final VisitScheduleRepository? visitRepository;
   final MediaUploadRepository? mediaUploadRepository;
   final ApiReachabilityService? apiReachability;
   final String? apiBaseUrl;
@@ -227,6 +233,15 @@ class SyncService {
             await db.removeCachedEntity(key, item.localId!);
           }
         }
+      case 'manual_order':
+        if (item.operation == 'create' && item.localId != null && serverId != null) {
+          await db.resolveMediaBlobParents(
+            parentEntityType: 'manual_order',
+            parentLocalId: item.localId!,
+            parentServerId: serverId,
+          );
+          await db.removeCachedEntity('manual_order', item.localId!);
+        }
     }
   }
 
@@ -251,6 +266,10 @@ class SyncService {
           await _syncWatchlist(item);
         case 'diary':
           await _syncDiary(item);
+        case 'manual_order':
+          await _syncManualOrder(item);
+        case 'visit':
+          await _syncVisit(item);
         default:
           await db.updateQueueStatus(item.id, status: 'failed', errorMessage: 'Unknown entity');
       }
@@ -407,6 +426,46 @@ class SyncService {
     }
   }
 
+  Future<void> _syncVisit(SyncQueueItem item) async {
+    final repo = visitRepository;
+    if (repo == null) return;
+
+    if (item.operation == 'create') {
+      final payload = Map<String, dynamic>.from(item.payload);
+      payload.putIfAbsent('client_request_id', generateClientRequestId);
+      final created = await repo.create(payload);
+      if (item.localId != null) {
+        await db.removeCachedEntity('visit', item.localId!);
+      }
+      await db.cacheEntity(entityType: 'visit', entityId: created.id, data: created.toCacheJson());
+      await db.updateQueueStatus(item.id, status: 'done', serverId: created.id, clearNextRetryAt: true);
+      return;
+    }
+
+    final serverId = item.serverId;
+    if (serverId == null) {
+      await db.updateQueueStatus(item.id, status: 'failed', errorMessage: 'Missing server id');
+      return;
+    }
+
+    final outcome = item.payload['outcome_note'] as String?;
+    final updated = switch (item.operation) {
+      'update' => await repo.update(serverId, item.payload),
+      'complete' => await repo.complete(serverId, outcomeNote: outcome),
+      'miss' => await repo.miss(serverId, outcomeNote: outcome),
+      'cancel' => await repo.cancel(serverId, reason: outcome),
+      _ => null,
+    };
+
+    if (updated == null) {
+      await db.updateQueueStatus(item.id, status: 'failed', errorMessage: 'Unknown visit operation');
+      return;
+    }
+
+    await db.cacheEntity(entityType: 'visit', entityId: updated.id, data: updated.toCacheJson());
+    await db.updateQueueStatus(item.id, status: 'done', serverId: updated.id, clearNextRetryAt: true);
+  }
+
   Future<void> _syncDiary(SyncQueueItem item) async {
     final repo = diaryRepository;
     if (repo == null || item.operation != 'create') return;
@@ -415,11 +474,13 @@ class SyncService {
     payload.putIfAbsent('client_request_id', generateClientRequestId);
     final customerType = payload['customer_type'] as String;
     final customerId = payload['customer_id'] as int;
+    final orderId = payload['order_id'] as int?;
     final note = await repo.create(
       customerType: customerType,
       customerId: customerId,
       noteType: payload['note_type'] as String? ?? 'text',
       body: payload['body'] as String?,
+      orderId: orderId,
       salesPersonId: payload['sales_person_id'] as int?,
       clientRequestId: payload['client_request_id'] as String?,
     );
@@ -429,10 +490,33 @@ class SyncService {
         parentLocalId: item.localId!,
         parentServerId: note.id,
       );
-      final key = 'diary_${customerType}_$customerId';
+      final key = orderId != null ? 'diary_order_$orderId' : 'diary_${customerType}_$customerId';
       await db.removeCachedEntity(key, item.localId!);
     }
     await db.updateQueueStatus(item.id, status: 'done', serverId: note.id, clearNextRetryAt: true);
+  }
+
+  Future<void> _syncManualOrder(SyncQueueItem item) async {
+    final repo = manualOrderRepository;
+    if (repo == null || item.operation != 'create') return;
+
+    final payload = Map<String, dynamic>.from(item.payload);
+    payload.putIfAbsent('client_request_id', generateClientRequestId);
+    final request = await repo.create(
+      customerType: payload['customer_type'] as String?,
+      customerId: payload['customer_id'] as int?,
+      notes: payload['notes'] as String? ?? '',
+      clientRequestId: payload['client_request_id'] as String?,
+    );
+    if (item.localId != null) {
+      await db.resolveMediaBlobParents(
+        parentEntityType: 'manual_order',
+        parentLocalId: item.localId!,
+        parentServerId: request.id,
+      );
+      await db.removeCachedEntity('manual_order', item.localId!);
+    }
+    await db.updateQueueStatus(item.id, status: 'done', serverId: request.id, clearNextRetryAt: true);
   }
 
   Map<String, dynamic> _orderToJson(OrderModel order) => {
