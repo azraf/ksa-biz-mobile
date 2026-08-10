@@ -106,7 +106,7 @@ class AuthNotifier extends Notifier<AuthState> {
       sessionExpiredMessage: sessionExpiredMessage,
     );
     if (next == null) {
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(isLoading: false, error: 'Biometric authentication failed. Try again or use your password.');
       return false;
     }
     if (next.isAuthenticated && !next.roles.contains('admin')) {

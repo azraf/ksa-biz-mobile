@@ -15,6 +15,7 @@ class LocationMapScreen extends StatefulWidget {
     required this.pins,
     this.initialFilter = MapLayerFilter.both,
     this.filterHeader,
+    this.endDrawer,
     this.onPinTap,
     this.loading = false,
   });
@@ -23,6 +24,11 @@ class LocationMapScreen extends StatefulWidget {
   final List<MapPin> pins;
   final MapLayerFilter initialFilter;
   final Widget? filterHeader;
+
+  /// Optional filter/search panel shown as a right-hand drawer instead of
+  /// (or alongside) [filterHeader], so the map itself keeps more of the
+  /// screen. Opened via a toolbar action; hidden entirely in maximize mode.
+  final Widget? endDrawer;
   final void Function(MapPin pin)? onPinTap;
   final bool loading;
 
@@ -32,9 +38,11 @@ class LocationMapScreen extends StatefulWidget {
 
 class _LocationMapScreenState extends State<LocationMapScreen> {
   final Completer<GoogleMapController> _mapController = Completer();
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   late MapLayerFilter _filter;
   BitmapDescriptor? _shopIcon;
   BitmapDescriptor? _watchlistIcon;
+  bool _maximized = false;
 
   @override
   void initState() {
@@ -122,49 +130,85 @@ class _LocationMapScreenState extends State<LocationMapScreen> {
     final visible = _visiblePins;
     final hasMapKey = AppConfig.hasGoogleMapsApiKey;
 
+    final mapBody = hasMapKey
+        ? GoogleMap(
+            initialCameraPosition: _initialCamera(visible),
+            markers: _buildMarkers(),
+            myLocationEnabled: true,
+            myLocationButtonEnabled: true,
+            onMapCreated: (controller) {
+              _mapController.complete(controller);
+              _fitBounds(visible);
+            },
+          )
+        : _MapUnavailableFallback(pins: visible);
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: SegmentedButton<MapLayerFilter>(
-              segments: const [
-                ButtonSegment(value: MapLayerFilter.shops, label: Text('Shops')),
-                ButtonSegment(value: MapLayerFilter.watchlist, label: Text('Watchlist')),
-                ButtonSegment(value: MapLayerFilter.both, label: Text('Both')),
-              ],
-              selected: {_filter},
-              onSelectionChanged: (selected) {
-                setState(() => _filter = selected.first);
-                _fitBounds(_visiblePins);
-              },
-            ),
-          ),
-        ),
-      ),
-      body: widget.loading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                if (widget.filterHeader != null) widget.filterHeader!,
-                Expanded(
-                  child: hasMapKey
-                      ? GoogleMap(
-                          initialCameraPosition: _initialCamera(visible),
-                          markers: _buildMarkers(),
-                          myLocationEnabled: true,
-                          myLocationButtonEnabled: true,
-                          onMapCreated: (controller) {
-                            _mapController.complete(controller);
-                            _fitBounds(visible);
-                          },
-                        )
-                      : _MapUnavailableFallback(pins: visible),
+      key: _scaffoldKey,
+      endDrawer: widget.endDrawer,
+      appBar: _maximized
+          ? null
+          : AppBar(
+              title: Text(widget.title),
+              actions: [
+                if (widget.endDrawer != null)
+                  IconButton(
+                    icon: const Icon(Icons.tune),
+                    tooltip: 'Filters',
+                    onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+                  ),
+                IconButton(
+                  icon: const Icon(Icons.fullscreen),
+                  tooltip: 'Maximize map',
+                  onPressed: () => setState(() => _maximized = true),
                 ),
               ],
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(48),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: SegmentedButton<MapLayerFilter>(
+                    segments: const [
+                      ButtonSegment(value: MapLayerFilter.shops, label: Text('Shops')),
+                      ButtonSegment(value: MapLayerFilter.watchlist, label: Text('Watchlist')),
+                      ButtonSegment(value: MapLayerFilter.both, label: Text('Both')),
+                    ],
+                    selected: {_filter},
+                    onSelectionChanged: (selected) {
+                      setState(() => _filter = selected.first);
+                      _fitBounds(_visiblePins);
+                    },
+                  ),
+                ),
+              ),
             ),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: widget.loading
+                ? const Center(child: CircularProgressIndicator())
+                : Column(
+                    children: [
+                      if (!_maximized && widget.filterHeader != null) widget.filterHeader!,
+                      Expanded(child: mapBody),
+                    ],
+                  ),
+          ),
+          if (_maximized)
+            Positioned(
+              top: 8,
+              left: 8,
+              child: SafeArea(
+                child: FloatingActionButton.small(
+                  heroTag: 'restore-map-view',
+                  tooltip: 'Restore',
+                  onPressed: () => setState(() => _maximized = false),
+                  child: const Icon(Icons.fullscreen_exit),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

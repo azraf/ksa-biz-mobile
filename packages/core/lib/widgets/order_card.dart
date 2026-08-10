@@ -14,12 +14,17 @@ class OrderCard extends StatelessWidget {
     required this.onTap,
     this.currency,
     this.subtitle,
+    this.showDue = false,
   });
 
   final OrderModel order;
   final VoidCallback onTap;
   final NumberFormat? currency;
   final String? subtitle;
+
+  /// Show the outstanding due amount when the order has one. Off by default
+  /// so existing callers (sales_app) are unaffected.
+  final bool showDue;
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +65,16 @@ class OrderCard extends StatelessWidget {
                     if (dateLabel != null && dateLabel.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Text(dateLabel, style: Theme.of(context).textTheme.bodySmall),
+                    ],
+                    if (showDue && order.outstandingDue > 0) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Due: ${money.format(order.outstandingDue)}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.danger(context),
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
                     ],
                     const SizedBox(height: 8),
                     Wrap(

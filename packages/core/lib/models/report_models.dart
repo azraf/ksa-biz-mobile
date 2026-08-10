@@ -44,7 +44,8 @@ class ProductSalesRow extends Equatable {
   final int qty;
   final double revenue;
 
-  factory ProductSalesRow.fromJson(Map<String, dynamic> json) => ProductSalesRow(
+  factory ProductSalesRow.fromJson(Map<String, dynamic> json) =>
+      ProductSalesRow(
         productId: parseJsonIntOrNull(json['product_id']),
         qty: parseJsonInt(json['qty']),
         revenue: SalesReport._toDouble(json['revenue']),
@@ -158,13 +159,148 @@ class PeriodExpenseRow extends Equatable {
   final String? periodKey;
   final double total;
 
-  factory PeriodExpenseRow.fromJson(Map<String, dynamic> json) => PeriodExpenseRow(
+  factory PeriodExpenseRow.fromJson(Map<String, dynamic> json) =>
+      PeriodExpenseRow(
         periodKey: json['period_key'] as String?,
         total: SalesReport._toDouble(json['total']),
       );
 
   @override
   List<Object?> get props => [periodKey, total];
+}
+
+class SalesPersonPerformanceRow extends Equatable {
+  const SalesPersonPerformanceRow({
+    required this.id,
+    required this.name,
+    this.orders = 0,
+    this.orderValue = 0,
+    this.averageOrderValue = 0,
+    this.shopsServed = 0,
+    this.totalCartons = 0,
+    this.collected = 0,
+    this.collectionRate,
+    this.outstanding = 0,
+    this.newShops = 0,
+    this.prospects = 0,
+    this.prospectsConverted = 0,
+  });
+
+  final int id;
+  final String name;
+  final int orders;
+  final double orderValue;
+  final double averageOrderValue;
+  final int shopsServed;
+  final double totalCartons;
+  final double collected;
+  final double? collectionRate;
+  final double outstanding;
+  final int newShops;
+  final int prospects;
+  final int prospectsConverted;
+
+  factory SalesPersonPerformanceRow.fromJson(Map<String, dynamic> json) =>
+      SalesPersonPerformanceRow(
+        id: parseJsonInt(json['id']),
+        name: json['name']?.toString() ?? '',
+        orders: parseJsonInt(json['orders']),
+        orderValue: parseJsonDouble(json['order_value']),
+        averageOrderValue: parseJsonDouble(json['average_order_value']),
+        shopsServed: parseJsonInt(json['shops_served']),
+        totalCartons: parseJsonDouble(json['total_cartons']),
+        collected: parseJsonDouble(json['collected']),
+        collectionRate: json['collection_rate'] == null
+            ? null
+            : parseJsonDouble(json['collection_rate']),
+        outstanding: parseJsonDouble(json['outstanding']),
+        newShops: parseJsonInt(json['new_shops']),
+        prospects: parseJsonInt(json['prospects']),
+        prospectsConverted: parseJsonInt(json['prospects_converted']),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'orders': orders,
+        'order_value': orderValue,
+        'average_order_value': averageOrderValue,
+        'shops_served': shopsServed,
+        'total_cartons': totalCartons,
+        'collected': collected,
+        'collection_rate': collectionRate,
+        'outstanding': outstanding,
+        'new_shops': newShops,
+        'prospects': prospects,
+        'prospects_converted': prospectsConverted,
+      };
+
+  @override
+  List<Object?> get props =>
+      [id, orders, orderValue, totalCartons, outstanding];
+}
+
+class ProductPerformanceRow extends Equatable {
+  const ProductPerformanceRow({
+    required this.salesPersonId,
+    required this.productId,
+    required this.productName,
+    this.cartons = 0,
+    this.revenue = 0,
+  });
+
+  final int salesPersonId;
+  final int productId;
+  final String productName;
+  final double cartons;
+  final double revenue;
+
+  factory ProductPerformanceRow.fromJson(Map<String, dynamic> json) =>
+      ProductPerformanceRow(
+        salesPersonId: parseJsonInt(json['sales_person_id']),
+        productId: parseJsonInt(json['product_id']),
+        productName: json['product_name']?.toString() ?? '',
+        cartons: parseJsonDouble(json['cartons']),
+        revenue: parseJsonDouble(json['revenue']),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'sales_person_id': salesPersonId,
+        'product_id': productId,
+        'product_name': productName,
+        'cartons': cartons,
+        'revenue': revenue,
+      };
+
+  @override
+  List<Object?> get props => [salesPersonId, productId, cartons, revenue];
+}
+
+class SalesPerformanceReport extends Equatable {
+  const SalesPerformanceReport({this.rows = const [], this.items});
+
+  final List<SalesPersonPerformanceRow> rows;
+  final List<ProductPerformanceRow>? items;
+
+  factory SalesPerformanceReport.fromJson(Map<String, dynamic> json) =>
+      SalesPerformanceReport(
+        rows: (json['rows'] as List<dynamic>? ?? [])
+            .map((e) =>
+                SalesPersonPerformanceRow.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        items: (json['items'] as List<dynamic>?)
+            ?.map((e) =>
+                ProductPerformanceRow.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'rows': rows.map((r) => r.toJson()).toList(),
+        'items': items?.map((i) => i.toJson()).toList(),
+      };
+
+  @override
+  List<Object?> get props => [rows, items];
 }
 
 class ReportResult<T> {

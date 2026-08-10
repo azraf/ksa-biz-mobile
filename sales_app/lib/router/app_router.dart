@@ -9,6 +9,7 @@ import '../features/auth/select_sales_person_screen.dart';
 import '../features/customers/customer_orders_screen.dart';
 import '../features/customers/customer_screens.dart';
 import '../features/dashboard/dashboard_screen.dart';
+import '../features/field_map/field_map_screen.dart';
 import '../features/plan/collection_candidates_screen.dart';
 import '../features/plan/plan_hub_screen.dart';
 import '../features/manual_orders/convert_order_screen.dart';
@@ -19,6 +20,7 @@ import '../features/orders/create_order_screen.dart';
 import '../features/orders/order_detail_screen.dart';
 import '../features/orders/order_edit_screen.dart';
 import '../features/orders/order_list_screen.dart';
+import '../features/performance/performance_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/van_stock/damage_replacement_screen.dart';
 import '../features/van_stock/load_van_screen.dart';
@@ -72,11 +74,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SelectSalesPersonScreen(),
       ),
       StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) => HomeShell(navigationShell: navigationShell),
+        builder: (context, state, navigationShell) =>
+            HomeShell(navigationShell: navigationShell),
         branches: [
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/', builder: (context, state) => const DashboardScreen()),
+              GoRoute(
+                path: '/',
+                builder: (context, state) => const DashboardScreen(),
+              ),
               // These screens live inside the shell so every page keeps the
               // bottom nav; they draw their own AppBars (shell hides its own).
               GoRoute(
@@ -86,6 +92,14 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/profile',
                 builder: (context, state) => const ProfileScreen(),
+              ),
+              GoRoute(
+                path: '/field-map',
+                builder: (context, state) => const FieldMapScreen(),
+              ),
+              GoRoute(
+                path: '/performance',
+                builder: (context, state) => const PerformanceReviewScreen(),
               ),
               GoRoute(
                 path: '/watchlist',
@@ -179,13 +193,15 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: ':id',
-                    builder: (_, state) =>
-                        ManualOrderDetailScreen(id: int.parse(state.pathParameters['id']!)),
+                    builder: (_, state) => ManualOrderDetailScreen(
+                      id: int.parse(state.pathParameters['id']!),
+                    ),
                     routes: [
                       GoRoute(
                         path: 'convert',
-                        builder: (_, state) =>
-                            ConvertOrderScreen(id: int.parse(state.pathParameters['id']!)),
+                        builder: (_, state) => ConvertOrderScreen(
+                          id: int.parse(state.pathParameters['id']!),
+                        ),
                       ),
                     ],
                   ),
@@ -205,13 +221,15 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: ':id',
-                    builder: (_, state) =>
-                        OrderDetailScreen(id: int.parse(state.pathParameters['id']!)),
+                    builder: (_, state) => OrderDetailScreen(
+                      id: int.parse(state.pathParameters['id']!),
+                    ),
                     routes: [
                       GoRoute(
                         path: 'edit',
-                        builder: (_, state) =>
-                            OrderEditScreen(id: int.parse(state.pathParameters['id']!)),
+                        builder: (_, state) => OrderEditScreen(
+                          id: int.parse(state.pathParameters['id']!),
+                        ),
                       ),
                     ],
                   ),
@@ -225,10 +243,22 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: '/van-stock',
                 builder: (context, state) => const VanStockScreen(),
                 routes: [
-                  GoRoute(path: 'load', builder: (_, _) => const LoadVanScreen()),
-                  GoRoute(path: 'transfer', builder: (_, _) => const TransferScreen()),
-                  GoRoute(path: 'damage', builder: (_, _) => const DamageReplacementScreen()),
-                  GoRoute(path: 'exchange', builder: (_, _) => const ProductExchangeScreen()),
+                  GoRoute(
+                    path: 'load',
+                    builder: (_, _) => const LoadVanScreen(),
+                  ),
+                  GoRoute(
+                    path: 'transfer',
+                    builder: (_, _) => const TransferScreen(),
+                  ),
+                  GoRoute(
+                    path: 'damage',
+                    builder: (_, _) => const DamageReplacementScreen(),
+                  ),
+                  GoRoute(
+                    path: 'exchange',
+                    builder: (_, _) => const ProductExchangeScreen(),
+                  ),
                 ],
               ),
             ],
@@ -263,15 +293,22 @@ class HomeShell extends ConsumerWidget {
 
   String _titleForLocation(String location, AppLocalizations l10n) {
     if (location.contains('/orders/create')) return l10n.salesTitleCreateOrder;
-    if (location.contains('/orders/') && location.endsWith('/edit')) return l10n.salesTitleEditOrder;
+    if (location.contains('/orders/') && location.endsWith('/edit'))
+      return l10n.salesTitleEditOrder;
     final orderDetail = RegExp(r'/orders/(\d+)');
-    if (orderDetail.hasMatch(location) && !location.contains('create')) return l10n.salesTitleOrderDetail;
-    if (location.contains('/manual-orders/') && location.endsWith('/convert')) return l10n.salesTitleConvertOrder;
-    if (RegExp(r'/manual-orders/\d+').hasMatch(location)) return l10n.salesTitleManualOrder;
+    if (orderDetail.hasMatch(location) && !location.contains('create'))
+      return l10n.salesTitleOrderDetail;
+    if (location.contains('/manual-orders/') && location.endsWith('/convert'))
+      return l10n.salesTitleConvertOrder;
+    if (RegExp(r'/manual-orders/\d+').hasMatch(location))
+      return l10n.salesTitleManualOrder;
     if (location.contains('/van-stock/load')) return l10n.salesTitleLoadVan;
-    if (location.contains('/van-stock/transfer')) return l10n.salesTitleTransferStock;
-    if (location.contains('/van-stock/damage')) return l10n.salesTitleDamageReplacement;
-    if (location.contains('/van-stock/exchange')) return l10n.salesTitleProductExchange;
+    if (location.contains('/van-stock/transfer'))
+      return l10n.salesTitleTransferStock;
+    if (location.contains('/van-stock/damage'))
+      return l10n.salesTitleDamageReplacement;
+    if (location.contains('/van-stock/exchange'))
+      return l10n.salesTitleProductExchange;
 
     return switch (navigationShell.currentIndex) {
       0 => l10n.salesTitleDashboard,
@@ -292,6 +329,7 @@ class HomeShell extends ConsumerWidget {
   bool _screenHasOwnAppBar(String location) {
     return location.startsWith('/customers') ||
         location.startsWith('/watchlist') ||
+        location.startsWith('/field-map') ||
         location.startsWith('/notifications') ||
         location.startsWith('/profile') ||
         location.startsWith('/plan/candidates');

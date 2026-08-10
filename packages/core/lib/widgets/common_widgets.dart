@@ -102,6 +102,7 @@ class StatusChip extends StatelessWidget {
       case 'converted':
       case 'confirmed':
       case 'paid':
+      case 'completed':
         return (AppColors.successContainer(context), AppColors.success(context));
       case 'in_review':
       case 'modified':

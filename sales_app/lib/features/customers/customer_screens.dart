@@ -145,17 +145,33 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
 
   Future<void> _load({int? page, bool append = false}) async {
     if (page != null) _page = page;
+    final search = _searchController.text.trim();
+    final repo = ref.read(offlineCustomerRepositoryProvider);
+
+    // Cache-first paint: on a cold first load (nothing on screen yet), show
+    // the local snapshot instantly instead of waiting on the network — the
+    // live fetch below still runs right after and silently replaces it.
+    if (!append && _page == 1 && _items.isEmpty) {
+      try {
+        final cached = await _cachedPage(repo, search);
+        if (cached.isNotEmpty && mounted) {
+          setState(() {
+            _items = _clientSort(cached);
+            _loading = false;
+          });
+        }
+      } catch (_) {}
+    }
+
     setState(() {
       if (append) {
         _loadingMore = true;
-      } else {
+      } else if (_items.isEmpty) {
         _loading = true;
-        _error = null;
       }
+      _error = null;
     });
 
-    final search = _searchController.text.trim();
-    final repo = ref.read(offlineCustomerRepositoryProvider);
     final sortParam = _apiSortParam();
 
     try {
@@ -213,10 +229,25 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        // A cached page is already on screen (from the fast path above or a
+        // prior load) — leave it up rather than replacing it with a full
+        // error screen over a background refresh failure.
+        if (_items.isEmpty) _error = e.toString();
         _loading = false;
         _loadingMore = false;
       });
+    }
+  }
+
+  Future<List<dynamic>> _cachedPage(OfflineCustomerRepository repo, String search) async {
+    final s = search.isEmpty ? null : search;
+    switch (widget.customerType) {
+      case 'customer_van':
+        return (await repo.cachedVans(search: s, perPage: _perPage)).items;
+      case 'customer_importer':
+        return (await repo.cachedImporters(search: s, perPage: _perPage)).items;
+      default:
+        return (await repo.cachedShops(search: s, perPage: _perPage)).items;
     }
   }
 

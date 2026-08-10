@@ -12,9 +12,12 @@ import '../features/customers/customer_screens.dart';
 import '../features/customers/watchlist_screens.dart';
 import '../features/dashboard/dashboard_screen.dart';
 import '../features/expenses/expense_screens.dart';
+import '../features/inventory/inspection_screens.dart';
 import '../features/inventory/inventory_screens.dart';
 import '../features/more/more_hub_screen.dart';
+import '../features/more/settings_screens.dart';
 import '../features/reports/report_screens.dart';
+import '../features/reports/sales_performance_screen.dart';
 import '../features/sales/manual_order_detail_screen.dart';
 import '../features/sales/team_calendar_screen.dart';
 import '../features/sales/order_edit_screen.dart';
@@ -56,8 +59,10 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       return null;
     },
-    errorBuilder: (context, state) =>
-        Scaffold(appBar: AppBar(), body: const ErrorView(message: 'Page not found')),
+    errorBuilder: (context, state) => Scaffold(
+      appBar: AppBar(),
+      body: const ErrorView(message: 'Page not found'),
+    ),
     routes: [
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       StatefulShellRoute.indexedStack(
@@ -80,31 +85,50 @@ final routerProvider = Provider<GoRouter>((ref) {
                     path: 'orders',
                     builder: (_, _) => const OrdersScreen(),
                     routes: [
-                      GoRoute(path: 'create', builder: (_, _) => const CreateOrderScreen()),
+                      GoRoute(
+                        path: 'create',
+                        builder: (_, _) => const CreateOrderScreen(),
+                      ),
                       GoRoute(
                         path: ':id',
-                        builder: (_, s) =>
-                            OrderDetailScreen(orderId: int.parse(s.pathParameters['id']!)),
+                        builder: (_, s) => OrderDetailScreen(
+                          orderId: int.parse(s.pathParameters['id']!),
+                        ),
                         routes: [
                           GoRoute(
                             path: 'edit',
-                            builder: (_, s) =>
-                                AdminOrderEditScreen(orderId: int.parse(s.pathParameters['id']!)),
+                            builder: (_, s) => AdminOrderEditScreen(
+                              orderId: int.parse(s.pathParameters['id']!),
+                            ),
                           ),
                         ],
                       ),
                     ],
                   ),
-                  GoRoute(path: 'manual-orders', builder: (_, _) => const ManualOrdersScreen(), routes: [
-                    GoRoute(
-                      path: ':id',
-                      builder: (_, s) =>
-                          AdminManualOrderDetailScreen(id: int.parse(s.pathParameters['id']!)),
-                    ),
-                  ]),
-                  GoRoute(path: 'invoices', builder: (_, _) => const InvoicesScreen()),
-                  GoRoute(path: 'persons', builder: (_, _) => const SalesPersonsScreen()),
-                  GoRoute(path: 'team-calendar', builder: (_, _) => const TeamCalendarScreen()),
+                  GoRoute(
+                    path: 'manual-orders',
+                    builder: (_, _) => const ManualOrdersScreen(),
+                    routes: [
+                      GoRoute(
+                        path: ':id',
+                        builder: (_, s) => AdminManualOrderDetailScreen(
+                          id: int.parse(s.pathParameters['id']!),
+                        ),
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'invoices',
+                    builder: (_, _) => const InvoicesScreen(),
+                  ),
+                  GoRoute(
+                    path: 'persons',
+                    builder: (_, _) => const SalesPersonsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'team-calendar',
+                    builder: (_, _) => const TeamCalendarScreen(),
+                  ),
                 ],
               ),
             ],
@@ -116,26 +140,74 @@ final routerProvider = Provider<GoRouter>((ref) {
                 redirect: (context, state) =>
                     state.uri.path == '/customers' ? '/customers/hub' : null,
                 routes: [
-                  GoRoute(path: 'hub', builder: (_, _) => const CustomersHubScreen()),
-                  GoRoute(path: 'shops', builder: (_, _) => const CustomerShopsScreen(), routes: [
-                    GoRoute(
-                      path: ':id',
-                      builder: (_, s) => ShopDetailScreen(shopId: int.parse(s.pathParameters['id']!)),
-                    ),
-                  ]),
-                  GoRoute(path: 'vans', builder: (_, _) => const CustomerVansScreen()),
-                  GoRoute(path: 'importers', builder: (_, _) => const CustomerImportersScreen()),
-                  GoRoute(path: 'types', builder: (_, _) => const CustomerTypesScreen()),
-                  GoRoute(path: 'areas', builder: (_, _) => const AreasScreen()),
-                  GoRoute(path: 'assignments', builder: (_, _) => const CustomerAssignmentsScreen()),
-                  GoRoute(path: 'dashboard', builder: (_, _) => const SalesPersonDashboardScreen()),
-                  GoRoute(path: 'territories', builder: (_, _) => const SalesPersonTerritoryScreen()),
-                  GoRoute(path: 'calendar', builder: (_, _) => const AssignmentCalendarScreen()),
-                  GoRoute(path: 'unassigned', builder: (_, _) => const UnassignedCustomersScreen()),
-                  GoRoute(path: 'audit', builder: (_, _) => const AssignmentAuditScreen()),
-                  GoRoute(path: 'map', builder: (_, _) => const ShopMapScreen()),
-                  GoRoute(path: 'watchlist', builder: (_, _) => const AdminWatchlistScreen()),
-                  GoRoute(path: 'churn', builder: (_, _) => const ChurnRiskScreen()),
+                  GoRoute(
+                    path: 'hub',
+                    builder: (_, _) => const CustomersHubScreen(),
+                  ),
+                  GoRoute(
+                    path: 'shops',
+                    builder: (_, _) => const CustomerShopsScreen(),
+                    routes: [
+                      GoRoute(
+                        path: ':id',
+                        builder: (_, s) => ShopDetailScreen(
+                          shopId: int.parse(s.pathParameters['id']!),
+                        ),
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'vans',
+                    builder: (_, _) => const CustomerVansScreen(),
+                  ),
+                  GoRoute(
+                    path: 'importers',
+                    builder: (_, _) => const CustomerImportersScreen(),
+                  ),
+                  GoRoute(
+                    path: 'types',
+                    builder: (_, _) => const CustomerTypesScreen(),
+                  ),
+                  GoRoute(
+                    path: 'areas',
+                    builder: (_, _) => const AreasScreen(),
+                  ),
+                  GoRoute(
+                    path: 'assignments',
+                    builder: (_, _) => const CustomerAssignmentsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'dashboard',
+                    builder: (_, _) => const SalesPersonDashboardScreen(),
+                  ),
+                  GoRoute(
+                    path: 'territories',
+                    builder: (_, _) => const SalesPersonTerritoryScreen(),
+                  ),
+                  GoRoute(
+                    path: 'calendar',
+                    builder: (_, _) => const AssignmentCalendarScreen(),
+                  ),
+                  GoRoute(
+                    path: 'unassigned',
+                    builder: (_, _) => const UnassignedCustomersScreen(),
+                  ),
+                  GoRoute(
+                    path: 'audit',
+                    builder: (_, _) => const AssignmentAuditScreen(),
+                  ),
+                  GoRoute(
+                    path: 'map',
+                    builder: (_, _) => const ShopMapScreen(),
+                  ),
+                  GoRoute(
+                    path: 'watchlist',
+                    builder: (_, _) => const AdminWatchlistScreen(),
+                  ),
+                  GoRoute(
+                    path: 'churn',
+                    builder: (_, _) => const ChurnRiskScreen(),
+                  ),
                 ],
               ),
             ],
@@ -144,14 +216,42 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/inventory',
-                redirect: (context, state) =>
-                    state.uri.path == '/inventory' ? '/inventory/warehouse' : null,
+                redirect: (context, state) => state.uri.path == '/inventory'
+                    ? '/inventory/warehouse'
+                    : null,
                 routes: [
-                  GoRoute(path: 'warehouse', builder: (_, _) => const WarehouseStockScreen()),
-                  GoRoute(path: 'van', builder: (_, _) => const VanStockScreen()),
-                  GoRoute(path: 'load', builder: (_, _) => const LoadVanScreen()),
-                  GoRoute(path: 'adjust', builder: (_, _) => const StockAdjustmentScreen()),
-                  GoRoute(path: 'damage-writeoff', builder: (_, _) => const DamageWriteoffScreen()),
+                  GoRoute(
+                    path: 'warehouse',
+                    builder: (_, _) => const WarehouseStockScreen(),
+                  ),
+                  GoRoute(
+                    path: 'van',
+                    builder: (_, _) => const VanStockScreen(),
+                  ),
+                  GoRoute(
+                    path: 'load',
+                    builder: (_, _) => const LoadVanScreen(),
+                  ),
+                  GoRoute(
+                    path: 'adjust',
+                    builder: (_, _) => const StockAdjustmentScreen(),
+                  ),
+                  GoRoute(
+                    path: 'damage-writeoff',
+                    builder: (_, _) => const DamageWriteoffScreen(),
+                  ),
+                  GoRoute(
+                    path: 'inspections',
+                    builder: (_, _) => const InventoryInspectionsListScreen(),
+                    routes: [
+                      GoRoute(
+                        path: ':id',
+                        builder: (context, state) => InventoryInspectionDetailScreen(
+                          id: int.parse(state.pathParameters['id']!),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ],
@@ -162,51 +262,118 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: '/more',
                 builder: (_, _) => const MoreHubScreen(),
                 routes: [
-                  GoRoute(path: 'reports/sales', builder: (_, _) => const SalesReportScreen()),
-                  GoRoute(path: 'reports/profit', builder: (_, _) => const ProfitReportScreen()),
-                  GoRoute(path: 'reports/expenses', builder: (_, _) => const ExpenseReportScreen()),
+                  GoRoute(
+                    path: 'reports/sales',
+                    builder: (_, _) => const SalesReportScreen(),
+                  ),
+                  GoRoute(
+                    path: 'reports/sales-performance',
+                    builder: (_, _) => const SalesPerformanceScreen(),
+                  ),
+                  GoRoute(
+                    path: 'reports/profit',
+                    builder: (_, _) => const ProfitReportScreen(),
+                  ),
+                  GoRoute(
+                    path: 'reports/expenses',
+                    builder: (_, _) => const ExpenseReportScreen(),
+                  ),
                   GoRoute(
                     path: 'reports/expense-summary',
                     builder: (_, _) => const ExpenseSummaryReportScreen(),
                   ),
-                  GoRoute(path: 'expenses/categories', builder: (_, _) => const ExpenseCategoriesScreen()),
+                  GoRoute(
+                    path: 'expenses/categories',
+                    builder: (_, _) => const ExpenseCategoriesScreen(),
+                  ),
                   GoRoute(
                     path: 'expenses/list',
                     builder: (_, _) => const ExpensesScreen(),
                     routes: [
-                      GoRoute(path: 'create', builder: (_, _) => const ExpenseFormScreen()),
+                      GoRoute(
+                        path: 'create',
+                        builder: (_, _) => const ExpenseFormScreen(),
+                      ),
                       GoRoute(
                         path: ':id',
-                        builder: (_, s) =>
-                            ExpenseFormScreen(expenseId: int.parse(s.pathParameters['id']!)),
+                        builder: (_, s) => ExpenseFormScreen(
+                          expenseId: int.parse(s.pathParameters['id']!),
+                        ),
                       ),
                     ],
                   ),
-                  GoRoute(path: 'expenses/vehicles', builder: (_, _) => const VehiclesScreen()),
-                  GoRoute(path: 'catalog/tags', builder: (_, _) => const TagsScreen()),
-                  GoRoute(path: 'catalog/brands', builder: (_, _) => const BrandsScreen()),
-                  GoRoute(path: 'catalog/units', builder: (_, _) => const UnitsScreen()),
-                  GoRoute(path: 'catalog/categories', builder: (_, _) => const CategoriesScreen()),
+                  GoRoute(
+                    path: 'expenses/vehicles',
+                    builder: (_, _) => const VehiclesScreen(),
+                  ),
+                  GoRoute(
+                    path: 'catalog/tags',
+                    builder: (_, _) => const TagsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'catalog/brands',
+                    builder: (_, _) => const BrandsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'catalog/units',
+                    builder: (_, _) => const UnitsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'catalog/categories',
+                    builder: (_, _) => const CategoriesScreen(),
+                  ),
                   GoRoute(
                     path: 'catalog/products',
                     builder: (_, _) => const ProductsScreen(),
                     routes: [
-                      GoRoute(path: 'create', builder: (_, _) => const ProductFormScreen()),
+                      GoRoute(
+                        path: 'create',
+                        builder: (_, _) => const ProductFormScreen(),
+                      ),
                       GoRoute(
                         path: ':id',
-                        builder: (_, s) =>
-                            ProductFormScreen(productId: int.parse(s.pathParameters['id']!)),
+                        builder: (_, s) => ProductFormScreen(
+                          productId: int.parse(s.pathParameters['id']!),
+                        ),
                       ),
                     ],
                   ),
-                  GoRoute(path: 'catalog/promotions', builder: (_, _) => const PromotionsScreen()),
-                  GoRoute(path: 'shipping/countries', builder: (_, _) => const CountriesScreen()),
-                  GoRoute(path: 'shipping/suppliers', builder: (_, _) => const SuppliersScreen()),
-                  GoRoute(path: 'shipping/containers', builder: (_, _) => const ContainersScreen()),
-                  GoRoute(path: 'shipping/purchases', builder: (_, _) => const PurchasesScreen()),
-                  GoRoute(path: 'approval/discount', builder: (_, _) => const DiscountApprovalScreen()),
-                  GoRoute(path: 'users', builder: (_, _) => const UsersScreen()),
-                  GoRoute(path: 'profile', builder: (_, _) => const AdminProfileScreen()),
+                  GoRoute(
+                    path: 'catalog/promotions',
+                    builder: (_, _) => const PromotionsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'shipping/countries',
+                    builder: (_, _) => const CountriesScreen(),
+                  ),
+                  GoRoute(
+                    path: 'shipping/suppliers',
+                    builder: (_, _) => const SuppliersScreen(),
+                  ),
+                  GoRoute(
+                    path: 'shipping/containers',
+                    builder: (_, _) => const ContainersScreen(),
+                  ),
+                  GoRoute(
+                    path: 'shipping/purchases',
+                    builder: (_, _) => const PurchasesScreen(),
+                  ),
+                  GoRoute(
+                    path: 'approval/discount',
+                    builder: (_, _) => const DiscountApprovalScreen(),
+                  ),
+                  GoRoute(
+                    path: 'settings',
+                    builder: (_, _) => const AppSettingsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'users',
+                    builder: (_, _) => const UsersScreen(),
+                  ),
+                  GoRoute(
+                    path: 'profile',
+                    builder: (_, _) => const AdminProfileScreen(),
+                  ),
                 ],
               ),
             ],
@@ -241,7 +408,9 @@ class AdminHomeShell extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const CircleAvatar(child: Icon(Icons.admin_panel_settings)),
+              leading: const CircleAvatar(
+                child: Icon(Icons.admin_panel_settings),
+              ),
               title: Text(auth.user?.name ?? 'Admin'),
               subtitle: Text(auth.user?.email ?? ''),
             ),
@@ -251,7 +420,10 @@ class AdminHomeShell extends ConsumerWidget {
               onTap: () async {
                 Navigator.pop(ctx);
                 if (!context.mounted) return;
-                if (!await confirmLogoutWithPendingData(context, ref.read(syncServiceProvider))) {
+                if (!await confirmLogoutWithPendingData(
+                  context,
+                  ref.read(syncServiceProvider),
+                )) {
                   return;
                 }
                 await ref.read(authProvider.notifier).logout();

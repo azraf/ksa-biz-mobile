@@ -117,4 +117,6 @@ export 'widgets/sync_status_screen.dart';
 export 'widgets/logout_guard.dart';
 export 'utils/storage_warning.dart';
 export 'widgets/order_card.dart';
+export 'widgets/order_filters_drawer.dart';
+export 'widgets/sales_person_multi_select_tile.dart';
 export 'widgets/skeleton_loader.dart';

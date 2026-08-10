@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../support/json_parse.dart';
+
 import 'customer_assignment_models.dart';
 import 'customer_metrics.dart';
 import 'user.dart';
@@ -69,7 +71,7 @@ class CustomerVanModel extends Equatable {
           : null,
       lastOrderAt: json['last_order_at']?.toString(),
       createdAt: json['created_at']?.toString(),
-      isInactive: json['is_inactive'] as bool? ?? false,
+      isInactive: parseJsonBool(json['is_inactive']),
       distanceKm: (json['distance_km'] as num?)?.toDouble(),
       salesPersonName: json['sales_person_name'] as String? ??
           (json['sales_person'] is Map
@@ -78,7 +80,7 @@ class CustomerVanModel extends Equatable {
       metrics: CustomerMetricsFields.fromJson(json),
       user: parseCustomerLinkedUser(json['user']),
       allowUserAccountCreation:
-          json['allow_user_account_creation'] as bool? ?? false,
+          parseJsonBool(json['allow_user_account_creation']),
     );
   }
 
@@ -133,7 +135,7 @@ class CustomerImporterModel extends Equatable {
           : null,
       lastOrderAt: json['last_order_at']?.toString(),
       createdAt: json['created_at']?.toString(),
-      isInactive: json['is_inactive'] as bool? ?? false,
+      isInactive: parseJsonBool(json['is_inactive']),
       salesPersonName: json['sales_person_name'] as String? ??
           (json['sales_person'] is Map
               ? (json['sales_person'] as Map)['name'] as String?
@@ -141,7 +143,7 @@ class CustomerImporterModel extends Equatable {
       metrics: CustomerMetricsFields.fromJson(json),
       user: parseCustomerLinkedUser(json['user']),
       allowUserAccountCreation:
-          json['allow_user_account_creation'] as bool? ?? false,
+          parseJsonBool(json['allow_user_account_creation']),
     );
   }
 

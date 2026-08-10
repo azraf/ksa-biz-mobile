@@ -11,6 +11,7 @@ import '../features/profile/profile_screen.dart';
 import '../features/maps/location_map_screen_wrapper.dart';
 import '../features/reports/report_screens.dart';
 import '../features/reports/reports_hub_screen.dart';
+import '../features/sales/sales_performance_screen.dart';
 import '../features/sales/order_screens.dart';
 import '../providers/auth_provider.dart';
 
@@ -43,7 +44,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         branches: [
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/', builder: (context, state) => const DashboardScreen()),
+              GoRoute(
+                path: '/',
+                builder: (context, state) => const DashboardScreen(),
+              ),
             ],
           ),
           StatefulShellBranch(
@@ -59,8 +63,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                     routes: [
                       GoRoute(
                         path: ':id',
-                        builder: (_, state) =>
-                            OrderDetailScreen(id: int.parse(state.pathParameters['id']!)),
+                        builder: (_, state) => OrderDetailScreen(
+                          id: int.parse(state.pathParameters['id']!),
+                        ),
                       ),
                     ],
                   ),
@@ -75,14 +80,20 @@ final routerProvider = Provider<GoRouter>((ref) {
                 redirect: (context, state) =>
                     state.uri.path == '/inventory' ? '/inventory/van' : null,
                 routes: [
-                  GoRoute(path: 'van', builder: (context, state) => const VanStockScreen()),
+                  GoRoute(
+                    path: 'van',
+                    builder: (context, state) => const VanStockScreen(),
+                  ),
                 ],
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/expenses', builder: (context, state) => const ExpenseListScreen()),
+              GoRoute(
+                path: '/expenses',
+                builder: (context, state) => const ExpenseListScreen(),
+              ),
             ],
           ),
           StatefulShellBranch(
@@ -91,14 +102,30 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: '/reports',
                 builder: (context, state) => const ReportsHubScreen(),
                 routes: [
-                  GoRoute(path: 'sales', builder: (_, _) => const SalesReportScreen()),
-                  GoRoute(path: 'profit', builder: (_, _) => const ProfitReportScreen()),
-                  GoRoute(path: 'expenses', builder: (_, _) => const ExpenseReportScreen()),
+                  GoRoute(
+                    path: 'sales',
+                    builder: (_, _) => const SalesReportScreen(),
+                  ),
+                  GoRoute(
+                    path: 'sales-performance',
+                    builder: (_, _) => const SalesPerformanceScreen(),
+                  ),
+                  GoRoute(
+                    path: 'profit',
+                    builder: (_, _) => const ProfitReportScreen(),
+                  ),
+                  GoRoute(
+                    path: 'expenses',
+                    builder: (_, _) => const ExpenseReportScreen(),
+                  ),
                   GoRoute(
                     path: 'expense-summary',
                     builder: (_, _) => const ExpenseSummaryReportScreen(),
                   ),
-                  GoRoute(path: 'map', builder: (_, _) => const MonitorLocationMapScreen()),
+                  GoRoute(
+                    path: 'map',
+                    builder: (_, _) => const MonitorLocationMapScreen(),
+                  ),
                 ],
               ),
             ],
@@ -122,6 +149,8 @@ class MonitorHomeShell extends StatelessWidget {
   String _titleForLocation(String location) {
     if (RegExp(r'/sales/orders/\d+').hasMatch(location)) return 'Order detail';
     if (location.contains('/reports/map')) return 'Location map';
+    if (location.contains('/reports/sales-performance'))
+      return 'Sales performance';
     if (location.contains('/reports/sales')) return 'Sales report';
     if (location.contains('/reports/profit')) return 'Profit report';
     if (location.contains('/reports/expenses')) return 'Expense report';
@@ -150,7 +179,9 @@ class MonitorHomeShell extends StatelessWidget {
       appBar: location.contains('/reports/map')
           ? null
           : AppBar(
-              leading: showBack ? BackButton(onPressed: () => context.pop()) : null,
+              leading: showBack
+                  ? BackButton(onPressed: () => context.pop())
+                  : null,
               title: Text(title),
               actions: [
                 IconButton(

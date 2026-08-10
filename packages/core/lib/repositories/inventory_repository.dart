@@ -194,6 +194,49 @@ class InventoryRepository {
       'reason': reason,
     });
   }
+
+  // ---- inventory inspections (physical stock count) ------------------------
+
+  Future<List<InventoryInspectionModel>> inspections({String? status, int? salesPersonId}) async {
+    final response = await _api.get('/inventory/inspections', query: {
+      if (status != null) 'status': status,
+      if (salesPersonId != null) 'sales_person_id': '$salesPersonId',
+      'per_page': '100',
+    });
+    final data = response['data'] as List<dynamic>? ?? [];
+    return data.map((e) => InventoryInspectionModel.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<InventoryInspectionModel> startInspection({int? salesPersonId, int? discountLookbackDays}) async {
+    final response = await _api.post('/inventory/inspections', body: {
+      if (salesPersonId != null) 'sales_person_id': salesPersonId,
+      if (discountLookbackDays != null) 'discount_lookback_days': discountLookbackDays,
+    });
+    return InventoryInspectionModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
+  Future<InventoryInspectionModel> inspection(int id) async {
+    final response = await _api.get('/inventory/inspections/$id');
+    return InventoryInspectionModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
+  Future<InventoryInspectionModel> saveInspectionCounts(
+    int id,
+    List<Map<String, dynamic>> lines,
+  ) async {
+    final response = await _api.post('/inventory/inspections/$id/counts', body: {'lines': lines});
+    return InventoryInspectionModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
+  Future<InventoryInspectionModel> completeInspection(int id) async {
+    final response = await _api.post('/inventory/inspections/$id/complete');
+    return InventoryInspectionModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
+  Future<InventoryInspectionModel> cancelInspection(int id, String reason) async {
+    final response = await _api.post('/inventory/inspections/$id/cancel', body: {'reason': reason});
+    return InventoryInspectionModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
 }
 
 class PurchaseRepository {

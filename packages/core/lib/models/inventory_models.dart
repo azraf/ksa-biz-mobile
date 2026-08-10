@@ -309,3 +309,137 @@ class BulkLoadPreviewLine extends Equatable {
   @override
   List<Object?> get props => [productId, quantity, unitId];
 }
+
+/// A physical stock count vs the live ledger, for one location (warehouse or
+/// one salesperson's van). Mirrors `App\Models\InventoryInspection`.
+class InventoryInspectionModel extends Equatable {
+  const InventoryInspectionModel({
+    required this.id,
+    this.salesPersonId,
+    required this.status,
+    this.discountLookbackDays = 90,
+    this.startedAt,
+    this.completedAt,
+    this.cancellationReason,
+    this.totalProducts = 0,
+    this.totalMissingQty = 0,
+    this.totalOverageQty = 0,
+    this.totalMissingCostValue,
+    this.totalMissingGrossValue,
+    this.totalMissingNetValue,
+    this.salesPersonName,
+    this.items = const [],
+  });
+
+  final int id;
+  final int? salesPersonId;
+  final String status;
+  final int discountLookbackDays;
+  final String? startedAt;
+  final String? completedAt;
+  final String? cancellationReason;
+  final int totalProducts;
+  final int totalMissingQty;
+  final int totalOverageQty;
+  final double? totalMissingCostValue;
+  final double? totalMissingGrossValue;
+  final double? totalMissingNetValue;
+  final String? salesPersonName;
+  final List<InventoryInspectionItemModel> items;
+
+  bool get isWarehouse => salesPersonId == null;
+  bool get isDraft => status == 'draft';
+  bool get isCompleted => status == 'completed';
+  String get locationLabel => isWarehouse ? 'Warehouse' : (salesPersonName ?? 'Van');
+
+  factory InventoryInspectionModel.fromJson(Map<String, dynamic> json) => InventoryInspectionModel(
+        id: json['id'] as int,
+        salesPersonId: json['sales_person_id'] as int?,
+        status: json['status'] as String? ?? 'draft',
+        discountLookbackDays: json['discount_lookback_days'] as int? ?? 90,
+        startedAt: json['started_at']?.toString(),
+        completedAt: json['completed_at']?.toString(),
+        cancellationReason: json['cancellation_reason'] as String?,
+        totalProducts: json['total_products'] as int? ?? 0,
+        totalMissingQty: json['total_missing_qty'] as int? ?? 0,
+        totalOverageQty: json['total_overage_qty'] as int? ?? 0,
+        totalMissingCostValue: _toDouble(json['total_missing_cost_value']),
+        totalMissingGrossValue: _toDouble(json['total_missing_gross_value']),
+        totalMissingNetValue: _toDouble(json['total_missing_net_value']),
+        salesPersonName: json['sales_person'] is Map
+            ? (json['sales_person'] as Map<String, dynamic>)['name'] as String?
+            : null,
+        items: (json['items'] as List<dynamic>? ?? [])
+            .map((e) => InventoryInspectionItemModel.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+
+  static double? _toDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
+  }
+
+  @override
+  List<Object?> get props => [id, status, salesPersonId];
+}
+
+class InventoryInspectionItemModel extends Equatable {
+  const InventoryInspectionItemModel({
+    required this.id,
+    required this.productId,
+    this.expectedQtyStart = 0,
+    this.expectedQty,
+    this.countedQty,
+    this.varianceQty,
+    this.missingQty = 0,
+    this.missingCostValue,
+    this.missingGrossValue,
+    this.missingNetValue,
+    this.discountRateSnapshot,
+    this.stockAdjustmentId,
+    this.notes,
+    this.product,
+  });
+
+  final int id;
+  final int productId;
+  final int expectedQtyStart;
+  final int? expectedQty;
+  final int? countedQty;
+  final int? varianceQty;
+  final int missingQty;
+  final double? missingCostValue;
+  final double? missingGrossValue;
+  final double? missingNetValue;
+  final double? discountRateSnapshot;
+  final int? stockAdjustmentId;
+  final String? notes;
+  final ProductModel? product;
+
+  bool get isCounted => countedQty != null;
+  bool get isShort => (varianceQty ?? 0) < 0;
+  bool get isOver => (varianceQty ?? 0) > 0;
+
+  factory InventoryInspectionItemModel.fromJson(Map<String, dynamic> json) => InventoryInspectionItemModel(
+        id: json['id'] as int,
+        productId: json['product_id'] as int,
+        expectedQtyStart: json['expected_qty_start'] as int? ?? 0,
+        expectedQty: json['expected_qty'] as int?,
+        countedQty: json['counted_qty'] as int?,
+        varianceQty: json['variance_qty'] as int?,
+        missingQty: json['missing_qty'] as int? ?? 0,
+        missingCostValue: InventoryInspectionModel._toDouble(json['missing_cost_value']),
+        missingGrossValue: InventoryInspectionModel._toDouble(json['missing_gross_value']),
+        missingNetValue: InventoryInspectionModel._toDouble(json['missing_net_value']),
+        discountRateSnapshot: InventoryInspectionModel._toDouble(json['discount_rate_snapshot']),
+        stockAdjustmentId: json['stock_adjustment_id'] as int?,
+        notes: json['notes'] as String?,
+        product: json['product'] is Map
+            ? ProductModel.fromJson(json['product'] as Map<String, dynamic>)
+            : null,
+      );
+
+  @override
+  List<Object?> get props => [id, productId, countedQty, varianceQty];
+}

@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../support/json_parse.dart';
+
 import 'media.dart';
 
 import 'customer.dart';
@@ -104,7 +106,7 @@ class CustomerShopModel extends Equatable {
         id: json['id'] as int,
         name: json['name'] as String? ?? '',
         gps: json['gps'] as String?,
-        isSystem: json['is_system'] as bool? ?? false,
+        isSystem: parseJsonBool(json['is_system']),
         contactsCount: json['contacts_count'] as int?,
         contacts: (json['contacts'] as List<dynamic>? ?? [])
             .map((e) => CustomerShopContactModel.fromJson(e as Map<String, dynamic>))
@@ -117,7 +119,7 @@ class CustomerShopModel extends Equatable {
             : null,
         lastOrderAt: json['last_order_at']?.toString(),
         createdAt: json['created_at']?.toString(),
-        isInactive: json['is_inactive'] as bool? ?? false,
+        isInactive: parseJsonBool(json['is_inactive']),
         distanceKm: (json['distance_km'] as num?)?.toDouble(),
         salesPersonName: json['sales_person_name'] as String? ??
             (json['sales_person'] is Map
@@ -129,7 +131,7 @@ class CustomerShopModel extends Equatable {
             .toList(),
         user: parseCustomerLinkedUser(json['user']),
         allowUserAccountCreation:
-            json['allow_user_account_creation'] as bool? ?? false,
+            parseJsonBool(json['allow_user_account_creation']),
       );
 
   Map<String, dynamic> toJson() => {
@@ -169,7 +171,7 @@ class CustomerShopContactModel extends Equatable {
         contactMobile: json['contact_mobile'] as String?,
         contactEmail: json['contact_email'] as String?,
         note: json['note'] as String?,
-        active: json['active'] as bool? ?? true,
+        active: parseJsonBool(json['active'], fallback: true),
       );
 
   Map<String, dynamic> toJson() => {
@@ -265,8 +267,8 @@ class PromotionModel extends Equatable {
         endDate: json['end_date']?.toString(),
         percentDiscount: _toDouble(json['percent_discount']),
         flatDiscount: _toDouble(json['flat_discount']),
-        active: json['active'] as bool? ?? true,
-        isExpired: json['is_expired'] as bool? ?? false,
+        active: parseJsonBool(json['active'], fallback: true),
+        isExpired: parseJsonBool(json['is_expired']),
         customerType: json['customer_type'] is Map
             ? CustomerTypeModel.fromJson(json['customer_type'] as Map<String, dynamic>)
             : null,

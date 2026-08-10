@@ -43,12 +43,12 @@ class AuthNotifier extends Notifier<AuthState> {
     unawaited(() async {
       try {
         await ref.read(syncServiceProvider).syncIfOnline();
-        final hasCatalog = await ref.read(referenceDataPrefetcherProvider).hasCachedCatalog();
-        if (!hasCatalog) {
-          await ref.read(referenceDataPrefetcherProvider).prefetch(
-                salesPersonId: state.effectiveSalesPersonId,
-              );
-        }
+        // Always attempt a refresh on app start/restore — prefetch() has its
+        // own in-memory TTL (resets on cold start) so this is a real re-sync
+        // each time the app opens, not just the very first time ever.
+        await ref.read(referenceDataPrefetcherProvider).prefetch(
+              salesPersonId: state.effectiveSalesPersonId,
+            );
         ref.invalidate(pendingSyncCountProvider);
       } catch (_) {}
     }());

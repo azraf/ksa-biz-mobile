@@ -59,7 +59,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // Cached and offline-safe; hidden as 0 on any failure.
     try {
       final now = DateTime.now();
-      final visits = await ref.read(offlineVisitRepositoryProvider).list(from: now, to: now);
+      final visits = await ref
+          .read(offlineVisitRepositoryProvider)
+          .list(from: now, to: now);
       if (mounted) {
         setState(() => _todayVisits = visits.where((v) => v.isPlanned).length);
       }
@@ -78,8 +80,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       );
       final results = await Future.wait([
         manualRepo.list(openPool: true),
-        manualRepo.list(assignedSalesPersonId: salesPersonId, status: 'assigned'),
-        manualRepo.list(assignedSalesPersonId: salesPersonId, status: 'in_review'),
+        manualRepo.list(
+          assignedSalesPersonId: salesPersonId,
+          status: 'assigned',
+        ),
+        manualRepo.list(
+          assignedSalesPersonId: salesPersonId,
+          status: 'in_review',
+        ),
         inventoryRepo.vanStock(salesPersonId),
       ]);
       final openPool = results[0] as PaginatedResponse<ManualOrderRequestModel>;
@@ -139,116 +147,146 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           : l10n.salesDashboardNoProfile;
       return ErrorView(
         message: message,
-        onRetry: _needsSalesPersonSelection! ? () => context.go('/select-salesperson') : _load,
+        onRetry: _needsSalesPersonSelection!
+            ? () => context.go('/select-salesperson')
+            : _load,
       );
     }
     if (_error != null && _error!.isNotEmpty) {
       return ErrorView(
         message: _error!,
-        onRetry: auth.canPickSalesPerson ? () => context.go('/select-salesperson') : _load,
+        onRetry: auth.canPickSalesPerson
+            ? () => context.go('/select-salesperson')
+            : _load,
       );
     }
 
     return Stack(
       children: [
         RefreshIndicator(
-      onRefresh: _refresh,
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          AppUpdateNotice(api: ref.read(apiClientProvider)),
-          if (_duesFromCache && _duesIsStale && _duesCachedAt != null)
-            NoticeCard(
-              kind: NoticeKind.info,
-              icon: Icons.cloud_off_outlined,
-              title: l10n.salesDashboardCachedDues(_duesCachedAt!.substring(0, 16)),
-              actionLabel: l10n.commonRetry,
-              onAction: _refresh,
-            ),
-          Row(
+          onRefresh: _refresh,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
             children: [
-              Expanded(
-                child: Text(
-                  l10n.salesHello(auth.user?.name ?? l10n.salesDefaultSalesperson),
-                  style: Theme.of(context).textTheme.titleLarge,
+              AppUpdateNotice(api: ref.read(apiClientProvider)),
+              if (_duesFromCache && _duesIsStale && _duesCachedAt != null)
+                NoticeCard(
+                  kind: NoticeKind.info,
+                  icon: Icons.cloud_off_outlined,
+                  title: l10n.salesDashboardCachedDues(
+                    _duesCachedAt!.substring(0, 16),
+                  ),
+                  actionLabel: l10n.commonRetry,
+                  onAction: _refresh,
                 ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.salesHello(
+                        auth.user?.name ?? l10n.salesDefaultSalesperson,
+                      ),
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined),
+                    onPressed: () => context.push('/notifications'),
+                  ),
+                ],
               ),
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined),
-                onPressed: () => context.push('/notifications'),
+              if (auth.activeSalesPerson != null)
+                Text(
+                  l10n.salesActingAsName(auth.activeSalesPerson!.name),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                )
+              else if (auth.salesPerson != null)
+                Text(
+                  auth.salesPerson!.name,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              const SizedBox(height: 16),
+              KpiCard(
+                title: l10n.salesTitlePlan,
+                value: l10n.planTodayVisits(_todayVisits),
+                subtitle: l10n.planTabVisits,
+                icon: Icons.event_available,
+                onTap: () => context.go('/plan'),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              KpiCard(
+                title: l10n.salesCardOutstandingDues,
+                value: currency.format(_totalDue),
+                subtitle: l10n.salesCardUnpaidOrders(_unpaidOrders),
+                icon: Icons.payments,
+                onTap: () => context.go('/plan?tab=dues'),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              KpiCard(
+                title: l10n.salesCardManualOrders,
+                value: '$_openManualOrders',
+                subtitle: l10n.salesCardManualSubtitle,
+                icon: Icons.phone_in_talk,
+                onTap: () => context.go('/manual-orders'),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              KpiCard(
+                title: l10n.salesCardVanStock,
+                value: l10n.salesCardVanProducts(_vanProducts),
+                subtitle: _lowStock > 0
+                    ? l10n.salesCardLowStockAlerts(_lowStock)
+                    : l10n.salesCardTapManageStock,
+                icon: Icons.local_shipping,
+                onTap: () => context.go('/van-stock'),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              KpiCard(
+                title: l10n.salesCardMyOrders,
+                value: l10n.salesCardViewAll,
+                subtitle: l10n.salesCardOrdersSubtitle,
+                icon: Icons.receipt_long,
+                onTap: () => context.go('/orders'),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              KpiCard(
+                title: l10n.salesCardCustomers,
+                value: l10n.salesCardCustomersValue,
+                subtitle: l10n.salesCardCustomersSubtitle,
+                icon: Icons.people_outline,
+                onTap: () => context.push('/customers'),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              KpiCard(
+                title: l10n.salesCardWatchlist,
+                value: l10n.salesCardWatchlistValue,
+                subtitle: l10n.salesCardWatchlistSubtitle,
+                icon: Icons.bookmark_add_outlined,
+                onTap: () => context.push('/watchlist'),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              KpiCard(
+                title: 'Field map',
+                value: 'View',
+                subtitle: 'Filterable map of your assigned customers',
+                icon: Icons.map_outlined,
+                onTap: () => context.push('/field-map'),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              KpiCard(
+                title: 'Performance Review',
+                value: 'View',
+                subtitle: 'Your sales, cartons, and dues this month',
+                icon: Icons.insights_outlined,
+                onTap: () => context.push('/performance'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () => quickSaveWatchlistLocation(context, ref),
+                icon: const Icon(Icons.add_location_alt),
+                label: Text(l10n.salesQuickSaveLocation),
               ),
             ],
           ),
-          if (auth.activeSalesPerson != null)
-            Text(l10n.salesActingAsName(auth.activeSalesPerson!.name), style: Theme.of(context).textTheme.bodyMedium)
-          else if (auth.salesPerson != null)
-            Text(auth.salesPerson!.name, style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 16),
-          KpiCard(
-            title: l10n.salesTitlePlan,
-            value: l10n.planTodayVisits(_todayVisits),
-            subtitle: l10n.planTabVisits,
-            icon: Icons.event_available,
-            onTap: () => context.go('/plan'),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          KpiCard(
-            title: l10n.salesCardOutstandingDues,
-            value: currency.format(_totalDue),
-            subtitle: l10n.salesCardUnpaidOrders(_unpaidOrders),
-            icon: Icons.payments,
-            onTap: () => context.go('/plan?tab=dues'),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          KpiCard(
-            title: l10n.salesCardManualOrders,
-            value: '$_openManualOrders',
-            subtitle: l10n.salesCardManualSubtitle,
-            icon: Icons.phone_in_talk,
-            onTap: () => context.go('/manual-orders'),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          KpiCard(
-            title: l10n.salesCardVanStock,
-            value: l10n.salesCardVanProducts(_vanProducts),
-            subtitle: _lowStock > 0
-                ? l10n.salesCardLowStockAlerts(_lowStock)
-                : l10n.salesCardTapManageStock,
-            icon: Icons.local_shipping,
-            onTap: () => context.go('/van-stock'),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          KpiCard(
-            title: l10n.salesCardMyOrders,
-            value: l10n.salesCardViewAll,
-            subtitle: l10n.salesCardOrdersSubtitle,
-            icon: Icons.receipt_long,
-            onTap: () => context.go('/orders'),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          KpiCard(
-            title: l10n.salesCardCustomers,
-            value: l10n.salesCardCustomersValue,
-            subtitle: l10n.salesCardCustomersSubtitle,
-            icon: Icons.people_outline,
-            onTap: () => context.push('/customers'),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          KpiCard(
-            title: l10n.salesCardWatchlist,
-            value: l10n.salesCardWatchlistValue,
-            subtitle: l10n.salesCardWatchlistSubtitle,
-            icon: Icons.bookmark_add_outlined,
-            onTap: () => context.push('/watchlist'),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            onPressed: () => quickSaveWatchlistLocation(context, ref),
-            icon: const Icon(Icons.add_location_alt),
-            label: Text(l10n.salesQuickSaveLocation),
-          ),
-        ],
-      ),
         ),
         FirstRunTips(prefs: ref.watch(sharedPreferencesProvider)),
       ],

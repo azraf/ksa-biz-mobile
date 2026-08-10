@@ -9,8 +9,10 @@ import '../utils/client_request_id.dart';
 class OrderListQuery {
   const OrderListQuery({
     this.salesPersonId,
+    this.salesPersonIds,
     this.status,
     this.paymentStatus,
+    this.archived,
     this.customerType,
     this.customerId,
     this.search,
@@ -22,8 +24,16 @@ class OrderListQuery {
   });
 
   final int? salesPersonId;
+
+  /// Multi-select (admin/monitor) — takes precedence over [salesPersonId]
+  /// server-side when both are somehow set, mirrors the map's shop filter.
+  final Set<int>? salesPersonIds;
   final String? status;
   final String? paymentStatus;
+
+  /// Fully paid orders auto-archive; null = no filtering by archived state,
+  /// true = only archived, false = only active (the admin list's default).
+  final bool? archived;
 
   /// Internal 'customer_shop' style or server short form — mapped in toQuery.
   final String? customerType;
@@ -44,9 +54,14 @@ class OrderListQuery {
       'view': 'list',
       'sort': sort,
     };
-    if (salesPersonId != null) q['sales_person_id'] = '$salesPersonId';
+    if (salesPersonIds != null && salesPersonIds!.isNotEmpty) {
+      q['sales_person_ids'] = salesPersonIds!.join(',');
+    } else if (salesPersonId != null) {
+      q['sales_person_id'] = '$salesPersonId';
+    }
     if (status != null) q['status'] = status!;
     if (paymentStatus != null) q['payment_status'] = paymentStatus!;
+    if (archived != null) q['archived'] = archived! ? '1' : '0';
     if (customerType != null && customerId != null) {
       // Server accepts the short form; the single place server names live.
       q['customer_type'] = customerType!.replaceFirst('customer_', '');
@@ -67,8 +82,13 @@ class OrderRepository {
   Future<PaginatedResponse<OrderModel>> list({
     OrderListQuery? query,
     int? salesPersonId,
+    Set<int>? salesPersonIds,
     String? status,
     String? paymentStatus,
+    bool? archived,
+    String? search,
+    String? fromDate,
+    String? toDate,
     String sort = 'created_at',
     int page = 1,
     int perPage = 20,
@@ -76,8 +96,13 @@ class OrderRepository {
     final q = query ??
         OrderListQuery(
           salesPersonId: salesPersonId,
+          salesPersonIds: salesPersonIds,
           status: status,
           paymentStatus: paymentStatus,
+          archived: archived,
+          search: search,
+          fromDate: fromDate,
+          toDate: toDate,
           sort: sort,
           page: page,
           perPage: perPage,

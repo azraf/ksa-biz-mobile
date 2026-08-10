@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../support/json_parse.dart';
+
 class AreaModel extends Equatable {
   const AreaModel({required this.id, required this.name, this.code, this.parentId, this.active = true});
 
@@ -14,7 +16,7 @@ class AreaModel extends Equatable {
         name: json['name'] as String? ?? '',
         code: json['code'] as String?,
         parentId: json['parent_id'] as int?,
-        active: json['active'] as bool? ?? true,
+        active: parseJsonBool(json['active'], fallback: true),
       );
 
   Map<String, dynamic> toJson() => {
@@ -89,7 +91,7 @@ class CustomerAssignmentModel extends Equatable {
         endsAt: json['ends_at']?.toString(),
         reason: json['reason'] as String?,
         replacedSalesPersonId: json['replaced_sales_person_id'] as int?,
-        active: json['active'] as bool? ?? true,
+        active: parseJsonBool(json['active'], fallback: true),
         salesPersonName: json['sales_person'] is Map
             ? (json['sales_person'] as Map)['name'] as String?
             : null,
@@ -122,7 +124,7 @@ class SalesCustomerRow extends Equatable {
         name: json['name'] as String? ?? '',
         phone: json['phone'] as String?,
         areaName: json['area'] is Map ? (json['area'] as Map)['name'] as String? : null,
-        isInactive: json['is_inactive'] as bool? ?? false,
+        isInactive: parseJsonBool(json['is_inactive']),
       );
 
   @override
@@ -158,7 +160,7 @@ class SalesPersonAreaModel extends Equatable {
         salesPersonName: json['sales_person'] is Map
             ? (json['sales_person'] as Map)['name'] as String?
             : null,
-        active: json['active'] as bool? ?? true,
+        active: parseJsonBool(json['active'], fallback: true),
         startsAt: json['starts_at']?.toString(),
         endsAt: json['ends_at']?.toString(),
       );

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/api_client.dart';
+import '../api/api_exception.dart';
 import '../config/app_config.dart';
 import '../models/sales_person.dart';
 import '../models/user.dart';
@@ -248,12 +249,18 @@ class AuthRepository {
     _appLock.markUnlocked();
   }
 
+  /// True unless the server explicitly rejects the stored token (401). A
+  /// network failure, timeout, or any other server error can't confirm the
+  /// session is actually invalid, so it's treated as still valid — this app
+  /// supports offline use and biometric unlock must work without connectivity.
   Future<bool> validateSessionOnline() async {
     try {
       await _api.get('/user');
       return true;
+    } on ApiException catch (e) {
+      return e.statusCode != 401;
     } catch (_) {
-      return false;
+      return true;
     }
   }
 

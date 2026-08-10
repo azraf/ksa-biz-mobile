@@ -8,7 +8,8 @@ import '../offline/local_database.dart';
 typedef ReportRevalidateCallback<T> = void Function(ReportResult<T> result);
 
 class ReportRepository {
-  ReportRepository(this._api, {LocalDatabase? db}) : _db = db ?? LocalDatabase.instance;
+  ReportRepository(this._api, {LocalDatabase? db})
+      : _db = db ?? LocalDatabase.instance;
 
   static const cacheTtl = Duration(minutes: 15);
 
@@ -16,7 +17,8 @@ class ReportRepository {
   final LocalDatabase _db;
 
   String _cacheKey(String type, Map<String, String>? query) {
-    final sorted = (query ?? {}).entries.toList()..sort((a, b) => a.key.compareTo(b.key));
+    final sorted = (query ?? {}).entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
     return '$type:${sorted.map((e) => '${e.key}=${e.value}').join('&')}';
   }
 
@@ -43,8 +45,34 @@ class ReportRepository {
       'sales',
       query,
       () async {
-        final response = await _api.get('/reports/sales', query: query.isEmpty ? null : query);
+        final response = await _api.get('/reports/sales',
+            query: query.isEmpty ? null : query);
         return SalesReport.fromJson(response);
+      },
+      forceRefresh: forceRefresh,
+      onRevalidate: onRevalidate,
+    );
+  }
+
+  Future<ReportResult<SalesPerformanceReport>> performance({
+    String? range,
+    List<int>? salesPersonIds,
+    bool forceRefresh = false,
+    ReportRevalidateCallback<SalesPerformanceReport>? onRevalidate,
+  }) async {
+    final query = <String, String>{};
+    if (range != null) query['range'] = range;
+    if (salesPersonIds != null && salesPersonIds.isNotEmpty) {
+      query['sales_person_ids'] = salesPersonIds.join(',');
+    }
+
+    return _fetch(
+      'sales-performance',
+      query,
+      () async {
+        final response = await _api.get('/reports/sales-performance',
+            query: query.isEmpty ? null : query);
+        return SalesPerformanceReport.fromJson(response);
       },
       forceRefresh: forceRefresh,
       onRevalidate: onRevalidate,
@@ -61,7 +89,8 @@ class ReportRepository {
       'sales-person-due',
       query,
       () async {
-        final response = await _api.get('/reports/sales-person-due', query: query);
+        final response =
+            await _api.get('/reports/sales-person-due', query: query);
         return SalesPersonDueReport.fromJson(response);
       },
       forceRefresh: forceRefresh,
@@ -82,7 +111,8 @@ class ReportRepository {
       'profit',
       query,
       () async {
-        final response = await _api.get('/reports/profit', query: query.isEmpty ? null : query);
+        final response = await _api.get('/reports/profit',
+            query: query.isEmpty ? null : query);
         return ProfitReport.fromJson(response);
       },
       forceRefresh: forceRefresh,
@@ -98,13 +128,15 @@ class ReportRepository {
     final query = <String, String>{};
     if (fromDate != null) query['from_date'] = fromDate;
     if (toDate != null) query['to_date'] = toDate;
-    if (expenseCategoryId != null) query['expense_category_id'] = '$expenseCategoryId';
+    if (expenseCategoryId != null)
+      query['expense_category_id'] = '$expenseCategoryId';
 
     return _fetch(
       'expenses',
       query,
       () async {
-        final response = await _api.get('/reports/expenses', query: query.isEmpty ? null : query);
+        final response = await _api.get('/reports/expenses',
+            query: query.isEmpty ? null : query);
         return ExpenseReport.fromJson(response);
       },
       forceRefresh: forceRefresh,
@@ -126,7 +158,8 @@ class ReportRepository {
       'expense-summary',
       query,
       () async {
-        final response = await _api.get('/reports/expense-summary', query: query);
+        final response =
+            await _api.get('/reports/expense-summary', query: query);
         return ExpenseSummaryReport.fromJson(response);
       },
       forceRefresh: forceRefresh,
@@ -163,7 +196,8 @@ class ReportRepository {
     return _fetchRaw(
       'containers',
       query,
-      () => _api.get('/reports/containers', query: query.isEmpty ? null : query),
+      () =>
+          _api.get('/reports/containers', query: query.isEmpty ? null : query),
       forceRefresh: forceRefresh,
     );
   }
@@ -187,7 +221,8 @@ class ReportRepository {
           isStale: stale,
         );
         if (stale) {
-          unawaited(_revalidateInBackground(type, query, key, fetcher, onRevalidate));
+          unawaited(
+              _revalidateInBackground(type, query, key, fetcher, onRevalidate));
         }
         return result;
       }
@@ -200,7 +235,8 @@ class ReportRepository {
         reportType: type,
         data: _serialize(data),
       );
-      return ReportResult(data: data, fetchedAt: DateTime.now().toIso8601String());
+      return ReportResult(
+          data: data, fetchedAt: DateTime.now().toIso8601String());
     } catch (e) {
       final cached = await _db.getCachedReport(key);
       if (cached != null) {
@@ -258,7 +294,8 @@ class ReportRepository {
     try {
       final data = await fetcher();
       await _db.cacheReport(cacheKey: key, reportType: type, data: data);
-      return ReportResult(data: data, fetchedAt: DateTime.now().toIso8601String());
+      return ReportResult(
+          data: data, fetchedAt: DateTime.now().toIso8601String());
     } catch (e) {
       final cached = await _db.getCachedReport(key);
       if (cached != null) {
@@ -281,12 +318,17 @@ class ReportRepository {
         'orders_count': data.ordersCount,
         'total_bill': data.totalBill,
         'by_product': data.byProduct
-            .map((p) => {'product_id': p.productId, 'qty': p.qty, 'revenue': p.revenue})
+            .map((p) =>
+                {'product_id': p.productId, 'qty': p.qty, 'revenue': p.revenue})
             .toList(),
       };
     }
     if (data is ProfitReport) {
-      return {'revenue': data.revenue, 'cost': data.cost, 'profit': data.profit};
+      return {
+        'revenue': data.revenue,
+        'cost': data.cost,
+        'profit': data.profit
+      };
     }
     if (data is ExpenseReport) {
       return {
@@ -309,7 +351,9 @@ class ReportRepository {
         'from_date': data.fromDate,
         'to_date': data.toDate,
         'grand_total': data.grandTotal,
-        'by_period': data.byPeriod.map((p) => {'period_key': p.periodKey, 'total': p.total}).toList(),
+        'by_period': data.byPeriod
+            .map((p) => {'period_key': p.periodKey, 'total': p.total})
+            .toList(),
       };
     }
     if (data is SalesPersonDueReport) {
@@ -318,6 +362,9 @@ class ReportRepository {
         'total_due': data.totalDue,
         'orders': data.orders,
       };
+    }
+    if (data is SalesPerformanceReport) {
+      return data.toJson();
     }
     return {};
   }
@@ -329,6 +376,7 @@ class ReportRepository {
       'expenses' => ExpenseReport.fromJson(json),
       'expense-summary' => ExpenseSummaryReport.fromJson(json),
       'sales-person-due' => SalesPersonDueReport.fromJson(json),
+      'sales-performance' => SalesPerformanceReport.fromJson(json),
       _ => json,
     };
   }

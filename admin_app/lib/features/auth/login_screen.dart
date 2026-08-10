@@ -18,18 +18,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController(text: kDebugMode ? 'password' : '');
   final _apiUrlController = TextEditingController(text: AppConfig.defaultApiBaseUrl);
   bool _showPasswordForm = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeAutoBiometric());
-  }
-
-  Future<void> _maybeAutoBiometric() async {
-    final auth = ref.read(authProvider);
-    if (!auth.pendingBiometricUnlock || auth.storedUserEmail == null) return;
-    await _unlockWithBiometric();
-  }
+  bool _autoBiometricAttempted = false;
 
   Future<void> _unlockWithBiometric() async {
     final l10n = AppLocalizations.of(context);
@@ -73,6 +62,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final auth = ref.watch(authProvider);
+    // Session restore on cold start is async (secure-storage/prefs reads);
+    // the initial state always has pendingBiometricUnlock: false, so this
+    // must react to the state settling rather than check it once at launch.
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (_autoBiometricAttempted || next.isLoading) return;
+      if (next.pendingBiometricUnlock && next.storedUserEmail != null) {
+        _autoBiometricAttempted = true;
+        _unlockWithBiometric();
+      }
+    });
     final showBiometricOnly = auth.pendingBiometricUnlock &&
         auth.storedUserEmail != null &&
         !_showPasswordForm &&

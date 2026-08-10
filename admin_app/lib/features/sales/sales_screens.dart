@@ -59,7 +59,23 @@ class OrdersScreen extends ConsumerStatefulWidget {
 
 class _OrdersScreenState extends ConsumerState<OrdersScreen> {
   static const _listKey = 'admin_orders';
-  int _reloadToken = 0;
+
+  final _scrollController = ScrollController();
+  final _searchController = TextEditingController();
+  List<OrderModel> _orders = [];
+  List<SalesPersonModel> _salesPersons = [];
+  bool _loading = true;
+  bool _loadingMore = false;
+  String? _error;
+  int _currentPage = 1;
+  int _lastPage = 1;
+
+  String? _status;
+  String? _paymentStatus;
+  DateTime? _fromDate;
+  DateTime? _toDate;
+  Set<int> _salesPersonIds = {};
+  bool _archived = false;
   late ListSortMode _sortMode;
 
   @override
@@ -67,46 +83,202 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
     super.initState();
     _sortMode = ListSortPreference(ref.read(sharedPreferencesProvider))
         .read(_listKey, defaultMode: ListSortMode.date);
+    _scrollController.addListener(_onScroll);
+    _load(page: 1, reset: true);
   }
 
   @override
-  Widget build(BuildContext context) {
-    final repo = ref.watch(offlineOrderRepositoryProvider);
-    return CrudListScreen<OrderModel>(
-      key: ValueKey('$_reloadToken-$_sortMode'),
-      title: 'Orders',
-      loadItems: () async {
+  void dispose() {
+    _scrollController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_loadingMore || _loading || _currentPage >= _lastPage) return;
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      _load(page: _currentPage + 1);
+    }
+  }
+
+  Future<void> _load({int page = 1, bool reset = false}) async {
+    if (reset) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    } else {
+      setState(() => _loadingMore = true);
+    }
+    try {
+      if (reset) {
         unawaited(ref.read(syncServiceProvider).syncIfOnline().timeout(
               const Duration(seconds: 30),
               onTimeout: () {},
             ));
-        return (await repo.list(sort: _sortMode.orderApiSortParam())).items;
-      },
-      itemTitle: (o) => '#${o.id} — ${o.customerShopName ?? ''} — SAR ${o.totalBill.toStringAsFixed(2)}',
-      itemSubtitle: (o) => orderListSubtitle(o, showSalesPerson: true, showCreatedAt: true),
-      sortModes: const [
-        ListSortMode.date,
-        ListSortMode.name,
-        ListSortMode.area,
-        ListSortMode.salesPerson,
-      ],
-      initialSortMode: _sortMode,
-      onSortChanged: (mode) async {
-        _sortMode = mode;
-        await ListSortPreference(ref.read(sharedPreferencesProvider)).write(_listKey, mode);
-        setState(() => _reloadToken++);
-      },
-      sortItems: (items, mode) => sortByListMode(
-        items,
-        mode,
+      }
+      final search = _searchController.text.trim();
+      final results = await Future.wait([
+        ref.read(customerRepositoryProvider).salesPersons().then((r) => r.items),
+        ref.read(offlineOrderRepositoryProvider).list(
+              salesPersonIds: _salesPersonIds,
+              status: _status,
+              paymentStatus: _paymentStatus,
+              archived: _archived,
+              search: search.isEmpty ? null : search,
+              fromDate: _fromDate?.toIso8601String().split('T').first,
+              toDate: _toDate?.toIso8601String().split('T').first,
+              sort: _sortMode.orderApiSortParam(),
+              page: page,
+            ),
+      ]);
+      final salesPersons = results[0] as List<SalesPersonModel>;
+      final result = results[1] as PaginatedResponse<OrderModel>;
+      var items = sortByListMode(
+        result.items,
+        _sortMode,
         dateIso: (o) => o.createdAt,
         name: (o) => o.customerShopName ?? '',
         area: (o) => o.customerShopAreaName,
         salesPerson: (o) => o.salesPerson?.name,
+      );
+      if (!mounted) return;
+      setState(() {
+        _salesPersons = salesPersons;
+        if (reset) {
+          _orders = items;
+        } else {
+          final existingIds = _orders.map((o) => o.id).toSet();
+          _orders = [..._orders, ...items.where((o) => !existingIds.contains(o.id))];
+        }
+        _currentPage = result.currentPage;
+        _lastPage = result.lastPage;
+        _loading = false;
+        _loadingMore = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+        _loadingMore = false;
+      });
+    }
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _status = null;
+      _paymentStatus = null;
+      _fromDate = null;
+      _toDate = null;
+      _salesPersonIds = {};
+      _archived = false;
+      _searchController.clear();
+    });
+    _load(page: 1, reset: true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final activeFilterCount = [_status, _paymentStatus, _fromDate, _toDate]
+            .where((v) => v != null)
+            .length +
+        (_salesPersonIds.isEmpty ? 0 : 1) +
+        (_archived ? 1 : 0);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(activeFilterCount == 0 ? 'Orders' : 'Orders ($activeFilterCount)'),
+        actions: [
+          IconButton(icon: const Icon(Icons.add), onPressed: () => context.push('/sales/orders/create')),
+          Builder(
+            builder: (ctx) => IconButton(
+              icon: const Icon(Icons.tune),
+              onPressed: () => Scaffold.of(ctx).openEndDrawer(),
+            ),
+          ),
+        ],
       ),
-      isPending: (o) => o.id < 0,
-      onTap: (o) => context.push('/sales/orders/${o.id}'),
-      onAdd: () => context.push('/sales/orders/create'),
+      endDrawer: OrderFiltersDrawer(
+        searchController: _searchController,
+        onSearchSubmitted: () => _load(page: 1, reset: true),
+        status: _status,
+        onStatusChanged: (v) {
+          setState(() => _status = v);
+          _load(page: 1, reset: true);
+        },
+        paymentStatus: _paymentStatus,
+        onPaymentStatusChanged: (v) {
+          setState(() => _paymentStatus = v);
+          _load(page: 1, reset: true);
+        },
+        fromDate: _fromDate,
+        onFromDateChanged: (v) {
+          setState(() => _fromDate = v);
+          _load(page: 1, reset: true);
+        },
+        toDate: _toDate,
+        onToDateChanged: (v) {
+          setState(() => _toDate = v);
+          _load(page: 1, reset: true);
+        },
+        salesPersons: _salesPersons,
+        selectedSalesPersonIds: _salesPersonIds,
+        onSalesPersonsChanged: (v) {
+          setState(() => _salesPersonIds = v);
+          _load(page: 1, reset: true);
+        },
+        archived: _archived,
+        onArchivedChanged: (v) {
+          setState(() => _archived = v);
+          _load(page: 1, reset: true);
+        },
+        sort: _sortMode,
+        onSortChanged: (mode) async {
+          setState(() => _sortMode = mode);
+          await ListSortPreference(ref.read(sharedPreferencesProvider)).write(_listKey, mode);
+          _load(page: 1, reset: true);
+        },
+        onClear: _clearFilters,
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(_error!),
+                      const SizedBox(height: 12),
+                      FilledButton(onPressed: () => _load(page: 1, reset: true), child: const Text('Retry')),
+                    ],
+                  ),
+                )
+              : _orders.isEmpty
+                  ? const Center(child: Text('No orders found'))
+                  : RefreshIndicator(
+                      onRefresh: () => _load(page: 1, reset: true),
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        itemCount: _orders.length + (_loadingMore ? 1 : 0),
+                        itemBuilder: (_, i) {
+                          if (i >= _orders.length) {
+                            return const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
+                          final order = _orders[i];
+                          return OrderCard(
+                            order: order,
+                            showDue: true,
+                            subtitle: orderListSubtitle(order, showSalesPerson: true),
+                            onTap: () => context.push('/sales/orders/${order.id}'),
+                          );
+                        },
+                      ),
+                    ),
     );
   }
 }
@@ -482,6 +654,8 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
   List<CustomerTypeModel> _types = [];
   CustomerTypeModel? _selectedType;
   CustomerShopModel? _selectedShop;
+  CustomerVanModel? _selectedVan;
+  CustomerImporterModel? _selectedImporter;
   final _items = <LineItemDraft>[];
   final _walkInNoteController = TextEditingController();
   bool _walkInMode = false;
@@ -489,8 +663,13 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
   int? _salesPersonId;
   List<SalesPersonModel> _salesPersons = [];
   List<CustomerShopModel> _shops = [];
+  List<CustomerVanModel> _vans = [];
+  List<CustomerImporterModel> _importers = [];
+  DateTime _orderDate = DateTime.now();
+  bool _asDraft = false;
   bool _loading = true;
   bool _submitting = false;
+  String? _error;
 
   @override
   void initState() {
@@ -505,20 +684,41 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
   }
 
   Future<void> _load() async {
-    final customerRepo = ref.read(customerRepositoryProvider);
-    _types = await customerRepo.customerTypes();
-    _salesPersons = (await customerRepo.salesPersons()).items;
-    _walkInShopId = await customerRepo.walkInShopId();
-    _shops = (await customerRepo.shops()).items.where((s) => !s.isSystem).toList();
-    if (_shops.isNotEmpty) _selectedShop = _shops.first;
-    if (_salesPersons.isNotEmpty) _salesPersonId = _salesPersons.first.id;
-    if (_types.isNotEmpty) {
-      _selectedType = _types.firstWhere(
-        (t) => t.typeName == 'customer_shop',
-        orElse: () => _types.first,
-      );
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final customerRepo = ref.read(customerRepositoryProvider);
+      final types = await customerRepo.customerTypes();
+      final salesPersons = (await customerRepo.salesPersons()).items;
+      final walkInShopId = await customerRepo.walkInShopId();
+      final shops = (await customerRepo.shops()).items.where((s) => !s.isSystem).toList();
+      final vans = (await customerRepo.vans()).items;
+      final importers = (await customerRepo.importers()).items;
+      setState(() {
+        _types = types;
+        _salesPersons = salesPersons;
+        _walkInShopId = walkInShopId;
+        _shops = shops;
+        _vans = vans;
+        _importers = importers;
+        if (_shops.isNotEmpty) _selectedShop = _shops.first;
+        if (_salesPersons.isNotEmpty) _salesPersonId = _salesPersons.first.id;
+        if (_types.isNotEmpty) {
+          _selectedType = _types.firstWhere(
+            (t) => t.typeName == 'customer_shop',
+            orElse: () => _types.first,
+          );
+        }
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
     }
-    setState(() => _loading = false);
   }
 
   Future<void> _startWalkIn() async {
@@ -539,21 +739,58 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     });
   }
 
+  Future<void> _pickOrderDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _orderDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+    );
+    if (date == null || !mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_orderDate),
+    );
+    if (time == null) return;
+    setState(() {
+      _orderDate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    });
+  }
+
   Future<void> _submit() async {
     if (_selectedType == null || _items.isEmpty) return;
-    if (!_walkInMode && _selectedShop == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Select a shop')));
-      return;
+    if (!_walkInMode) {
+      final missingCustomer = switch (_selectedType!.typeName) {
+        'customer_van' => _selectedVan == null,
+        'customer_importer' => _selectedImporter == null,
+        _ => _selectedShop == null,
+      };
+      if (missingCustomer) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Select a customer')));
+        return;
+      }
     }
     setState(() => _submitting = true);
     try {
       final body = <String, dynamic>{
         if (_salesPersonId != null) 'sales_person_id': _salesPersonId,
         'customer_type_id': _selectedType!.id,
-        'customer_shop_id': _walkInMode ? _walkInShopId : _selectedShop?.id,
-        'payment_status': 'pending',
+        'created_at': _orderDate.toIso8601String(),
+        'as_draft': _asDraft,
         'items': _items.map((e) => e.toJson()).toList(),
       };
+      if (_walkInMode) {
+        body['customer_shop_id'] = _walkInShopId;
+      } else {
+        switch (_selectedType!.typeName) {
+          case 'customer_van':
+            body['customer_van_id'] = _selectedVan?.id;
+          case 'customer_importer':
+            body['customer_importer_id'] = _selectedImporter?.id;
+          default:
+            body['customer_shop_id'] = _selectedShop?.id;
+        }
+      }
       if (_walkInMode && _walkInNoteController.text.trim().isNotEmpty) {
         body['walk_in_note'] = _walkInNoteController.text.trim();
       }
@@ -577,6 +814,18 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
 
   Widget _body(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(_error!),
+            const SizedBox(height: 12),
+            FilledButton(onPressed: _load, child: const Text('Retry')),
+          ],
+        ),
+      );
+    }
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -594,6 +843,15 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
           onChanged: (v) => setState(() => _salesPersonId = v),
         ),
         const SizedBox(height: 12),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.event),
+          title: const Text('Order date & time'),
+          subtitle: Text(DateFormat('yMMMd – h:mm a').format(_orderDate)),
+          trailing: const Icon(Icons.edit),
+          onTap: _pickOrderDate,
+        ),
+        const SizedBox(height: 12),
         if (_walkInMode) ...[
           const ListTile(
             leading: Icon(Icons.storefront),
@@ -606,16 +864,45 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
           ),
           const SizedBox(height: 12),
         ] else ...[
-          DropdownButtonFormField<CustomerShopModel>(
-            initialValue: _selectedShop,
-            decoration: const InputDecoration(labelText: 'Shop'),
-            items: _shops
-                .map((s) => DropdownMenuItem(value: s, child: Text(s.name)))
-                .toList(),
-            onChanged: (v) => setState(() => _selectedShop = v),
+          DropdownButtonFormField<CustomerTypeModel>(
+            initialValue: _selectedType,
+            decoration: const InputDecoration(labelText: 'Customer type'),
+            items: _types.map((t) => DropdownMenuItem(value: t, child: Text(t.typeName))).toList(),
+            onChanged: (v) => setState(() => _selectedType = v),
           ),
           const SizedBox(height: 12),
+          switch (_selectedType?.typeName) {
+            'customer_van' => DropdownButtonFormField<CustomerVanModel>(
+                initialValue: _selectedVan,
+                decoration: const InputDecoration(labelText: 'Van customer'),
+                items: _vans.map((v) => DropdownMenuItem(value: v, child: Text(v.name))).toList(),
+                onChanged: (v) => setState(() => _selectedVan = v),
+              ),
+            'customer_importer' => DropdownButtonFormField<CustomerImporterModel>(
+                initialValue: _selectedImporter,
+                decoration: const InputDecoration(labelText: 'Importer customer'),
+                items: _importers.map((i) => DropdownMenuItem(value: i, child: Text(i.name))).toList(),
+                onChanged: (v) => setState(() => _selectedImporter = v),
+              ),
+            _ => DropdownButtonFormField<CustomerShopModel>(
+                initialValue: _selectedShop,
+                decoration: const InputDecoration(labelText: 'Shop'),
+                items: _shops
+                    .map((s) => DropdownMenuItem(value: s, child: Text(s.name)))
+                    .toList(),
+                onChanged: (v) => setState(() => _selectedShop = v),
+              ),
+          },
+          const SizedBox(height: 12),
         ],
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Save as draft'),
+          subtitle: const Text('Draft orders skip inventory/credit checks until confirmed'),
+          value: _asDraft,
+          onChanged: (v) => setState(() => _asDraft = v),
+        ),
+        const SizedBox(height: 12),
         Row(
           children: [
             Text('Items', style: Theme.of(context).textTheme.titleMedium),
@@ -640,7 +927,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
           onPressed: _submitting ? null : _submit,
           child: _submitting
               ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-              : const Text('Create Order'),
+              : Text(_asDraft ? 'Save Draft' : 'Create Order'),
         ),
       ],
     );

@@ -21,8 +21,13 @@ class OfflineOrderRepository {
 
   Future<PaginatedResponse<OrderModel>> list({
     int? salesPersonId,
+    Set<int>? salesPersonIds,
     String? status,
     String? paymentStatus,
+    bool? archived,
+    String? search,
+    String? fromDate,
+    String? toDate,
     String sort = 'created_at',
     int page = 1,
   }) async {
@@ -30,8 +35,13 @@ class OfflineOrderRepository {
       try {
         final result = await _remote.list(
           salesPersonId: salesPersonId,
+          salesPersonIds: salesPersonIds,
           status: status,
           paymentStatus: paymentStatus,
+          archived: archived,
+          search: search,
+          fromDate: fromDate,
+          toDate: toDate,
           sort: sort,
           page: page,
         );

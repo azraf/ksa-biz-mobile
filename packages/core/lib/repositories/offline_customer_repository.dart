@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../models/admin_models.dart';
 import '../models/customer.dart';
 import '../models/customer_assignment_models.dart';
@@ -29,8 +31,13 @@ class OfflineCustomerRepository {
               .toList(),
         );
         return types;
-      } catch (_) {
-        return _cachedCustomerTypes();
+      } catch (e) {
+        final cached = await _cachedCustomerTypes();
+        if (cached.isEmpty) {
+          debugPrint('[OfflineCustomerRepository] customerTypes live fetch failed, no cache to fall back to: $e');
+          rethrow;
+        }
+        return cached;
       }
     }
     return _cachedCustomerTypes();
@@ -68,15 +75,39 @@ class OfflineCustomerRepository {
       perPage: perPage,
     );
     if (_isOnline()) {
-      try {
-        final result = await _remote.shops(query: query);
-        await _cacheShopsBatch(result.items);
-        return result;
-      } catch (_) {
-        return _cachedShopsPage(search: search, page: page, perPage: perPage);
-      }
+      return _liveOrCachedPage(
+        live: () => _remote.shops(query: query),
+        cacheBatch: _cacheShopsBatch,
+        cachedFallback: () => _cachedShopsPage(search: search, page: page, perPage: perPage),
+        label: 'shops',
+      );
     }
     return _cachedShopsPage(search: search, page: page, perPage: perPage);
+  }
+
+  /// Tries the live endpoint first; falls back to cache only if the cache
+  /// actually has something to show. An empty cache after a failed live call
+  /// rethrows instead of silently returning an empty-but-successful page —
+  /// otherwise a scoping bug, an expired token, and a real empty result all
+  /// look identical to the UI as "no customers."
+  Future<PaginatedResponse<T>> _liveOrCachedPage<T>({
+    required Future<PaginatedResponse<T>> Function() live,
+    required Future<void> Function(List<T> items) cacheBatch,
+    required Future<PaginatedResponse<T>> Function() cachedFallback,
+    required String label,
+  }) async {
+    try {
+      final result = await live();
+      await cacheBatch(result.items);
+      return result;
+    } catch (e) {
+      final cached = await cachedFallback();
+      if (cached.items.isEmpty) {
+        debugPrint('[OfflineCustomerRepository] $label live fetch failed, no cache to fall back to: $e');
+        rethrow;
+      }
+      return cached;
+    }
   }
 
   Future<PaginatedResponse<CustomerVanModel>> vans({
@@ -102,13 +133,12 @@ class OfflineCustomerRepository {
       perPage: perPage,
     );
     if (_isOnline()) {
-      try {
-        final result = await _remote.vans(query: query);
-        await _cacheVansBatch(result.items);
-        return result;
-      } catch (_) {
-        return _cachedVansPage(search: search, page: page, perPage: perPage);
-      }
+      return _liveOrCachedPage(
+        live: () => _remote.vans(query: query),
+        cacheBatch: _cacheVansBatch,
+        cachedFallback: () => _cachedVansPage(search: search, page: page, perPage: perPage),
+        label: 'vans',
+      );
     }
     return _cachedVansPage(search: search, page: page, perPage: perPage);
   }
@@ -136,13 +166,12 @@ class OfflineCustomerRepository {
       perPage: perPage,
     );
     if (_isOnline()) {
-      try {
-        final result = await _remote.importers(query: query);
-        await _cacheImportersBatch(result.items);
-        return result;
-      } catch (_) {
-        return _cachedImportersPage(search: search, page: page, perPage: perPage);
-      }
+      return _liveOrCachedPage(
+        live: () => _remote.importers(query: query),
+        cacheBatch: _cacheImportersBatch,
+        cachedFallback: () => _cachedImportersPage(search: search, page: page, perPage: perPage),
+        label: 'importers',
+      );
     }
     return _cachedImportersPage(search: search, page: page, perPage: perPage);
   }
@@ -173,6 +202,29 @@ class OfflineCustomerRepository {
       }
     }
   }
+
+  /// Reads straight from the local cache, no network call — for an instant
+  /// first paint while the caller separately kicks off a live refresh.
+  Future<PaginatedResponse<CustomerShopModel>> cachedShops({
+    String? search,
+    int page = 1,
+    int perPage = 25,
+  }) =>
+      _cachedShopsPage(search: search, page: page, perPage: perPage);
+
+  Future<PaginatedResponse<CustomerVanModel>> cachedVans({
+    String? search,
+    int page = 1,
+    int perPage = 25,
+  }) =>
+      _cachedVansPage(search: search, page: page, perPage: perPage);
+
+  Future<PaginatedResponse<CustomerImporterModel>> cachedImporters({
+    String? search,
+    int page = 1,
+    int perPage = 25,
+  }) =>
+      _cachedImportersPage(search: search, page: page, perPage: perPage);
 
   Future<PaginatedResponse<CustomerShopModel>> _cachedShopsPage({
     String? search,
@@ -321,32 +373,41 @@ class OfflineCustomerRepository {
   }
 
   Future<CustomerShopModel> getShop(int id) async {
+    Object? liveError;
     if (_isOnline()) {
       try {
         final shop = await _remote.getShop(id);
         await _db.cacheEntity(entityType: 'customer_shop', entityId: shop.id, data: _shopData(shop));
         return shop;
-      } catch (_) {}
+      } catch (e) {
+        liveError = e;
+      }
     }
     final cached = await _db.getCachedEntity('customer_shop', id);
     if (cached != null) return CustomerShopModel.fromJson(cached);
+    if (liveError != null) throw liveError;
     throw Exception('Shop not available offline');
   }
 
   Future<CustomerVanModel> getVan(int id) async {
+    Object? liveError;
     if (_isOnline()) {
       try {
         final van = await _remote.getVan(id);
         await _db.cacheEntity(entityType: 'customer_van', entityId: van.id, data: _vanData(van));
         return van;
-      } catch (_) {}
+      } catch (e) {
+        liveError = e;
+      }
     }
     final cached = await _db.getCachedEntity('customer_van', id);
     if (cached != null) return CustomerVanModel.fromJson(cached);
+    if (liveError != null) throw liveError;
     throw Exception('Van not available offline');
   }
 
   Future<CustomerImporterModel> getImporter(int id) async {
+    Object? liveError;
     if (_isOnline()) {
       try {
         final importer = await _remote.getImporter(id);
@@ -356,10 +417,13 @@ class OfflineCustomerRepository {
           data: _importerData(importer),
         );
         return importer;
-      } catch (_) {}
+      } catch (e) {
+        liveError = e;
+      }
     }
     final cached = await _db.getCachedEntity('customer_importer', id);
     if (cached != null) return CustomerImporterModel.fromJson(cached);
+    if (liveError != null) throw liveError;
     throw Exception('Importer not available offline');
   }
 

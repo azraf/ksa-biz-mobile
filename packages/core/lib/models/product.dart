@@ -14,6 +14,7 @@ class ProductModel extends Equatable {
     this.pcsUnitId,
     this.cartonUnitId,
     this.unitId,
+    this.cost,
   });
 
   final int id;
@@ -29,6 +30,10 @@ class ProductModel extends Equatable {
   final int? cartonUnitId;
   final int? unitId;
 
+  /// Default purchase cost, used to pre-fill a purchase line's price. Null
+  /// when the product has variants (cost varies per variant).
+  final double? cost;
+
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     return ProductModel(
       id: json['id'] as int,
@@ -43,6 +48,9 @@ class ProductModel extends Equatable {
       pcsUnitId: json['pcs_unit_id'] as int?,
       cartonUnitId: json['carton_unit_id'] as int?,
       unitId: json['unit_id'] as int?,
+      cost: (json['effective_cost'] ?? json['cost']) != null
+          ? _toDouble(json['effective_cost'] ?? json['cost'])
+          : null,
     );
   }
 

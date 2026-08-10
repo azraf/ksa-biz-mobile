@@ -1,6 +1,7 @@
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../providers/repositories.dart';
 
@@ -16,6 +17,11 @@ class WarehouseStockScreen extends ConsumerWidget {
           appBar: AppBar(
             title: const Text('Warehouse Stock'),
             actions: [
+              IconButton(
+                icon: const Icon(Icons.fact_check_outlined),
+                tooltip: 'Inspections',
+                onPressed: () => context.push('/inventory/inspections'),
+              ),
               IconButton(
                 icon: const Icon(Icons.assessment_outlined),
                 onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InventoryValuationScreen())),

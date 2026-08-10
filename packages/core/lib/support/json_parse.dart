@@ -16,3 +16,12 @@ double parseJsonDouble(dynamic value, {double fallback = 0}) {
   if (value is num) return value.toDouble();
   return double.tryParse(value.toString()) ?? fallback;
 }
+
+/// Safe parsing for JSON booleans that may arrive as bool, int (0/1), or string.
+bool parseJsonBool(dynamic value, {bool fallback = false}) {
+  if (value == null) return fallback;
+  if (value is bool) return value;
+  if (value is num) return value != 0;
+  if (value is String) return value == '1' || value.toLowerCase() == 'true';
+  return fallback;
+}

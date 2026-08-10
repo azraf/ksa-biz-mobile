@@ -26,6 +26,12 @@ class ReportsHubScreen extends StatelessWidget {
           onTap: () => context.push('/reports/sales'),
         ),
         _ReportTile(
+          title: 'Sales performance',
+          subtitle: 'Per-salesperson sales, cartons, and dues',
+          icon: Icons.insights,
+          onTap: () => context.push('/reports/sales-performance'),
+        ),
+        _ReportTile(
           title: 'Profit report',
           subtitle: 'Revenue, cost, and profit',
           icon: Icons.trending_up,

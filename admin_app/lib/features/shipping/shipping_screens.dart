@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/repositories.dart';
 import '../../widgets/crud_screens.dart';
 import '../../widgets/field_config.dart';
+import '../../widgets/line_items_editor.dart';
 
 class CountriesScreen extends ConsumerWidget {
   const CountriesScreen({super.key});
@@ -293,13 +294,20 @@ class _CreatePurchaseScreenState extends ConsumerState<CreatePurchaseScreen> {
       _notes.text = existing.notes ?? '';
       _items.addAll(existing.items.map((item) => {
             'product_id': item.productId,
+            'product_name': item.productName ?? item.product?.name,
             'quantity': item.quantity,
-            'unit_cost': item.unitCost ?? item.unitPrice ?? 0,
+            if ((item.unitPrice ?? item.unitCost) != null) 'unit_price': item.unitPrice ?? item.unitCost,
           }));
     }
   }
 
   Future<void> _save({required bool post}) async {
+    if (post && _items.any((i) => i['unit_price'] == null)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('All items need a price before posting.')),
+      );
+      return;
+    }
     setState(() => _saving = true);
     final body = {
       'purchase_type': _purchaseType,
@@ -348,26 +356,37 @@ class _CreatePurchaseScreenState extends ConsumerState<CreatePurchaseScreen> {
           TextField(controller: _notes, decoration: const InputDecoration(labelText: 'Notes')),
           const SizedBox(height: 16),
           Text('Line items', style: Theme.of(context).textTheme.titleMedium),
-          ..._items.asMap().entries.map((e) => ListTile(
-                title: Text('Product #${e.value['product_id']} × ${e.value['quantity']}'),
-                subtitle: Text('Cost: ${e.value['unit_cost']}'),
-                trailing: IconButton(icon: const Icon(Icons.delete), onPressed: () => setState(() => _items.removeAt(e.key))),
-              )),
+          ..._items.asMap().entries.map((e) {
+            final price = e.value['unit_price'];
+            return ListTile(
+              title: Text('${e.value['product_name'] ?? 'Product #${e.value['product_id']}'} × ${e.value['quantity']}'),
+              subtitle: Text(price != null ? 'Price: $price' : 'No price set'),
+              trailing: IconButton(icon: const Icon(Icons.delete), onPressed: () => setState(() => _items.removeAt(e.key))),
+            );
+          }),
           OutlinedButton.icon(
             onPressed: () async {
-              final productId = TextEditingController();
+              final product = await pickProduct(context, ref);
+              if (product == null || !mounted) return;
+
               final qty = TextEditingController(text: '1');
-              final cost = TextEditingController();
+              final price = TextEditingController(text: product.cost != null ? '${product.cost}' : '');
               final ok = await showDialog<bool>(
                 context: context,
                 builder: (ctx) => AlertDialog(
-                  title: const Text('Add item'),
+                  title: Text(product.name),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      TextField(controller: productId, decoration: const InputDecoration(labelText: 'Product ID'), keyboardType: TextInputType.number),
                       TextField(controller: qty, decoration: const InputDecoration(labelText: 'Quantity'), keyboardType: TextInputType.number),
-                      TextField(controller: cost, decoration: const InputDecoration(labelText: 'Unit cost'), keyboardType: TextInputType.number),
+                      TextField(
+                        controller: price,
+                        decoration: const InputDecoration(
+                          labelText: 'Purchase price',
+                          helperText: 'Defaults to cost price. Leave empty to price later — only allowed for drafts.',
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      ),
                     ],
                   ),
                   actions: [
@@ -378,9 +397,10 @@ class _CreatePurchaseScreenState extends ConsumerState<CreatePurchaseScreen> {
               );
               if (ok == true) {
                 setState(() => _items.add({
-                      'product_id': int.parse(productId.text),
-                      'quantity': int.parse(qty.text),
-                      'unit_cost': double.parse(cost.text),
+                      'product_id': product.id,
+                      'product_name': product.name,
+                      'quantity': int.tryParse(qty.text) ?? 1,
+                      if (price.text.trim().isNotEmpty) 'unit_price': double.tryParse(price.text.trim()),
                     }));
               }
             },
