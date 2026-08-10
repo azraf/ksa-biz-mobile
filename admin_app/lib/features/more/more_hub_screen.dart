@@ -110,8 +110,8 @@ class MoreHubScreen extends StatelessWidget {
         _section(context, 'Admin', [
           _tile(
             context,
-            'Discount approval',
-            Icons.percent,
+            'Approvals',
+            Icons.rule,
             '/more/approval/discount',
           ),
           _tile(context, 'Sales Persons', Icons.people, '/sales/persons'),
