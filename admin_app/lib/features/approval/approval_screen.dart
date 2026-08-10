@@ -25,18 +25,24 @@ class _ApprovalScreenState extends ConsumerState<ApprovalScreen> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
+    final repo = ref.read(orderRepositoryProvider);
+    List<DiscountApprovalRequestModel> discounts;
     try {
-      final repo = ref.read(orderRepositoryProvider);
-      final discounts = await repo.listPendingDiscountRequests();
-      final cancellations = await repo.listPendingCancellationRequests();
-      setState(() {
-        _discounts = discounts;
-        _cancellations = cancellations;
-        _loading = false;
-      });
+      discounts = await repo.listPendingDiscountRequests();
     } catch (_) {
-      setState(() => _loading = false);
+      discounts = [];
     }
+    List<DiscountApprovalRequestModel> cancellations;
+    try {
+      cancellations = await repo.listPendingCancellationRequests();
+    } catch (_) {
+      cancellations = [];
+    }
+    setState(() {
+      _discounts = discounts;
+      _cancellations = cancellations;
+      _loading = false;
+    });
   }
 
   Future<void> _approveDiscount(int id) async {
