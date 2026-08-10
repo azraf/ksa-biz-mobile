@@ -28,6 +28,10 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
   }
 
   Future<void> _load() async {
+    // customerContextProvider resolves asynchronously — wait for it rather
+    // than reading .profile before it's had a chance to finish (see
+    // OrderHomeScreen._load for the same race and why it matters).
+    await ref.read(customerContextProvider.notifier).load();
     final profile = ref.read(customerContextProvider).profile;
     if (profile == null) {
       if (!mounted) return;

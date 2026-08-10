@@ -30,11 +30,17 @@ class _OrderHomeScreenState extends ConsumerState<OrderHomeScreen> {
   }
 
   Future<void> _load() async {
-    final profile = ref.read(customerContextProvider).profile;
-  if (profile == null) {
+    // customerContextProvider resolves the shop/van/importer asynchronously
+    // in the background; reading .profile before that finishes reads null
+    // because it's still loading, not because it failed. Wait for the same
+    // future the provider itself uses before judging success/failure.
+    await ref.read(customerContextProvider.notifier).load();
+    final customerContext = ref.read(customerContextProvider);
+    final profile = customerContext.profile;
+    if (profile == null) {
       setState(() {
         _loading = false;
-        _error = AppLocalizations.of(context).orderContextError;
+        _error = customerContext.error ?? AppLocalizations.of(context).orderContextError;
       });
       return;
     }
