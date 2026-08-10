@@ -182,6 +182,26 @@ class OrderRepository {
     return data.map((e) => DiscountApprovalRequestModel.fromJson(e as Map<String, dynamic>)).toList();
   }
 
+  Future<List<DiscountApprovalRequestModel>> listPendingCancellationRequests() async {
+    final response = await _api.get('/cancellation-requests', query: {'status': 'pending'});
+    final data = response['data'] as List<dynamic>? ?? [];
+    return data.map((e) => DiscountApprovalRequestModel.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<DiscountApprovalRequestModel> approveCancellation(int requestId, {String? reviewNotes}) async {
+    final response = await _api.post('/cancellation-requests/$requestId/approve', body: {
+      if (reviewNotes != null) 'review_notes': reviewNotes,
+    });
+    return DiscountApprovalRequestModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
+  Future<DiscountApprovalRequestModel> rejectCancellation(int requestId, {String? reviewNotes}) async {
+    final response = await _api.post('/cancellation-requests/$requestId/reject', body: {
+      if (reviewNotes != null) 'review_notes': reviewNotes,
+    });
+    return DiscountApprovalRequestModel.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
   Future<OrderModel> addItem(int orderId, Map<String, dynamic> item) async {
     final response = await _api.post('/orders/$orderId/items', body: item);
     return OrderModel.fromJson(response['order'] as Map<String, dynamic>);
