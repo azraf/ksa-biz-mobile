@@ -16,12 +16,11 @@ class _StagedMedia {
   const _StagedMedia(this.file, this.kind, {this.durationSeconds});
 
   final File file;
-  final String kind; // photo | video | audio
+  final String kind; // photo | audio
   final int? durationSeconds;
 
   IconData get icon => switch (kind) {
         'photo' => Icons.photo_outlined,
-        'video' => Icons.videocam_outlined,
         _ => Icons.mic_outlined,
       };
 }
@@ -57,14 +56,6 @@ class _CreateManualOrderScreenState extends ConsumerState<CreateManualOrderScree
     final image = await _picker.pickImage(source: source);
     if (image == null) return;
     setState(() => _staged.add(_StagedMedia(File(image.path), 'photo')));
-  }
-
-  Future<void> _recordVideo() async {
-    if (!await AppPermissions.requestCamera()) return;
-    if (!await AppPermissions.requestMicrophone()) return;
-    final video = await _picker.pickVideo(source: ImageSource.camera);
-    if (video == null) return;
-    setState(() => _staged.add(_StagedMedia(File(video.path), 'video')));
   }
 
   Future<void> _toggleAudioRecording() async {
@@ -105,7 +96,7 @@ class _CreateManualOrderScreenState extends ConsumerState<CreateManualOrderScree
           item.file,
           requestId,
           localId: localId,
-          isVideo: item.kind == 'video',
+          isVideo: false,
           durationSeconds: item.durationSeconds,
         );
       }
@@ -206,11 +197,6 @@ class _CreateManualOrderScreenState extends ConsumerState<CreateManualOrderScree
               onPressed: _submitting ? null : () => _pickPhoto(ImageSource.gallery),
               icon: const Icon(Icons.photo_library_outlined),
               label: Text(l10n.orderManualGallery),
-            ),
-            OutlinedButton.icon(
-              onPressed: _submitting ? null : _recordVideo,
-              icon: const Icon(Icons.videocam_outlined),
-              label: Text(l10n.commonRecordVideo),
             ),
             OutlinedButton.icon(
               onPressed: _submitting ? null : _toggleAudioRecording,

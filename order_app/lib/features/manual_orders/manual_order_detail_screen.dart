@@ -102,14 +102,6 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
     setState(() => _isRecording = true);
   }
 
-  Future<void> _recordVideo() async {
-    if (!await AppPermissions.requestCamera()) return;
-    if (!await AppPermissions.requestMicrophone()) return;
-    final video = await _picker.pickVideo(source: ImageSource.camera);
-    if (video == null) return;
-    await _attach((f) => f.attachManualOrderMedia(File(video.path), widget.id, isVideo: true));
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -174,11 +166,6 @@ class _ManualOrderDetailScreenState extends ConsumerState<ManualOrderDetailScree
                 onPressed: _working ? null : _toggleAudioRecording,
                 icon: Icon(_isRecording ? Icons.stop : Icons.mic),
                 label: Text(_isRecording ? l10n.commonStopAndUpload : l10n.commonRecordAudio),
-              ),
-              OutlinedButton.icon(
-                onPressed: _working ? null : _recordVideo,
-                icon: const Icon(Icons.videocam_outlined),
-                label: Text(l10n.commonRecordVideo),
               ),
             ],
           ),
