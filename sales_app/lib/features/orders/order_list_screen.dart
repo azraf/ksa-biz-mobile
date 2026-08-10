@@ -231,6 +231,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
                                   order: order,
                                   currency: currency,
                                   subtitle: orderListSubtitle(order, showSalesPerson: true),
+                                  showDue: true,
                                   onTap: () => context.push('/orders/${order.id}'),
                                 );
                               },
