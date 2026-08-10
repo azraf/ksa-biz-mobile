@@ -6,6 +6,8 @@ import '../../providers/repositories.dart';
 import '../../widgets/crud_screens.dart';
 import '../../widgets/field_config.dart';
 
+const _customerRoles = {'customer_shop', 'customer_van', 'customer_importer'};
+
 class UsersScreen extends ConsumerWidget {
   const UsersScreen({super.key});
   @override
@@ -18,6 +20,13 @@ class UsersScreen extends ConsumerWidget {
       onTap: (u) => _edit(context, ref, u),
       onAdd: () => _edit(context, ref, null),
       onDelete: (u) => repo.delete(u.id),
+      trailing: (u) => u.roles.any(_customerRoles.contains)
+          ? const SizedBox.shrink()
+          : IconButton(
+              icon: const Icon(Icons.swap_horiz),
+              tooltip: 'Convert to customer',
+              onPressed: () => _convertToCustomer(context, ref, u),
+            ),
     );
   }
 
@@ -57,5 +66,69 @@ class UsersScreen extends ConsumerWidget {
         }
       },
     )));
+  }
+
+  Future<void> _convertToCustomer(BuildContext context, WidgetRef ref, AdminUserModel user) async {
+    final areas = await ref.read(customerRepositoryProvider).areas();
+    if (!context.mounted) return;
+
+    String customerType = 'customer_shop';
+    int? areaId;
+    final nameController = TextEditingController(text: user.name);
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          title: Text('Convert ${user.name} to a customer'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  initialValue: customerType,
+                  decoration: const InputDecoration(labelText: 'Customer type'),
+                  items: const [
+                    DropdownMenuItem(value: 'customer_shop', child: Text('Shop')),
+                    DropdownMenuItem(value: 'customer_van', child: Text('Van')),
+                    DropdownMenuItem(value: 'customer_importer', child: Text('Importer')),
+                  ],
+                  onChanged: (v) => setLocal(() => customerType = v ?? 'customer_shop'),
+                ),
+                TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Name')),
+                DropdownButtonFormField<int?>(
+                  initialValue: areaId,
+                  decoration: const InputDecoration(labelText: 'Area'),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('None')),
+                    ...areas.map((a) => DropdownMenuItem(value: a.id, child: Text(a.name))),
+                  ],
+                  onChanged: (v) => setLocal(() => areaId = v),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Convert')),
+          ],
+        ),
+      ),
+    );
+
+    if (ok != true || !context.mounted) return;
+    try {
+      await ref.read(adminRepositoriesProvider).convertUserToCustomer(
+            user.id,
+            customerType: customerType,
+            name: nameController.text.trim(),
+            areaId: areaId,
+          );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${user.name} converted to a customer')));
+      }
+    } catch (e) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+    }
   }
 }

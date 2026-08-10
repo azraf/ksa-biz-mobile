@@ -56,4 +56,30 @@ class AdminRepositories {
     final response = await api.put('/users/$userId/roles', body: {'roles': roles});
     return AdminUserModel.fromJson(response['data'] as Map<String, dynamic>);
   }
+
+  /// Attaches this login to a new customer profile — see
+  /// UserCustomerConversionService on the backend.
+  Future<void> convertUserToCustomer(
+    int userId, {
+    required String customerType,
+    String? name,
+    int? areaId,
+  }) async {
+    await api.post('/users/$userId/convert-to-customer', body: {
+      'customer_type': customerType,
+      if (name != null) 'name': name,
+      if (areaId != null) 'area_id': areaId,
+    });
+  }
+
+  /// Raw key/value settings blob (pricing visibility, VAT policy, discount
+  /// approval defaults, ...) — see `Api\SettingController` on the backend.
+  Future<Map<String, dynamic>> getSettings() async {
+    final response = await api.get('/settings');
+    return response['data'] as Map<String, dynamic>;
+  }
+
+  Future<void> updateSettings(Map<String, dynamic> body) async {
+    await api.put('/settings', body: body);
+  }
 }

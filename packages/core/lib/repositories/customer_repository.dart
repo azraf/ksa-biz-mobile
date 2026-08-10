@@ -356,6 +356,27 @@ class CustomerRepository {
     return PaginatedResponse.fromJson(response, SalesPersonModel.fromJson);
   }
 
+  /// Mark on leave (temporary) or resigned (permanent) — hands the whole
+  /// book over to [replacementSalesPersonId] in the same transaction.
+  Future<void> leaveSalesPerson(
+    int salesPersonId, {
+    required String status,
+    required int replacementSalesPersonId,
+    String? reason,
+    DateTime? endsAt,
+  }) async {
+    await _api.patch('/sales-persons/$salesPersonId/leave', body: {
+      'status': status,
+      'replacement_sales_person_id': replacementSalesPersonId,
+      if (reason != null) 'reason': reason,
+      if (endsAt != null) 'ends_at': endsAt.toIso8601String(),
+    });
+  }
+
+  Future<void> rehireSalesPerson(int salesPersonId) async {
+    await _api.patch('/sales-persons/$salesPersonId/rehire', body: {});
+  }
+
   Future<int?> walkInShopId() async {
     final response = await _api.get('/config/mobile');
     final data = response['data'] as Map<String, dynamic>?;
@@ -423,14 +444,34 @@ class CustomerRepository {
     return CustomerAssignmentModel.fromJson(response['data'] as Map<String, dynamic>);
   }
 
-  Future<int> bulkTemporaryAssignment(Map<String, dynamic> body) async {
-    final response = await _api.post('/customer-assignments/bulk', body: body);
+  /// Temporary cover, permanent transfer, or whole-book reassignment — see
+  /// CustomerAssignmentController::transfer.
+  Future<int> transferAssignment(Map<String, dynamic> body) async {
+    final response = await _api.post('/customer-assignments/transfer', body: body);
     return response['count'] as int? ?? 0;
   }
 
-  Future<List<Map<String, dynamic>>> mapShops({int? areaId}) async {
+  Future<List<Map<String, dynamic>>> mapShops({
+    int? areaId,
+    String? frequencyBand,
+    int? priorityRatingMin,
+    String? paymentReliability,
+    int? inactiveDays,
+    String? search,
+    bool? hasDue,
+    Set<int>? salesPersonIds,
+  }) async {
     final query = <String, String>{};
     if (areaId != null) query['area_id'] = '$areaId';
+    if (frequencyBand != null) query['frequency_band'] = frequencyBand;
+    if (priorityRatingMin != null) query['priority_rating_min'] = '$priorityRatingMin';
+    if (paymentReliability != null) query['payment_reliability'] = paymentReliability;
+    if (inactiveDays != null) query['inactive_days'] = '$inactiveDays';
+    if (search != null && search.isNotEmpty) query['search'] = search;
+    if (hasDue != null) query['has_due'] = hasDue ? '1' : '0';
+    if (salesPersonIds != null && salesPersonIds.isNotEmpty) {
+      query['sales_person_ids'] = salesPersonIds.join(',');
+    }
     final response = await _api.get('/reports/map-shops', query: query);
     return (response['data'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>();
   }

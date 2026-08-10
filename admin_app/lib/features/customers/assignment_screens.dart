@@ -82,10 +82,12 @@ class _CustomerAssignmentsScreenState extends ConsumerState<CustomerAssignmentsS
 
   Future<void> _bulkCover() async {
     final areas = await ref.read(customerRepositoryProvider).areas();
-    if (!mounted || areas.isEmpty) return;
-    int? areaId = areas.first.id;
+    if (!mounted) return;
+    String kind = 'temporary';
+    int? areaId = areas.isNotEmpty ? areas.first.id : null;
     int? fromSpId;
     int? toSpId;
+    bool transferAreas = false;
     final reasonController = TextEditingController(text: 'cover');
     final daysController = TextEditingController(text: '7');
 
@@ -93,20 +95,34 @@ class _CustomerAssignmentsScreenState extends ConsumerState<CustomerAssignmentsS
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setLocal) => AlertDialog(
-          title: const Text('Temporary area cover'),
+          title: const Text('Bulk reassign customers'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                DropdownButtonFormField<int>(
+                DropdownButtonFormField<String>(
+                  initialValue: kind,
+                  decoration: const InputDecoration(labelText: 'Kind'),
+                  items: const [
+                    DropdownMenuItem(value: 'temporary', child: Text('Temporary cover')),
+                    DropdownMenuItem(value: 'permanent', child: Text('Permanent transfer')),
+                  ],
+                  onChanged: (v) => setLocal(() => kind = v ?? 'temporary'),
+                ),
+                DropdownButtonFormField<int?>(
                   initialValue: areaId,
                   decoration: const InputDecoration(labelText: 'Area'),
-                  items: areas.map((a) => DropdownMenuItem(value: a.id, child: Text(a.name))).toList(),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('All areas (whole book)')),
+                    ...areas.map((a) => DropdownMenuItem(value: a.id, child: Text(a.name))),
+                  ],
                   onChanged: (v) => setLocal(() => areaId = v),
                 ),
                 DropdownButtonFormField<int?>(
                   initialValue: fromSpId,
-                  decoration: const InputDecoration(labelText: 'From salesperson'),
+                  decoration: InputDecoration(
+                    labelText: areaId == null ? 'From salesperson (required)' : 'From salesperson',
+                  ),
                   items: [
                     const DropdownMenuItem(value: null, child: Text('Any')),
                     ..._salesPersons.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))),
@@ -120,7 +136,14 @@ class _CustomerAssignmentsScreenState extends ConsumerState<CustomerAssignmentsS
                   onChanged: (v) => setLocal(() => toSpId = v),
                 ),
                 TextField(controller: reasonController, decoration: const InputDecoration(labelText: 'Reason')),
-                TextField(controller: daysController, decoration: const InputDecoration(labelText: 'Days')),
+                if (kind == 'temporary')
+                  TextField(controller: daysController, decoration: const InputDecoration(labelText: 'Days')),
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Also transfer territory ownership'),
+                  value: transferAreas,
+                  onChanged: (v) => setLocal(() => transferAreas = v ?? false),
+                ),
               ],
             ),
           ),
@@ -132,19 +155,30 @@ class _CustomerAssignmentsScreenState extends ConsumerState<CustomerAssignmentsS
       ),
     );
 
-    if (ok != true || toSpId == null || areaId == null) return;
-    final days = int.tryParse(daysController.text.trim()) ?? 7;
+    if (ok != true || toSpId == null) return;
+    if (areaId == null && fromSpId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Choose an area or a "from" salesperson')),
+        );
+      }
+      return;
+    }
+
     try {
-      final count = await ref.read(customerRepositoryProvider).bulkTemporaryAssignment({
-        'area_id': areaId,
+      final days = int.tryParse(daysController.text.trim()) ?? 7;
+      final count = await ref.read(customerRepositoryProvider).transferAssignment({
+        'area_id': ?areaId,
         'from_sales_person_id': ?fromSpId,
         'to_sales_person_id': toSpId,
+        'assignment_kind': kind,
         'starts_at': DateTime.now().toIso8601String(),
-        'ends_at': DateTime.now().add(Duration(days: days)).toIso8601String(),
+        if (kind == 'temporary') 'ends_at': DateTime.now().add(Duration(days: days)).toIso8601String(),
         'reason': reasonController.text.trim(),
+        'transfer_areas': transferAreas,
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Created $count assignments')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Reassigned $count customer(s)')));
         _load();
       }
     } catch (e) {
@@ -517,12 +551,121 @@ class _SalesPersonTerritoryScreenState extends ConsumerState<SalesPersonTerritor
     _load();
   }
 
+  SalesPersonModel? get _selected {
+    final index = _salesPersons.indexWhere((s) => s.id == _selectedSp);
+    return index == -1 ? null : _salesPersons[index];
+  }
+
+  Future<void> _rehire(SalesPersonModel sp) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Rehire'),
+        content: Text('Reactivate ${sp.name}? They can log in again immediately.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Rehire')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await ref.read(customerRepositoryProvider).rehireSalesPerson(sp.id);
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${sp.name} reactivated')));
+      _load();
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+    }
+  }
+
+  Future<void> _markLeave(SalesPersonModel sp) async {
+    final replacements = _salesPersons.where((s) => s.id != sp.id && s.isActive).toList();
+    if (replacements.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No other active salesperson to hand the book over to')),
+      );
+      return;
+    }
+
+    String status = 'on_leave';
+    int? replacementId = replacements.first.id;
+    final reasonController = TextEditingController();
+    final daysController = TextEditingController(text: '14');
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          title: Text('Mark ${sp.name} on leave / resigned'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  initialValue: status,
+                  decoration: const InputDecoration(labelText: 'Status'),
+                  items: const [
+                    DropdownMenuItem(value: 'on_leave', child: Text('On leave (temporary)')),
+                    DropdownMenuItem(value: 'resigned', child: Text('Resigned (permanent)')),
+                  ],
+                  onChanged: (v) => setLocal(() => status = v ?? 'on_leave'),
+                ),
+                DropdownButtonFormField<int>(
+                  initialValue: replacementId,
+                  decoration: const InputDecoration(labelText: 'Replacement *'),
+                  items: replacements.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))).toList(),
+                  onChanged: (v) => setLocal(() => replacementId = v),
+                ),
+                TextField(controller: reasonController, decoration: const InputDecoration(labelText: 'Reason')),
+                if (status == 'on_leave')
+                  TextField(
+                    controller: daysController,
+                    decoration: const InputDecoration(labelText: 'Back in (days)'),
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Apply')),
+          ],
+        ),
+      ),
+    );
+
+    if (ok != true || replacementId == null) return;
+    try {
+      await ref.read(customerRepositoryProvider).leaveSalesPerson(
+            sp.id,
+            status: status,
+            replacementSalesPersonId: replacementId!,
+            reason: reasonController.text.trim(),
+            endsAt: status == 'on_leave'
+                ? DateTime.now().add(Duration(days: int.tryParse(daysController.text.trim()) ?? 14))
+                : null,
+          );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${sp.name} marked $status')));
+      }
+      _load();
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final selected = _selected;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Salesperson territories'),
         actions: [
+          if (selected != null)
+            IconButton(
+              onPressed: () => selected.isActive ? _markLeave(selected) : _rehire(selected),
+              icon: Icon(selected.isActive ? Icons.person_off : Icons.person_add_alt),
+              tooltip: selected.isActive ? 'Mark on leave / resigned' : 'Rehire',
+            ),
           IconButton(
             onPressed: _selectedSp == null ? null : _assignArea,
             icon: const Icon(Icons.add),
@@ -540,7 +683,10 @@ class _SalesPersonTerritoryScreenState extends ConsumerState<SalesPersonTerritor
                     initialValue: _selectedSp,
                     decoration: const InputDecoration(labelText: 'Salesperson'),
                     items: _salesPersons
-                        .map((s) => DropdownMenuItem(value: s.id, child: Text(s.name)))
+                        .map((s) => DropdownMenuItem(
+                              value: s.id,
+                              child: Text(s.isActive ? s.name : '${s.name} (${s.status})'),
+                            ))
                         .toList(),
                     onChanged: (v) {
                       setState(() => _selectedSp = v);

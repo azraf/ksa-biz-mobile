@@ -8,6 +8,7 @@ class SalesPersonModel extends Equatable {
     this.mobile,
     this.email,
     this.address,
+    this.status = 'active',
   });
 
   final int id;
@@ -16,6 +17,9 @@ class SalesPersonModel extends Equatable {
   final String? mobile;
   final String? email;
   final String? address;
+  final String status;
+
+  bool get isActive => status == 'active';
 
   factory SalesPersonModel.fromJson(Map<String, dynamic> json) {
     return SalesPersonModel(
@@ -25,6 +29,7 @@ class SalesPersonModel extends Equatable {
       mobile: json['mobile'] as String?,
       email: json['email'] as String?,
       address: json['address'] as String?,
+      status: json['status'] as String? ?? 'active',
     );
   }
 
@@ -35,8 +40,9 @@ class SalesPersonModel extends Equatable {
         'mobile': mobile,
         'email': email,
         'address': address,
+        'status': status,
       };
 
   @override
-  List<Object?> get props => [id, userId, name, mobile, email, address];
+  List<Object?> get props => [id, userId, name, mobile, email, address, status];
 }

@@ -115,14 +115,6 @@ class _AdminManualOrderDetailScreenState extends ConsumerState<AdminManualOrderD
     setState(() => _isRecording = true);
   }
 
-  Future<void> _recordVideo() async {
-    if (!await AppPermissions.requestCamera()) return;
-    if (!await AppPermissions.requestMicrophone()) return;
-    final video = await _picker.pickVideo(source: ImageSource.camera);
-    if (video == null) return;
-    await _uploadFile(File(video.path), video.name, recordingType: 'recording_video');
-  }
-
   Future<void> _uploadFile(File file, String filename, {required String recordingType}) async {
     setState(() => _working = true);
     try {
@@ -216,11 +208,6 @@ class _AdminManualOrderDetailScreenState extends ConsumerState<AdminManualOrderD
                 onPressed: _working ? null : _toggleAudioRecording,
                 icon: Icon(_isRecording ? Icons.stop : Icons.mic),
                 label: Text(_isRecording ? 'Stop & upload' : 'Record audio'),
-              ),
-              OutlinedButton.icon(
-                onPressed: _working ? null : _recordVideo,
-                icon: const Icon(Icons.videocam_outlined),
-                label: const Text('Record video'),
               ),
               OutlinedButton.icon(
                 onPressed: _working ? null : _pickAndUploadRecording,
