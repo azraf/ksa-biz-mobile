@@ -95,7 +95,16 @@ class CustomerContextNotifier extends Notifier<CustomerContextState> {
     return null;
   }
 
-  Future<void> load() {
+  // Screens call this on every mount (see OrderHomeScreen._load for why they
+  // must await it). Without the cache check, revisiting Catalog/Orders/Manual
+  // after Home already resolved re-ran the full resolution chain — up to 3
+  // sequential network calls (/user, getShop|getVan, customerTypes), each
+  // with a 30s timeout — before the screen's own data even started loading,
+  // which is what made those tabs appear to freeze on a slow connection.
+  Future<void> load({bool force = false}) {
+    if (!force && state.profile != null && !state.isLoading) {
+      return Future.value();
+    }
     return _loadFuture ??= _loadInternal().whenComplete(() => _loadFuture = null);
   }
 
