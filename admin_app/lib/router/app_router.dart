@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../features/approval/discount_approval_screen.dart';
+import '../features/approval/approval_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/catalog/catalog_screens.dart';
 import '../features/customers/assignment_screens.dart';
@@ -360,7 +360,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'approval/discount',
-                    builder: (_, _) => const DiscountApprovalScreen(),
+                    builder: (_, _) => const ApprovalScreen(),
                   ),
                   GoRoute(
                     path: 'settings',
