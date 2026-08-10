@@ -51,6 +51,14 @@ class AppLocalizationsBn extends AppLocalizations {
   String get commonSignOut => 'সাইন আউট';
 
   @override
+  String logoutUnsyncedWarning(int count) {
+    return 'এই ডিভাইসে অন্য কোনো ব্যবহারকারী সাইন ইন করলে $countটি অসিঙ্ক করা রেকর্ড স্থায়ীভাবে হারিয়ে যাবে। তবুও সাইন আউট করবেন?';
+  }
+
+  @override
+  String get logoutAnyway => 'তবুও সাইন আউট করুন';
+
+  @override
   String get commonEmail => 'ইমেইল';
 
   @override

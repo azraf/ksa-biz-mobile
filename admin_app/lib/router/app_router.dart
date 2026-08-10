@@ -23,6 +23,7 @@ import '../features/shipping/shipping_screens.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/users/user_screens.dart';
 import '../providers/auth_provider.dart';
+import '../providers/repositories.dart';
 import '../widgets/app_drawer.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -249,6 +250,10 @@ class AdminHomeShell extends ConsumerWidget {
               title: const Text('Sign out'),
               onTap: () async {
                 Navigator.pop(ctx);
+                if (!context.mounted) return;
+                if (!await confirmLogoutWithPendingData(context, ref.read(syncServiceProvider))) {
+                  return;
+                }
                 await ref.read(authProvider.notifier).logout();
                 if (context.mounted) context.go('/login');
               },
@@ -261,16 +266,14 @@ class AdminHomeShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Shell app bar only when nothing is pushed; pushed screens bring their
-    // own. The Sales (1) and Inventory (3) tab roots also draw their own
-    // AppBar (CrudListScreen / WarehouseStockScreen), so the shell stays
-    // bare there too.
+    // Shell app bar only when nothing is pushed; a pushed screen brings its
+    // own. The Sales/Inventory tab roots (CrudListScreen / WarehouseStockScreen)
+    // also draw their own AppBar below this one — same as v1, and the
+    // shell's bar is what carries the drawer/hamburger, so it must stay.
     final canPop = GoRouter.of(context).canPop();
-    final branchRootHasOwnBar =
-        navigationShell.currentIndex == 1 || navigationShell.currentIndex == 3;
     return Scaffold(
       drawer: const AppDrawer(),
-      appBar: canPop || branchRootHasOwnBar
+      appBar: canPop
           ? null
           : AppBar(
               title: Text(_titleForIndex(navigationShell.currentIndex)),

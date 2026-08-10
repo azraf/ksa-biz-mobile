@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -57,5 +59,79 @@ void main() {
     final blobs = await db.pendingMediaBlobs();
     final blob = blobs.firstWhere((b) => b.id == blobId);
     expect(blob.extraFields['type'], 'gallery');
+  });
+
+  test('lastUserId round-trips through app_config', () async {
+    final db = LocalDatabase.instance;
+    await db.setLastUserId(42);
+    expect(await db.getLastUserId(), 42);
+    await db.setLastUserId(7);
+    expect(await db.getLastUserId(), 7);
+  });
+
+  test('updateQueueStatus returns 0 for a missing row', () async {
+    final db = LocalDatabase.instance;
+    final claimed = await db.updateQueueStatus(999999999, status: 'syncing');
+    expect(claimed, 0);
+  });
+
+  test('updateQueueStatus returns 1 for a claimed row', () async {
+    final db = LocalDatabase.instance;
+    final id = await db.enqueue(
+      SyncQueueItem(
+        id: 0,
+        entityType: 'order',
+        operation: 'create',
+        localId: -2,
+        payload: const {},
+        status: 'pending',
+        retryCount: 0,
+        createdAt: DateTime.now().toIso8601String(),
+      ),
+    );
+    final claimed = await db.updateQueueStatus(id, status: 'syncing');
+    expect(claimed, 1);
+  });
+
+  // Runs last in this file: wipeUserData() clears every table unconditionally,
+  // which would break the assumptions of earlier tests if it ran before them.
+  test('wipeUserData clears every table and deletes media files', () async {
+    final db = LocalDatabase.instance;
+
+    await db.cacheEntity(entityType: 'wipe_test', entityId: 1, data: {'id': 1});
+    await db.enqueue(
+      SyncQueueItem(
+        id: 0,
+        entityType: 'order',
+        operation: 'create',
+        localId: -3,
+        payload: const {},
+        status: 'pending',
+        retryCount: 0,
+        createdAt: DateTime.now().toIso8601String(),
+      ),
+    );
+    await db.cacheReport(cacheKey: 'wipe_test_report', reportType: 'sales', data: {'total': 1});
+    await db.setLastSyncAt(DateTime.now());
+
+    final tempFile = File('${Directory.systemTemp.path}/wipe_test_${DateTime.now().microsecondsSinceEpoch}.jpg')
+      ..writeAsBytesSync([0]);
+    await db.insertMediaBlob(
+      localPath: tempFile.path,
+      mimeType: 'image/jpeg',
+      mediaKind: 'image',
+      parentEntityType: 'watchlist',
+      uploadEndpoint: '/watchlist-items/{parent_id}/attachments',
+    );
+    expect(tempFile.existsSync(), isTrue);
+
+    await db.wipeUserData();
+
+    expect(await db.getCachedEntities('wipe_test'), isEmpty);
+    expect(await db.pendingCount(), 0);
+    expect(await db.getCachedReport('wipe_test_report'), isNull);
+    expect(await db.pendingMediaCount(), 0);
+    expect(await db.getLastSyncAt(), isNull);
+    expect(tempFile.existsSync(), isFalse);
   });
 }

@@ -51,6 +51,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonSignOut => 'Sign out';
 
   @override
+  String logoutUnsyncedWarning(int count) {
+    return '$count unsynced record(s) will be permanently lost if a different user signs in on this device. Sign out anyway?';
+  }
+
+  @override
+  String get logoutAnyway => 'Sign out anyway';
+
+  @override
   String get commonEmail => 'Email';
 
   @override

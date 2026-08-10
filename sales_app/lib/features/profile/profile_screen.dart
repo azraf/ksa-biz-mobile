@@ -145,6 +145,9 @@ class ProfileScreen extends ConsumerWidget {
           const SizedBox(height: 24),
           FilledButton.icon(
             onPressed: () async {
+              if (!await confirmLogoutWithPendingData(context, ref.read(syncServiceProvider))) {
+                return;
+              }
               await ref.read(authProvider.notifier).logout();
               if (context.mounted) context.go('/login');
             },

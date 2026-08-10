@@ -6,6 +6,7 @@ import '../api/api_client.dart';
 import '../config/app_config.dart';
 import '../models/sales_person.dart';
 import '../models/user.dart';
+import '../offline/local_database.dart';
 import 'app_lock_service.dart';
 import 'biometric_auth_service.dart';
 import 'secure_session_store.dart';
@@ -146,6 +147,9 @@ class AuthRepository {
     });
 
     final session = await _sessionFromLoginResponse(response, resolvedUrl);
+    // Before the token is applied — a background sync must never see a
+    // stale queue belonging to whoever was previously logged in here.
+    await _ensureOfflineDataOwner(session.user.id);
     await _persistSession(session);
     _api.setToken(session.token);
     _appLock.markUnlocked();
@@ -199,6 +203,10 @@ class AuthRepository {
       return const AuthRestoreResult();
     }
 
+    // Stamps last_user_id for an existing install that had never run this
+    // check before — does not wipe, since the session being restored IS the
+    // device's current user.
+    await _ensureOfflineDataOwner(session.user.id);
     _applySessionToApi(session);
     _appLock.markUnlocked();
     return AuthRestoreResult(
@@ -221,6 +229,7 @@ class AuthRepository {
     final session = await _readStoredSession();
     if (session == null) return null;
 
+    await _ensureOfflineDataOwner(session.user.id);
     _applySessionToApi(session);
     _appLock.markUnlocked();
     return session;
@@ -337,5 +346,20 @@ class AuthRepository {
   void _applySessionToApi(AuthSession session) {
     _api.setBaseUrl(session.apiBaseUrl);
     _api.setToken(session.token);
+  }
+
+  /// Wipes the offline database when the user on this device changes, so
+  /// one salesperson's cached customers/orders/queue are never shown to, or
+  /// synced under, the next person who logs in. Same user re-logging in
+  /// keeps the cache. A null `last_user_id` (first run, or an existing
+  /// install updating into this check) stamps without wiping — preserving
+  /// whichever user is already on the device rather than guessing.
+  Future<void> _ensureOfflineDataOwner(int userId) async {
+    final db = LocalDatabase.instance;
+    final lastUserId = await db.getLastUserId();
+    if (lastUserId != null && lastUserId != userId) {
+      await db.wipeUserData();
+    }
+    await db.setLastUserId(userId);
   }
 }

@@ -14,6 +14,15 @@
   "commonLoading": "Loading...",
   "commonSignIn": "Sign in",
   "commonSignOut": "Sign out",
+  "logoutUnsyncedWarning": "{count} unsynced record(s) will be permanently lost if a different user signs in on this device. Sign out anyway?",
+  "@logoutUnsyncedWarning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "logoutAnyway": "Sign out anyway",
   "commonEmail": "Email",
   "commonPassword": "Password",
   "commonApiBaseUrl": "API base URL",

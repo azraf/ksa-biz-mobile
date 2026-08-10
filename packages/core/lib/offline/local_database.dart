@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:path/path.dart';
@@ -381,6 +382,42 @@ class LocalDatabase {
     await setConfig('last_sync_at', at.toIso8601String());
   }
 
+  static const _lastUserIdKey = 'last_user_id';
+
+  Future<int?> getLastUserId() async {
+    final raw = await getConfig(_lastUserIdKey);
+    return raw == null ? null : int.tryParse(raw);
+  }
+
+  Future<void> setLastUserId(int userId) => setConfig(_lastUserIdKey, '$userId');
+
+  /// Deletes all per-user offline data: cached entities/reports, the sync
+  /// outbox, and downloaded media files. Called when a different user logs
+  /// in on this device (see AuthRepository) so one user's data is never
+  /// shown to, or synced under, another. Does not touch `last_user_id`
+  /// itself — the caller re-stamps it after wiping.
+  Future<void> wipeUserData() async {
+    final db = await database;
+
+    final mediaRows = await db.query('media_blobs', columns: ['local_path']);
+    for (final row in mediaRows) {
+      try {
+        final path = row['local_path'] as String?;
+        if (path != null) await File(path).delete();
+      } catch (_) {
+        // Best-effort — a missing/unreadable file must not block the wipe.
+      }
+    }
+
+    final batch = db.batch();
+    batch.delete('entity_cache');
+    batch.delete('sync_queue');
+    batch.delete('report_cache');
+    batch.delete('media_blobs');
+    batch.delete('app_config', where: 'key = ?', whereArgs: ['last_sync_at']);
+    await batch.commit(noResult: true);
+  }
+
   Future<Map<String, dynamic>> exportRecoveryData() async {
     final queue = await allQueueItems();
     final media = await pendingMediaBlobs();
@@ -440,7 +477,10 @@ class LocalDatabase {
     return Sqflite.firstIntValue(result) ?? 0;
   }
 
-  Future<void> updateQueueStatus(
+  /// Returns the number of rows updated (0 or 1) — a sync in flight when a
+  /// different user logs in and wipes the queue can use this to notice its
+  /// row is gone and stop, rather than pushing it under the new user's token.
+  Future<int> updateQueueStatus(
     int id, {
     required String status,
     int? serverId,
@@ -461,7 +501,7 @@ class LocalDatabase {
     } else if (nextRetryAt != null) {
       updates['next_retry_at'] = nextRetryAt.toIso8601String();
     }
-    await db.update(
+    return db.update(
       'sync_queue',
       updates,
       where: 'id = ?',

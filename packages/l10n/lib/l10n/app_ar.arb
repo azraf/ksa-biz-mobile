@@ -14,6 +14,15 @@
   "commonLoading": "جارٍ التحميل...",
   "commonSignIn": "تسجيل الدخول",
   "commonSignOut": "تسجيل الخروج",
+  "logoutUnsyncedWarning": "سيتم فقدان {count} سجل (سجلات) غير متزامنة نهائيًا إذا سجل مستخدم آخر الدخول على هذا الجهاز. هل تريد تسجيل الخروج على أي حال؟",
+  "@logoutUnsyncedWarning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "logoutAnyway": "تسجيل الخروج على أي حال",
   "commonEmail": "البريد الإلكتروني",
   "commonPassword": "كلمة المرور",
   "commonApiBaseUrl": "رابط واجهة API",

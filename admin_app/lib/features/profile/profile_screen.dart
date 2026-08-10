@@ -63,6 +63,9 @@ class AdminProfileScreen extends ConsumerWidget {
           const Divider(),
           FilledButton.icon(
             onPressed: () async {
+              if (!await confirmLogoutWithPendingData(context, ref.read(syncServiceProvider))) {
+                return;
+              }
               await ref.read(authProvider.notifier).logout();
               if (context.mounted) context.go('/login');
             },

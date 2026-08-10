@@ -184,6 +184,18 @@ abstract class AppLocalizations {
   /// **'Sign out'**
   String get commonSignOut;
 
+  /// No description provided for @logoutUnsyncedWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unsynced record(s) will be permanently lost if a different user signs in on this device. Sign out anyway?'**
+  String logoutUnsyncedWarning(int count);
+
+  /// No description provided for @logoutAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out anyway'**
+  String get logoutAnyway;
+
   /// No description provided for @commonEmail.
   ///
   /// In en, this message translates to:

@@ -114,6 +114,7 @@ export 'widgets/app_root_builder.dart';
 export 'widgets/offline_status_banner.dart';
 export 'widgets/startup_error_app.dart';
 export 'widgets/sync_status_screen.dart';
+export 'widgets/logout_guard.dart';
 export 'utils/storage_warning.dart';
 export 'widgets/order_card.dart';
 export 'widgets/skeleton_loader.dart';

@@ -51,6 +51,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commonSignOut => 'تسجيل الخروج';
 
   @override
+  String logoutUnsyncedWarning(int count) {
+    return 'سيتم فقدان $count سجل (سجلات) غير متزامنة نهائيًا إذا سجل مستخدم آخر الدخول على هذا الجهاز. هل تريد تسجيل الخروج على أي حال؟';
+  }
+
+  @override
+  String get logoutAnyway => 'تسجيل الخروج على أي حال';
+
+  @override
   String get commonEmail => 'البريد الإلكتروني';
 
   @override

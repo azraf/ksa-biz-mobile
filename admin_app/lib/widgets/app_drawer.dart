@@ -104,6 +104,9 @@ class AppDrawer extends ConsumerWidget {
             leading: const Icon(Icons.logout),
             title: const Text('Sign out'),
             onTap: () async {
+              if (!await confirmLogoutWithPendingData(context, ref.read(syncServiceProvider))) {
+                return;
+              }
               await ref.read(authProvider.notifier).logout();
               if (context.mounted) context.go('/login');
             },
@@ -128,9 +131,10 @@ class AppDrawer extends ConsumerWidget {
         title: Text(title),
         onTap: () {
           Navigator.pop(context);
-          // push (not go) so the opened page can pop back and the shell
-          // hides its bar under the page's own AppBar.
-          context.push(route);
+          // go (not push) so a shell-branch destination switches that
+          // branch and the bottom nav follows, instead of stacking a
+          // duplicate route on top of the current tab.
+          context.go(route);
         },
       );
 }

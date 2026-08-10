@@ -14,6 +14,15 @@
   "commonLoading": "লোড হচ্ছে...",
   "commonSignIn": "সাইন ইন",
   "commonSignOut": "সাইন আউট",
+  "logoutUnsyncedWarning": "এই ডিভাইসে অন্য কোনো ব্যবহারকারী সাইন ইন করলে {count}টি অসিঙ্ক করা রেকর্ড স্থায়ীভাবে হারিয়ে যাবে। তবুও সাইন আউট করবেন?",
+  "@logoutUnsyncedWarning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "logoutAnyway": "তবুও সাইন আউট করুন",
   "commonEmail": "ইমেইল",
   "commonPassword": "পাসওয়ার্ড",
   "commonApiBaseUrl": "API বেস URL",

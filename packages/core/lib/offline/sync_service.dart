@@ -127,25 +127,46 @@ class SyncService {
 
     try {
       for (var offset = 0; offset < queue.length; offset += bulkBatchSize) {
-        final batch = queue.skip(offset).take(bulkBatchSize).toList();
+        final wholeBatch = queue.skip(offset).take(bulkBatchSize).toList();
+
+        // Claim every row first — a 0 count means wipeUserData() deleted it
+        // (a different user logged in mid-sync); drop it from this batch so
+        // it's never pushed under the new user's token.
+        final batch = <SyncQueueItem>[];
+        for (final item in wholeBatch) {
+          final claimed = await db.updateQueueStatus(item.id, status: 'syncing', clearNextRetryAt: true);
+          if (claimed > 0) batch.add(item);
+        }
+        if (batch.isEmpty) continue;
+
         final operations = batch.map(_operationPayload).toList();
-        final results = await repo.push(operations);
+        try {
+          final results = await repo.push(operations);
 
-        for (var i = 0; i < batch.length; i++) {
-          final item = batch[i];
-          final result = i < results.length ? results[i] : null;
-          if (result == null || result['status'] != 'done') {
-            await _markFailed(item, result?['error']?.toString() ?? 'Bulk sync failed');
-            continue;
+          for (var i = 0; i < batch.length; i++) {
+            final item = batch[i];
+            final result = i < results.length ? results[i] : null;
+            if (result == null || result['status'] != 'done') {
+              await _markFailed(item, result?['error']?.toString() ?? 'Bulk sync failed');
+              continue;
+            }
+
+            await _applyBulkResult(item, result);
+            await db.updateQueueStatus(
+              item.id,
+              status: 'done',
+              serverId: _readServerId(result),
+              clearNextRetryAt: true,
+            );
           }
-
-          await _applyBulkResult(item, result);
-          await db.updateQueueStatus(
-            item.id,
-            status: 'done',
-            serverId: _readServerId(result),
-            clearNextRetryAt: true,
-          );
+        } on ApiException {
+          // Claimed as 'syncing' but the push itself failed — put them back
+          // so the per-item fallback path (which also claims before
+          // sending) picks them up instead of leaving them stuck.
+          for (final item in batch) {
+            await db.updateQueueStatus(item.id, status: 'pending');
+          }
+          rethrow;
         }
       }
       return true;
@@ -255,7 +276,11 @@ class SyncService {
       return;
     }
 
-    await db.updateQueueStatus(item.id, status: 'syncing', clearNextRetryAt: true);
+    // Claim the row — a 0 count means it was deleted by wipeUserData() (a
+    // different user logged in while this sync was in flight); stop rather
+    // than push it to the server under the new user's token.
+    final claimed = await db.updateQueueStatus(item.id, status: 'syncing', clearNextRetryAt: true);
+    if (claimed == 0) return;
     try {
       switch (item.entityType) {
         case 'order':
