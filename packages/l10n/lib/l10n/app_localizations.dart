@@ -2020,6 +2020,12 @@ abstract class AppLocalizations {
   /// **'Order cancelled'**
   String get salesOrderCancelled;
 
+  /// No description provided for @salesOrderCancellationPendingApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancellation submitted for admin approval'**
+  String get salesOrderCancellationPendingApproval;
+
   /// No description provided for @salesOrderEditTooltip.
   ///
   /// In en, this message translates to:

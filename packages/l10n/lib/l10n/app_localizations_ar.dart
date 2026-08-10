@@ -1078,6 +1078,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get salesOrderCancelled => 'تم إلغاء الطلب';
 
   @override
+  String get salesOrderCancellationPendingApproval =>
+      'تم إرسال طلب الإلغاء لموافقة الإدارة';
+
+  @override
   String get salesOrderEditTooltip => 'تعديل الطلب';
 
   @override

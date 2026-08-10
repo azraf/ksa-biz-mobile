@@ -192,10 +192,13 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     if (confirmed != true || reasonController.text.trim().isEmpty) return;
 
     try {
-      await ref.read(offlineOrderRepositoryProvider).cancel(widget.id, reasonController.text.trim());
+      final updated = await ref.read(offlineOrderRepositoryProvider).cancel(widget.id, reasonController.text.trim());
       ref.invalidate(pendingSyncCountProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.salesOrderCancelled)));
+        final message = updated.status == 'cancellation_pending'
+            ? l10n.salesOrderCancellationPendingApproval
+            : l10n.salesOrderCancelled;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
         await _load();
       }
     } catch (e) {

@@ -1086,6 +1086,10 @@ class AppLocalizationsBn extends AppLocalizations {
   String get salesOrderCancelled => 'অর্ডার বাতিল হয়েছে';
 
   @override
+  String get salesOrderCancellationPendingApproval =>
+      'বাতিলের অনুরোধ অ্যাডমিনের অনুমোদনের জন্য পাঠানো হয়েছে';
+
+  @override
   String get salesOrderEditTooltip => 'অর্ডার সম্পাদনা';
 
   @override

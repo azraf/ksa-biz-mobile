@@ -1083,6 +1083,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get salesOrderCancelled => 'Order cancelled';
 
   @override
+  String get salesOrderCancellationPendingApproval =>
+      'Cancellation submitted for admin approval';
+
+  @override
   String get salesOrderEditTooltip => 'Edit order';
 
   @override

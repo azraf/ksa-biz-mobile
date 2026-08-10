@@ -563,6 +563,7 @@
   "salesOrderDiscountSubmitted": "Discount request submitted",
   "salesOrderCancelOrder": "Cancel order",
   "salesOrderCancelled": "Order cancelled",
+  "salesOrderCancellationPendingApproval": "Cancellation submitted for admin approval",
   "salesOrderEditTooltip": "Edit order",
   "salesPickerSelectShop": "Select shop",
   "salesPickerSelectVan": "Select van",

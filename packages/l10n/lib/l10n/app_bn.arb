@@ -447,6 +447,7 @@
   "salesOrderDiscountSubmitted": "ছাড়ের অনুরোধ জমা হয়েছে",
   "salesOrderCancelOrder": "অর্ডার বাতিল",
   "salesOrderCancelled": "অর্ডার বাতিল হয়েছে",
+  "salesOrderCancellationPendingApproval": "বাতিলের অনুরোধ অ্যাডমিনের অনুমোদনের জন্য পাঠানো হয়েছে",
   "salesOrderEditTooltip": "অর্ডার সম্পাদনা",
   "salesPickerSelectShop": "দোকান নির্বাচন",
   "salesPickerSelectVan": "ভ্যান নির্বাচন",

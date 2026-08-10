@@ -447,6 +447,7 @@
   "salesOrderDiscountSubmitted": "تم إرسال طلب الخصم",
   "salesOrderCancelOrder": "إلغاء الطلب",
   "salesOrderCancelled": "تم إلغاء الطلب",
+  "salesOrderCancellationPendingApproval": "تم إرسال طلب الإلغاء لموافقة الإدارة",
   "salesOrderEditTooltip": "تعديل الطلب",
   "salesPickerSelectShop": "اختر متجراً",
   "salesPickerSelectVan": "اختر شاحنة",

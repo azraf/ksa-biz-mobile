@@ -612,9 +612,15 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             onPressed: () async {
               final reason = await _prompt(context, 'Cancellation reason');
               if (reason == null) return;
-              await ref.read(offlineOrderRepositoryProvider).cancel(order.id, reason);
+              final updated = await ref.read(offlineOrderRepositoryProvider).cancel(order.id, reason);
               ref.invalidate(pendingSyncCountProvider);
-              if (context.mounted) Navigator.pop(context);
+              if (context.mounted) {
+                final message = updated.status == 'cancellation_pending'
+                    ? 'Cancellation submitted for admin approval'
+                    : 'Order cancelled';
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+                Navigator.pop(context);
+              }
             },
             child: const Text('Cancel Order'),
           ),
