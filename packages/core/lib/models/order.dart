@@ -84,7 +84,7 @@ class OrderModel extends Equatable {
   /// Server value renamed pending→draft; 'pending' accepted for cached rows
   /// written by older builds.
   bool get isDraft => status == 'draft' || status == 'pending';
-  bool get isEditable => !isCancelled;
+  bool get isEditable => !isCancelled && status != 'cancellation_pending';
   bool get hasPendingDiscount => discountRequests.any((r) => r.status == 'pending');
 
   /// Server amount_due when set, else derived remainder (offline/legacy rows).

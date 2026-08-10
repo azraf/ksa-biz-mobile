@@ -6,6 +6,7 @@ class DiscountApprovalRequestModel extends Equatable {
     required this.orderId,
     required this.requestedAmount,
     required this.status,
+    this.requestType = 'grand_discount',
     this.previousAmount = 0,
     this.autoApproved = false,
     this.reason,
@@ -18,10 +19,13 @@ class DiscountApprovalRequestModel extends Equatable {
   final double requestedAmount;
   final double previousAmount;
   final String status;
+  final String requestType;
   final bool autoApproved;
   final String? reason;
   final String? reviewNotes;
   final String? createdAt;
+
+  bool get isCancellationRequest => requestType == 'order_cancellation';
 
   factory DiscountApprovalRequestModel.fromJson(Map<String, dynamic> json) {
     return DiscountApprovalRequestModel(
@@ -30,6 +34,7 @@ class DiscountApprovalRequestModel extends Equatable {
       requestedAmount: _toDouble(json['requested_amount']),
       previousAmount: _toDouble(json['previous_amount']),
       status: json['status'] as String? ?? 'pending',
+      requestType: json['request_type'] as String? ?? 'grand_discount',
       autoApproved: json['auto_approved'] as bool? ?? false,
       reason: json['reason'] as String?,
       reviewNotes: json['review_notes'] as String?,
@@ -44,5 +49,5 @@ class DiscountApprovalRequestModel extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, orderId, status, requestedAmount];
+  List<Object?> get props => [id, orderId, status, requestedAmount, requestType];
 }

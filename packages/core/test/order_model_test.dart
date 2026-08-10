@@ -38,6 +38,18 @@ void main() {
     expect(order('confirmed').isDraft, isFalse);
   });
 
+  test('isEditable is false for cancelled and cancellation_pending orders', () {
+    OrderModel order(String status) => OrderModel.fromJson({
+          'id': 1,
+          'customer_type_id': 1,
+          'status': status,
+        });
+
+    expect(order('cancelled').isEditable, isFalse);
+    expect(order('cancellation_pending').isEditable, isFalse);
+    expect(order('confirmed').isEditable, isTrue);
+  });
+
   test('OrderListQuery emits customer scope, search and dates, omitting nulls', () {
     const query = OrderListQuery(
       customerType: 'customer_shop',

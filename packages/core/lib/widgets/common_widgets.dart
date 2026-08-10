@@ -107,6 +107,7 @@ class StatusChip extends StatelessWidget {
       case 'in_review':
       case 'modified':
       case 'partial':
+      case 'cancellation_pending':
         return (AppColors.warningContainer(context), AppColors.warning(context));
       case 'pending':
       case 'draft':
