@@ -162,14 +162,18 @@ class AuthRepository {
       await _api.post('/logout');
     } catch (_) {}
     await clearSession();
-  }
-
-  Future<void> clearSession() async {
-    await _secureStore.clear();
     await _prefs.remove(AppConfig.biometricEnabledKey);
     await _prefs.remove(AppConfig.lastUserEmailKey);
-    await _prefs.remove(AppConfig.tokenExpiresAtKey);
     await _prefs.remove(AppConfig.apiBaseUrlKey);
+  }
+
+  /// Ends the session (token + secure store) but deliberately keeps the
+  /// biometric enrollment and last-used email: a server-side 401 means the
+  /// token died, not that the user chose to stop using biometrics. Only an
+  /// explicit [logout] or [disableBiometric] removes those.
+  Future<void> clearSession() async {
+    await _secureStore.clear();
+    await _prefs.remove(AppConfig.tokenExpiresAtKey);
     _api.setToken(null);
     _appLock.markUnlocked();
   }

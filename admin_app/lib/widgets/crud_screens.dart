@@ -31,6 +31,7 @@ class CrudListScreen<T> extends StatefulWidget {
     this.emptyActionLabel,
     this.onEmptyAction,
     this.extraActions,
+    this.itemLeading,
   });
 
   final String title;
@@ -52,6 +53,7 @@ class CrudListScreen<T> extends StatefulWidget {
   final String? emptyActionLabel;
   final VoidCallback? onEmptyAction;
   final List<Widget>? extraActions;
+  final Widget Function(T item)? itemLeading;
 
   @override
   State<CrudListScreen<T>> createState() => _CrudListScreenState<T>();
@@ -103,6 +105,7 @@ class _CrudListScreenState<T> extends State<CrudListScreen<T>> {
               final pending = widget.isPending?.call(item) ?? false;
               final subtitle = widget.itemSubtitle?.call(item);
               return ListTile(
+                leading: widget.itemLeading?.call(item),
                 title: Text(widget.itemTitle(item)),
                 subtitle: subtitle != null && subtitle.isNotEmpty ? Text(subtitle) : null,
                 trailing: Row(
@@ -277,15 +280,24 @@ class _CrudFormScreenState extends State<CrudFormScreen> {
           onChanged: field.readOnly ? null : (v) => setState(() => _values[field.key] = v),
         );
       case FieldType.dropdown:
+        final items = <DropdownMenuItem<dynamic>>[
+          if (!field.required)
+            const DropdownMenuItem<dynamic>(value: null, child: Text('None')),
+          ...?field.options
+              ?.map((o) => DropdownMenuItem(value: o.value, child: Text(o.label))),
+        ];
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: DropdownButtonFormField<dynamic>(
             decoration: InputDecoration(labelText: field.label),
             initialValue: value,
-            items: field.options
-                ?.map((o) => DropdownMenuItem(value: o.value, child: Text(o.label)))
-                .toList(),
-            onChanged: field.readOnly ? null : (v) => setState(() => _values[field.key] = v),
+            items: items,
+            validator: field.required
+                ? (v) => v == null ? 'Required' : null
+                : null,
+            onChanged: field.readOnly
+                ? null
+                : (v) => setState(() => _values[field.key] = v),
           ),
         );
       case FieldType.textarea:

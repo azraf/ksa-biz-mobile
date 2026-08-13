@@ -16,6 +16,7 @@ class _ApprovalScreenState extends ConsumerState<ApprovalScreen> {
   List<DiscountApprovalRequestModel> _discounts = [];
   List<DiscountApprovalRequestModel> _cancellations = [];
   bool _loading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -24,23 +25,26 @@ class _ApprovalScreenState extends ConsumerState<ApprovalScreen> {
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     final repo = ref.read(orderRepositoryProvider);
-    List<DiscountApprovalRequestModel> discounts;
+    // A failed fetch must surface, not render as an empty "nothing pending"
+    // list — that once hid stuck cancellation_pending orders for weeks.
+    String? error;
+    List<DiscountApprovalRequestModel> discounts = [];
+    List<DiscountApprovalRequestModel> cancellations = [];
     try {
       discounts = await repo.listPendingDiscountRequests();
-    } catch (_) {
-      discounts = [];
-    }
-    List<DiscountApprovalRequestModel> cancellations;
-    try {
       cancellations = await repo.listPendingCancellationRequests();
-    } catch (_) {
-      cancellations = [];
+    } catch (e) {
+      error = '$e';
     }
     setState(() {
       _discounts = discounts;
       _cancellations = cancellations;
+      _error = error;
       _loading = false;
     });
   }
@@ -112,6 +116,16 @@ class _ApprovalScreenState extends ConsumerState<ApprovalScreen> {
       return Scaffold(
         appBar: AppBar(title: const Text('Approvals')),
         body: const LoadingView(),
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Approvals'),
+          actions: [IconButton(icon: const Icon(Icons.refresh), onPressed: _load)],
+        ),
+        body: ErrorView(message: _error!, onRetry: _load),
       );
     }
 

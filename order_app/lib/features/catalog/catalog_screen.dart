@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:l10n/l10n.dart';
+import 'package:media/media.dart';
 
 import '../../providers/customer_context_provider.dart';
 import '../../providers/repositories.dart';
@@ -136,7 +137,14 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                               final item = _products[i];
                               return Card(
                                 child: ListTile(
-                                  leading: CircleAvatar(child: Text('${i + 1}')),
+                                  leading: item.product.featureImageUrl != null
+                                      ? SizedBox(
+                                          width: 48,
+                                          height: 48,
+                                          child: MediaImageTile(
+                                              url: item.product.featureImageUrl, height: 48),
+                                        )
+                                      : CircleAvatar(child: Text('${i + 1}')),
                                   title: Text(item.product.name),
                                   subtitle: Text(
                                     item.product.description?.isNotEmpty == true

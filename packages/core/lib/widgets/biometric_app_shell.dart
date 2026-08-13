@@ -121,14 +121,15 @@ class BiometricAuthSupport {
 
     final valid = await _repository.validateSessionOnline();
     if (!valid) {
+      // The token is dead, so the session ends — but biometric enrollment
+      // and the remembered email survive: the user re-authenticates with
+      // their password once and biometrics keep working afterwards.
       await _repository.clearSession();
-      return const AuthState(
+      return AuthState(
         isLoading: false,
-        biometricEnabled: false,
-      ).copyWith(
-        error: sessionExpiredMessage,
-        clearStoredUserEmail: true,
-      );
+        biometricEnabled: _repository.isBiometricEnabled,
+        storedUserEmail: _repository.storedUserEmail,
+      ).copyWith(error: sessionExpiredMessage);
     }
 
     _repository.appLock.markUnlocked();

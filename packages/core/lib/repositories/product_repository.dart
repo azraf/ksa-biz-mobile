@@ -48,4 +48,26 @@ class ProductRepository {
         .map((e) => ProductCartonModel.fromJson(e as Map<String, dynamic>))
         .toList();
   }
+
+  Future<void> uploadFeatureImage(int productId, List<int> bytes, String filename) async {
+    await _api.uploadMultipart(
+      '/products/$productId/feature-image',
+      fileField: 'image',
+      bytes: bytes,
+      filename: filename,
+    );
+  }
+
+  Future<void> uploadGalleryImage(int productId, List<int> bytes, String filename) async {
+    await _api.uploadMultipart(
+      '/products/$productId/gallery',
+      fileField: 'image',
+      bytes: bytes,
+      filename: filename,
+    );
+  }
+
+  Future<void> deleteGalleryImage(int productId, int mediaId) async {
+    await _api.delete('/products/$productId/gallery/$mediaId');
+  }
 }

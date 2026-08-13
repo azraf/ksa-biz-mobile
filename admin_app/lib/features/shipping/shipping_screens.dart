@@ -57,15 +57,32 @@ class SuppliersScreen extends ConsumerWidget {
     );
   }
 
-  void _edit(BuildContext context, WidgetRef ref, SupplierModel? item) {
+  void _edit(BuildContext context, WidgetRef ref, SupplierModel? item) async {
+    final countries = await ref.read(adminRepositoriesProvider).countries.list();
+    if (!context.mounted) return;
     Navigator.push(context, MaterialPageRoute(builder: (_) => CrudFormScreen(
       title: item == null ? 'New Supplier' : 'Edit Supplier',
-      initialValues: item == null ? {} : item.toJson(),
-      fields: const [
-        FieldConfig(key: 'name', label: 'Name', required: true),
-        FieldConfig(key: 'mobile', label: 'Mobile'),
-        FieldConfig(key: 'email', label: 'Email'),
-        FieldConfig(key: 'address', label: 'Address', type: FieldType.textarea),
+      initialValues: item == null
+          ? {}
+          : {
+              'name': item.name,
+              'country_id': item.countryId,
+              'mobile': item.mobile,
+              'email': item.email,
+              'address': item.address,
+            },
+      fields: [
+        const FieldConfig(key: 'name', label: 'Name', required: true),
+        FieldConfig(
+          key: 'country_id',
+          label: 'Country',
+          type: FieldType.dropdown,
+          required: true,
+          options: countries.map((c) => DropdownOption(value: c.id, label: c.name)).toList(),
+        ),
+        const FieldConfig(key: 'mobile', label: 'Mobile'),
+        const FieldConfig(key: 'email', label: 'Email'),
+        const FieldConfig(key: 'address', label: 'Address', type: FieldType.textarea),
       ],
       onSave: (v) async {
         final repo = ref.read(adminRepositoriesProvider).suppliers;
@@ -81,6 +98,15 @@ class SuppliersScreen extends ConsumerWidget {
 
 class ContainersScreen extends ConsumerWidget {
   const ContainersScreen({super.key});
+
+  static const _statusOptions = [
+    DropdownOption(value: 'pending', label: 'Pending'),
+    DropdownOption(value: 'in_transit', label: 'In transit'),
+    DropdownOption(value: 'expected', label: 'Expected'),
+    DropdownOption(value: 'received', label: 'Received'),
+    DropdownOption(value: 'cancelled', label: 'Cancelled'),
+  ];
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.watch(adminRepositoriesProvider).shippingContainers;
@@ -93,53 +119,180 @@ class ContainersScreen extends ConsumerWidget {
     );
   }
 
-  void _showDetail(BuildContext context, WidgetRef ref, ShippingContainerModel container) {
+  void _showDetail(BuildContext context, WidgetRef ref, ShippingContainerModel container) async {
+    final full = await ref.read(adminRepositoriesProvider).shippingContainers.get(container.id);
+    if (!context.mounted) return;
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(title: Text(container.containerNumber ?? 'Container #${container.id}'), subtitle: Text('Status: ${container.status ?? ''}')),
-            if (container.status != 'received')
+        child: DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.55,
+          minChildSize: 0.35,
+          maxChildSize: 0.9,
+          builder: (_, scrollController) => ListView(
+            controller: scrollController,
+            children: [
               ListTile(
-                leading: const Icon(Icons.inventory_2_outlined),
-                title: const Text('Receive container'),
-                subtitle: const Text('Creates purchase and adds stock to warehouse'),
+                title: Text(full.containerNumber ?? 'Container #${full.id}'),
+                subtitle: Text('Status: ${full.status ?? ''}'),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: Text('Products', style: Theme.of(context).textTheme.titleMedium),
+              ),
+              if (full.containerProducts.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Text('No products yet. Add lines before receiving.'),
+                ),
+              ...full.containerProducts.map((line) => ListTile(
+                    title: Text(line.product?.name ?? 'Product #${line.productId}'),
+                    subtitle: Text('Qty: ${line.quantity}${line.costPerUnit != null ? ' · Cost: ${line.costPerUnit}' : ''}'),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: () async {
+                        try {
+                          await ref.read(adminRepositoriesProvider).containerProducts.delete(line.id);
+                          if (ctx.mounted) Navigator.pop(ctx);
+                          if (context.mounted) _showDetail(context, ref, full);
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+                          }
+                        }
+                      },
+                    ),
+                  )),
+              ListTile(
+                leading: const Icon(Icons.add),
+                title: const Text('Add product line'),
                 onTap: () async {
                   Navigator.pop(ctx);
-                  try {
-                    await ref.read(purchaseRepositoryProvider).receiveContainer(container.id);
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Container received. Stock added to warehouse.')));
-                    }
-                  } catch (e) {
-                    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-                  }
+                  await _addContainerProduct(context, ref, full);
                 },
               ),
-            ListTile(
-              leading: const Icon(Icons.edit),
-              title: const Text('Edit'),
-              onTap: () {
-                Navigator.pop(ctx);
-                _edit(context, ref, container);
-              },
-            ),
-          ],
+              if (full.status != 'received')
+                ListTile(
+                  leading: const Icon(Icons.inventory_2_outlined),
+                  title: const Text('Receive container'),
+                  subtitle: const Text('Creates purchase and adds stock to warehouse'),
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    try {
+                      await ref.read(purchaseRepositoryProvider).receiveContainer(full.id);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Container received. Stock added to warehouse.')),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+                    }
+                  },
+                ),
+              ListTile(
+                leading: const Icon(Icons.edit),
+                title: const Text('Edit'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _edit(context, ref, full);
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  void _edit(BuildContext context, WidgetRef ref, ShippingContainerModel? item) {
+  Future<void> _addContainerProduct(BuildContext context, WidgetRef ref, ShippingContainerModel container) async {
+    final product = await pickProduct(context, ref);
+    if (product == null || !context.mounted) return;
+
+    final qty = TextEditingController(text: '1');
+    final cost = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(product.name),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: qty,
+              decoration: const InputDecoration(labelText: 'Quantity'),
+              keyboardType: TextInputType.number,
+            ),
+            TextField(
+              controller: cost,
+              decoration: const InputDecoration(labelText: 'Cost per unit'),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Add')),
+        ],
+      ),
+    );
+    if (ok != true || !context.mounted) return;
+
+    try {
+      await ref.read(adminRepositoriesProvider).containerProducts.create({
+        'shipping_container_id': container.id,
+        'product_id': product.id,
+        'quantity': int.tryParse(qty.text) ?? 0,
+        if (cost.text.trim().isNotEmpty) 'cost_per_unit': double.tryParse(cost.text.trim()),
+      });
+      if (context.mounted) {
+        final updated = await ref.read(adminRepositoriesProvider).shippingContainers.get(container.id);
+        if (context.mounted) _showDetail(context, ref, updated);
+      }
+    } catch (e) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+    }
+  }
+
+  void _edit(BuildContext context, WidgetRef ref, ShippingContainerModel? item) async {
+    final admin = ref.read(adminRepositoriesProvider);
+    final countries = await admin.countries.list();
+    final suppliers = (await admin.suppliers.listPaginated()).items;
+    if (!context.mounted) return;
     Navigator.push(context, MaterialPageRoute(builder: (_) => CrudFormScreen(
       title: item == null ? 'New Container' : 'Edit Container',
-      initialValues: item == null ? {} : item.toJson(),
-      fields: const [
-        FieldConfig(key: 'container_number', label: 'Container Number'),
-        FieldConfig(key: 'status', label: 'Status'),
-        FieldConfig(key: 'notes', label: 'Notes', type: FieldType.textarea),
+      initialValues: item == null
+          ? {'status': 'expected'}
+          : {
+              'container_number': item.containerNumber,
+              'supplier_id': item.supplierId,
+              'country_id': item.countryId,
+              'status': item.status,
+              'notes': item.notes,
+            },
+      fields: [
+        const FieldConfig(key: 'container_number', label: 'Container Number', required: true),
+        FieldConfig(
+          key: 'supplier_id',
+          label: 'Supplier',
+          type: FieldType.dropdown,
+          options: suppliers.map((s) => DropdownOption(value: s.id, label: s.name)).toList(),
+        ),
+        FieldConfig(
+          key: 'country_id',
+          label: 'Country',
+          type: FieldType.dropdown,
+          options: countries.map((c) => DropdownOption(value: c.id, label: c.name)).toList(),
+        ),
+        FieldConfig(
+          key: 'status',
+          label: 'Status',
+          type: FieldType.dropdown,
+          options: _statusOptions,
+        ),
+        const FieldConfig(key: 'notes', label: 'Notes', type: FieldType.textarea),
       ],
       onSave: (v) async {
         final repo = ref.read(adminRepositoriesProvider).shippingContainers;
@@ -183,6 +336,47 @@ class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
     }
   }
 
+  // Detail comes straight from the list payload — index() eager-loads
+  // items.product, so no extra request is needed here.
+  void _showPurchaseDetail(BuildContext context, PurchaseModel p) {
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      builder: (_) => ListView(
+        padding: const EdgeInsets.only(bottom: 24),
+        children: [
+          ListTile(
+            title: Text('#${p.id} — ${p.purchaseType ?? 'local'}'),
+            subtitle: Text([
+              p.status ?? 'draft',
+              if (p.date != null) p.date!,
+              if (p.referenceNumber != null) 'Ref ${p.referenceNumber}',
+              if (p.supplier?.name != null) p.supplier!.name,
+            ].join(' · ')),
+            trailing: Text(
+              'SAR ${(p.totalAmount ?? 0).toStringAsFixed(2)}',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          const Divider(height: 1),
+          for (final it in p.items)
+            ListTile(
+              dense: true,
+              title: Text(it.productName ?? it.product?.name ?? 'Product #${it.productId}'),
+              subtitle: Text(
+                  '${it.quantity} × ${(it.unitCost ?? it.unitPrice ?? 0).toStringAsFixed(2)}'),
+              trailing: Text('SAR ${(it.lineTotal ?? 0).toStringAsFixed(2)}'),
+            ),
+          if (p.notes != null && p.notes!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Text(p.notes!, style: Theme.of(context).textTheme.bodySmall),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -224,6 +418,13 @@ class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
                     itemBuilder: (_, i) {
                       final p = _purchases[i];
                       return ListTile(
+                        onTap: p.status == 'draft'
+                            ? () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => CreatePurchaseScreen(existing: p)),
+                                ).then((_) => _load())
+                            : () => _showPurchaseDetail(context, p),
                         title: Text('#${p.id} — ${p.purchaseType ?? 'local'}'),
                         subtitle: Text('${p.status ?? 'draft'} · SAR ${(p.totalAmount ?? 0).toStringAsFixed(2)}'),
                         trailing: p.status == 'draft'
@@ -279,25 +480,53 @@ class _CreatePurchaseScreenState extends ConsumerState<CreatePurchaseScreen> {
   final _date = TextEditingController(text: DateTime.now().toIso8601String().split('T').first);
   final _reference = TextEditingController();
   final _notes = TextEditingController();
+  final _orderDiscount = TextEditingController();
+  final _orderTax = TextEditingController();
   String _purchaseType = 'local';
+  int? _supplierId;
+  int? _shippingContainerId;
+  List<SupplierModel> _suppliers = [];
+  List<ShippingContainerModel> _containers = [];
   final List<Map<String, dynamic>> _items = [];
   bool _saving = false;
+  bool _loadingOptions = true;
 
   @override
   void initState() {
     super.initState();
+    _loadOptions();
     final existing = widget.existing;
     if (existing != null) {
       _purchaseType = existing.purchaseType ?? 'local';
       if (existing.date != null) _date.text = existing.date!.split('T').first;
       _reference.text = existing.referenceNumber ?? '';
       _notes.text = existing.notes ?? '';
+      _supplierId = existing.supplierId;
+      _shippingContainerId = existing.shippingContainerId;
+      if (existing.orderDiscount != null) _orderDiscount.text = existing.orderDiscount.toString();
+      if (existing.orderTax != null) _orderTax.text = existing.orderTax.toString();
       _items.addAll(existing.items.map((item) => {
             'product_id': item.productId,
             'product_name': item.productName ?? item.product?.name,
             'quantity': item.quantity,
+            if (item.unitId != null) 'unit_id': item.unitId,
             if ((item.unitPrice ?? item.unitCost) != null) 'unit_price': item.unitPrice ?? item.unitCost,
+            if (item.discount != null) 'discount': item.discount,
+            if (item.tax != null) 'tax': item.tax,
           }));
+    }
+  }
+
+  Future<void> _loadOptions() async {
+    final admin = ref.read(adminRepositoriesProvider);
+    final suppliers = (await admin.suppliers.listPaginated()).items;
+    final containers = (await admin.shippingContainers.listPaginated()).items;
+    if (mounted) {
+      setState(() {
+        _suppliers = suppliers;
+        _containers = containers;
+        _loadingOptions = false;
+      });
     }
   }
 
@@ -314,6 +543,10 @@ class _CreatePurchaseScreenState extends ConsumerState<CreatePurchaseScreen> {
       'date': _date.text,
       'reference_number': _reference.text.isEmpty ? null : _reference.text,
       'notes': _notes.text.isEmpty ? null : _notes.text,
+      'supplier_id': _supplierId,
+      'shipping_container_id': _shippingContainerId,
+      if (_orderDiscount.text.trim().isNotEmpty) 'order_discount': double.tryParse(_orderDiscount.text.trim()),
+      if (_orderTax.text.trim().isNotEmpty) 'order_tax': double.tryParse(_orderTax.text.trim()),
       'items': _items,
       if (post) 'post_immediately': true,
     };
@@ -334,6 +567,12 @@ class _CreatePurchaseScreenState extends ConsumerState<CreatePurchaseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_loadingOptions) {
+      return Scaffold(
+        appBar: AppBar(title: Text(widget.existing == null ? 'New Purchase' : 'Edit Draft #${widget.existing!.id}')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       appBar: AppBar(title: Text(widget.existing == null ? 'New Purchase' : 'Edit Draft #${widget.existing!.id}')),
       body: ListView(
@@ -349,18 +588,61 @@ class _CreatePurchaseScreenState extends ConsumerState<CreatePurchaseScreen> {
             onChanged: (v) => setState(() => _purchaseType = v ?? 'local'),
           ),
           const SizedBox(height: 12),
+          DropdownButtonFormField<int?>(
+            initialValue: _supplierId,
+            decoration: const InputDecoration(labelText: 'Supplier'),
+            items: [
+              const DropdownMenuItem(value: null, child: Text('None')),
+              ..._suppliers.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))),
+            ],
+            onChanged: (v) => setState(() => _supplierId = v),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<int?>(
+            initialValue: _shippingContainerId,
+            decoration: const InputDecoration(labelText: 'Shipping Container'),
+            items: [
+              const DropdownMenuItem(value: null, child: Text('None')),
+              ..._containers.map((c) => DropdownMenuItem(
+                    value: c.id,
+                    child: Text(c.containerNumber ?? 'Container #${c.id}'),
+                  )),
+            ],
+            onChanged: (v) => setState(() => _shippingContainerId = v),
+          ),
+          const SizedBox(height: 12),
           TextField(controller: _date, decoration: const InputDecoration(labelText: 'Date')),
           const SizedBox(height: 12),
           TextField(controller: _reference, decoration: const InputDecoration(labelText: 'Reference / Invoice #')),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _orderDiscount,
+            decoration: const InputDecoration(labelText: 'Order discount'),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _orderTax,
+            decoration: const InputDecoration(labelText: 'Order tax'),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          ),
           const SizedBox(height: 12),
           TextField(controller: _notes, decoration: const InputDecoration(labelText: 'Notes')),
           const SizedBox(height: 16),
           Text('Line items', style: Theme.of(context).textTheme.titleMedium),
           ..._items.asMap().entries.map((e) {
             final price = e.value['unit_price'];
+            final discount = e.value['discount'];
+            final tax = e.value['tax'];
+            final unitId = e.value['unit_id'] as int?;
+            final unitLabel = unitId != null && e.value['pcs_unit_id'] == unitId ? 'pcs' : 'CTN';
             return ListTile(
-              title: Text('${e.value['product_name'] ?? 'Product #${e.value['product_id']}'} × ${e.value['quantity']}'),
-              subtitle: Text(price != null ? 'Price: $price' : 'No price set'),
+              title: Text('${e.value['product_name'] ?? 'Product #${e.value['product_id']}'} × ${e.value['quantity']} $unitLabel'),
+              subtitle: Text([
+                if (price != null) 'Price: $price',
+                if (discount != null) 'Discount: $discount',
+                if (tax != null) 'Tax: $tax',
+              ].join(' · ')),
               trailing: IconButton(icon: const Icon(Icons.delete), onPressed: () => setState(() => _items.removeAt(e.key))),
             );
           }),
@@ -371,36 +653,86 @@ class _CreatePurchaseScreenState extends ConsumerState<CreatePurchaseScreen> {
 
               final qty = TextEditingController(text: '1');
               final price = TextEditingController(text: product.cost != null ? '${product.cost}' : '');
+              final discount = TextEditingController();
+              final tax = TextEditingController();
+              int unitId = product.defaultCartonUnitId;
+              final canPickPiece = product.canPurchaseByPiece;
               final ok = await showDialog<bool>(
                 context: context,
-                builder: (ctx) => AlertDialog(
-                  title: Text(product.name),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextField(controller: qty, decoration: const InputDecoration(labelText: 'Quantity'), keyboardType: TextInputType.number),
-                      TextField(
-                        controller: price,
-                        decoration: const InputDecoration(
-                          labelText: 'Purchase price',
-                          helperText: 'Defaults to cost price. Leave empty to price later — only allowed for drafts.',
-                        ),
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                builder: (ctx) => StatefulBuilder(
+                  builder: (ctx, setDialogState) {
+                    final isPiece = product.pcsUnitId != null && unitId == product.pcsUnitId;
+                    final priceHint = isPiece ? 'Price per piece' : 'Price per carton';
+                    return AlertDialog(
+                      title: Text(product.name),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (canPickPiece)
+                            DropdownButtonFormField<int>(
+                              value: unitId,
+                              decoration: const InputDecoration(labelText: 'Unit'),
+                              items: [
+                                if (product.defaultCartonUnitId > 0)
+                                  DropdownMenuItem(
+                                    value: product.defaultCartonUnitId,
+                                    child: const Text('Carton (CTN)'),
+                                  ),
+                                DropdownMenuItem(
+                                  value: product.pcsUnitId,
+                                  child: Text('Piece (pcs) · ${product.piecesPerCarton} per CTN'),
+                                ),
+                              ],
+                              onChanged: (v) {
+                                if (v == null) return;
+                                setDialogState(() {
+                                  unitId = v;
+                                  final nextCost = product.costForUnitId(v);
+                                  if (nextCost != null) {
+                                    price.text = nextCost.toString();
+                                  }
+                                });
+                              },
+                            ),
+                          TextField(controller: qty, decoration: const InputDecoration(labelText: 'Quantity'), keyboardType: TextInputType.number),
+                          TextField(
+                            controller: price,
+                            decoration: InputDecoration(
+                              labelText: 'Purchase price',
+                              helperText: '$priceHint. Defaults to cost price. Leave empty to price later — only allowed for drafts.',
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          ),
+                          TextField(
+                            controller: discount,
+                            decoration: const InputDecoration(labelText: 'Line discount'),
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          ),
+                          TextField(
+                            controller: tax,
+                            decoration: const InputDecoration(labelText: 'Line tax'),
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  actions: [
-                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-                    FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Add')),
-                  ],
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Add')),
+                      ],
+                    );
+                  },
                 ),
               );
               if (ok == true) {
                 setState(() => _items.add({
                       'product_id': product.id,
                       'product_name': product.name,
+                      'unit_id': unitId,
+                      if (product.pcsUnitId != null) 'pcs_unit_id': product.pcsUnitId,
                       'quantity': int.tryParse(qty.text) ?? 1,
                       if (price.text.trim().isNotEmpty) 'unit_price': double.tryParse(price.text.trim()),
+                      if (discount.text.trim().isNotEmpty) 'discount': double.tryParse(discount.text.trim()),
+                      if (tax.text.trim().isNotEmpty) 'tax': double.tryParse(tax.text.trim()),
                     }));
               }
             },

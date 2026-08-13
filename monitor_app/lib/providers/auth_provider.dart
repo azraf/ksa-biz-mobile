@@ -132,6 +132,11 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> handleUnauthorized() async {
+    // A stray 401 must not race a lock/unlock in progress: while the app is
+    // locked or awaiting biometric unlock, the unlock's own online check is
+    // the sole authority on whether the session ends. Also ignore repeats
+    // once already logged out.
+    if (!state.isAuthenticated || state.isAppLocked) return;
     await _authRepository.clearSession();
     state = const AuthState(isLoading: false);
   }

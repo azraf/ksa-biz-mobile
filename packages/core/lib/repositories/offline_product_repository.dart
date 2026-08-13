@@ -49,6 +49,8 @@ class OfflineProductRepository {
                     if (product.pcsUnitId != null) 'pcs_unit_id': product.pcsUnitId,
                     if (product.cartonUnitId != null) 'carton_unit_id': product.cartonUnitId,
                     if (product.unitId != null) 'unit_id': product.unitId,
+                    if (product.featureImageUrl != null)
+                      'feature_image_url': product.featureImageUrl,
                   },
                 ),
               )

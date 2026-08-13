@@ -72,10 +72,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final auth = ref.watch(authProvider);
+    // No !auth.isLoading here: unlockWithBiometric() sets isLoading before
+    // the native prompt opens, and hiding this section then would flash the
+    // password form underneath the OS biometric dialog. BiometricLoginSection
+    // handles the busy state itself.
     final showBiometricOnly = auth.pendingBiometricUnlock &&
         auth.storedUserEmail != null &&
-        !_showPasswordForm &&
-        !auth.isLoading;
+        !_showPasswordForm;
 
     return Scaffold(
       body: SafeArea(
