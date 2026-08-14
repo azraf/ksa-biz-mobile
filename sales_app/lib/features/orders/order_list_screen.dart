@@ -195,6 +195,11 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
                     await _load(page: 1, reset: true);
                   },
                 ),
+                IconButton(
+                  tooltip: 'Update data',
+                  icon: const Icon(Icons.sync),
+                  onPressed: _loading ? null : () => _load(page: 1, reset: true),
+                ),
               ],
             ),
           ),

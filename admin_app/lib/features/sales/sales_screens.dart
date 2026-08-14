@@ -32,11 +32,19 @@ class SalesPersonsScreen extends ConsumerWidget {
   void _edit(BuildContext context, WidgetRef ref, SalesPersonModel? person) {
     Navigator.push(context, MaterialPageRoute(builder: (_) => CrudFormScreen(
       title: person == null ? 'New Sales Person' : 'Edit Sales Person',
-      initialValues: person == null ? {} : {'name': person.name, 'mobile': person.mobile, 'email': person.email},
+      initialValues: person == null
+          ? {}
+          : {
+              'name': person.name,
+              'mobile': person.mobile,
+              'email': person.email,
+              'address': person.address,
+            },
       fields: const [
         FieldConfig(key: 'name', label: 'Name', required: true),
         FieldConfig(key: 'mobile', label: 'Mobile'),
         FieldConfig(key: 'email', label: 'Email', type: FieldType.email),
+        FieldConfig(key: 'address', label: 'Address', type: FieldType.textarea),
       ],
       onSave: (v) async {
         final api = ref.read(apiClientProvider);
@@ -75,7 +83,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
   DateTime? _fromDate;
   DateTime? _toDate;
   Set<int> _salesPersonIds = {};
-  bool _archived = false;
+  bool? _archived = false;
   late ListSortMode _sortMode;
 
   @override
@@ -185,12 +193,25 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
             .where((v) => v != null)
             .length +
         (_salesPersonIds.isEmpty ? 0 : 1) +
-        (_archived ? 1 : 0);
+        (_archived != false ? 1 : 0);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(activeFilterCount == 0 ? 'Orders' : 'Orders ($activeFilterCount)'),
         actions: [
+          IconButton(
+            tooltip: 'Update data',
+            icon: const Icon(Icons.sync),
+            onPressed: _loading
+                ? null
+                : () async {
+                    await ref.read(syncServiceProvider).syncIfOnline().timeout(
+                          const Duration(seconds: 30),
+                          onTimeout: () {},
+                        );
+                    await _load(page: 1, reset: true);
+                  },
+          ),
           IconButton(icon: const Icon(Icons.add), onPressed: () => context.push('/sales/orders/create')),
           Builder(
             builder: (ctx) => IconButton(

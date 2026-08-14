@@ -28,6 +28,8 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
   bool _saving = false;
   int? _priorityRating;
   String? _paymentOverride;
+  int? _salesPersonId;
+  List<SalesPersonModel> _salesPersons = const [];
   CustomerMetricsFields _metrics = const CustomerMetricsFields();
   CustomerShopModel? _shop;
 
@@ -43,6 +45,9 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
       _paymentOverride = shop.metrics.paymentReliabilityOverride;
       _metrics = shop.metrics;
     }
+    ref.read(customerRepositoryProvider).salesPersons().then((r) {
+      if (mounted) setState(() => _salesPersons = r.items);
+    }).catchError((_) {});
   }
 
   @override
@@ -98,7 +103,7 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
       final repo = ref.read(customerRepositoryProvider);
       CustomerShopModel shop;
       if (_shop == null) {
-        shop = await repo.createShop(name: name, gps: _gps);
+        shop = await repo.createShop(name: name, gps: _gps, salesPersonId: _salesPersonId);
       } else {
         await ref.read(apiClientProvider).put('/customer-shops/${_shop!.id}', body: {
           'name': name,
@@ -106,6 +111,16 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
           if (_priorityRating != null) 'priority_rating': _priorityRating,
           'payment_reliability_override': _paymentOverride,
         });
+        if (_salesPersonId != null) {
+          // Permanent reassignment; the server ends the previous one itself.
+          await repo.createAssignment({
+            'sales_person_id': _salesPersonId,
+            'customer_type': 'customer_shop',
+            'customer_shop_id': _shop!.id,
+            'assignment_kind': 'permanent',
+            'reason': 'admin_change',
+          });
+        }
         shop = _shop!;
       }
       if (_shopPhoto != null) {
@@ -144,6 +159,21 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
           ),
           const SizedBox(height: 8),
           InlineMapCard(gps: _gps),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<int>(
+            initialValue: _salesPersonId,
+            decoration: InputDecoration(
+              labelText: 'Assign to salesperson',
+              helperText: _shop?.salesPersonName != null
+                  ? 'Currently: ${_shop!.salesPersonName}'
+                  : null,
+            ),
+            items: [
+              const DropdownMenuItem<int>(value: null, child: Text('No change')),
+              ..._salesPersons.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))),
+            ],
+            onChanged: (v) => setState(() => _salesPersonId = v),
+          ),
           const SizedBox(height: 8),
           if (_shop != null)
             FutureBuilder<CustomerFinancialSummary>(

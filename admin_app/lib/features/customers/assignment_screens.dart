@@ -312,6 +312,55 @@ class _UnassignedCustomersScreenState extends ConsumerState<UnassignedCustomersS
     if (mounted) setState(() => _loading = false);
   }
 
+  Future<void> _assign(CustomerShopModel shop) async {
+    final repo = ref.read(customerRepositoryProvider);
+    List<SalesPersonModel> salesPersons;
+    try {
+      salesPersons = (await repo.salesPersons()).items;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+      return;
+    }
+    if (!mounted) return;
+
+    final selected = await showDialog<SalesPersonModel>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text('Assign ${shop.name} to'),
+        children: [
+          for (final sp in salesPersons)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(context, sp),
+              child: Text(sp.name),
+            ),
+        ],
+      ),
+    );
+    if (selected == null) return;
+
+    try {
+      await repo.createAssignment({
+        'sales_person_id': selected.id,
+        'customer_type': 'customer_shop',
+        'customer_shop_id': shop.id,
+        'assignment_kind': 'permanent',
+        'reason': 'admin_change',
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${shop.name} assigned to ${selected.name}')),
+        );
+      }
+      await _load();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -327,6 +376,10 @@ class _UnassignedCustomersScreenState extends ConsumerState<UnassignedCustomersS
                       itemBuilder: (_, i) => ListTile(
                         title: Text(_shops[i].name),
                         subtitle: Text(_shops[i].areaName ?? 'No area'),
+                        trailing: TextButton(
+                          onPressed: () => _assign(_shops[i]),
+                          child: const Text('Assign'),
+                        ),
                       ),
                     ),
             ),

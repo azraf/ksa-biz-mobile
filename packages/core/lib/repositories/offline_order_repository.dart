@@ -62,7 +62,10 @@ class OfflineOrderRepository {
         }
         return result;
       } catch (_) {
-        return _cachedList();
+        // Device is online but the API call failed (auth, server error,
+        // unreachable host). Surface the error instead of silently serving a
+        // stale, filter-ignoring cache that looks like missing orders.
+        rethrow;
       }
     }
     return _cachedList();

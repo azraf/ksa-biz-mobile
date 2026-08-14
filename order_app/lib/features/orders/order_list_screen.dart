@@ -49,8 +49,16 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
     });
 
     try {
-      final result = await ref.read(orderRepositoryProvider).list();
-      final filtered = filterOrdersForCustomer(result.items, profile);
+      // Pending (staging draft) orders live in a separate list — merge them
+      // on top, the way the customer web portal does. The server scopes both
+      // lists to this customer's own orders.
+      final repo = ref.read(orderRepositoryProvider);
+      final results = await Future.wait([
+        repo.list(status: 'pending'),
+        repo.list(),
+      ]);
+      final merged = [...results[0].items, ...results[1].items];
+      final filtered = filterOrdersForCustomer(merged, profile);
       setState(() {
         _orders = filtered;
         _loading = false;

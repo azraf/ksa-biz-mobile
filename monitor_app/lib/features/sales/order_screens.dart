@@ -29,7 +29,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
   DateTime? _fromDate;
   DateTime? _toDate;
   Set<int> _salesPersonIds = {};
-  bool _archived = false;
+  bool? _archived = false;
   ListSortMode _sortMode = ListSortMode.date;
 
   @override
@@ -132,12 +132,17 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
             .where((v) => v != null)
             .length +
         (_salesPersonIds.isEmpty ? 0 : 1) +
-        (_archived ? 1 : 0);
+        (_archived != false ? 1 : 0);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(activeFilterCount == 0 ? 'Orders' : 'Orders ($activeFilterCount)'),
         actions: [
+          IconButton(
+            tooltip: 'Update data',
+            icon: const Icon(Icons.sync),
+            onPressed: _loading ? null : () => _load(page: 1, reset: true),
+          ),
           Builder(
             builder: (ctx) => IconButton(
               icon: const Icon(Icons.tune),

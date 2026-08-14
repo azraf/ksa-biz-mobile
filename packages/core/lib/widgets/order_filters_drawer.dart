@@ -55,10 +55,10 @@ class OrderFiltersDrawer extends StatelessWidget {
   final Set<int> selectedSalesPersonIds;
   final ValueChanged<Set<int>> onSalesPersonsChanged;
 
-  /// Fully paid orders auto-archive; this toggles between the default
-  /// (active only) and archived-only views.
-  final bool archived;
-  final ValueChanged<bool> onArchivedChanged;
+  /// Fully paid orders auto-archive. Tri-state: false = active only
+  /// (default), true = archived (paid) only, null = show all.
+  final bool? archived;
+  final ValueChanged<bool?> onArchivedChanged;
 
   final ListSortMode sort;
   final ValueChanged<ListSortMode> onSortChanged;
@@ -94,12 +94,15 @@ class OrderFiltersDrawer extends StatelessWidget {
               onSubmitted: (_) => onSearchSubmitted(),
             ),
             const SizedBox(height: 16),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Archived (fully paid)'),
-              subtitle: Text(archived ? 'Showing archived orders only' : 'Hidden — showing active orders'),
-              value: archived,
-              onChanged: onArchivedChanged,
+            _dropdown<String>(
+              label: 'Paid orders',
+              value: archived == null ? 'all' : (archived! ? 'paid' : 'active'),
+              items: const [
+                DropdownMenuItem(value: 'active', child: Text('Active only (unpaid)')),
+                DropdownMenuItem(value: 'paid', child: Text('Fully paid only')),
+                DropdownMenuItem(value: 'all', child: Text('All orders')),
+              ],
+              onChanged: (v) => onArchivedChanged(v == 'all' ? null : v == 'paid'),
             ),
             const SizedBox(height: 12),
             if (salesPersons.isNotEmpty) ...[
