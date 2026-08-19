@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../support/json_parse.dart';
+
 class CustomerMetricsFields extends Equatable {
   const CustomerMetricsFields({
     this.priorityRating,
@@ -29,7 +31,8 @@ class CustomerMetricsFields extends Equatable {
       paymentReliabilityEffective: json['payment_reliability_effective'] as String?,
       orderCount: json['order_count'] as int? ?? 0,
       ordersLast90Days: json['orders_last_90_days'] as int? ?? 0,
-      avgDaysBetweenOrders: (json['avg_days_between_orders'] as num?)?.toDouble(),
+      // decimal columns arrive as strings ("2.58") from Laravel's decimal cast
+      avgDaysBetweenOrders: parseJsonDoubleOrNull(json['avg_days_between_orders']),
       frequencyBand: json['frequency_band'] as String? ?? 'never',
     );
   }

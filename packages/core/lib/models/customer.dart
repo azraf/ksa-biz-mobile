@@ -72,7 +72,7 @@ class CustomerVanModel extends Equatable {
       lastOrderAt: json['last_order_at']?.toString(),
       createdAt: json['created_at']?.toString(),
       isInactive: parseJsonBool(json['is_inactive']),
-      distanceKm: (json['distance_km'] as num?)?.toDouble(),
+      distanceKm: parseJsonDoubleOrNull(json['distance_km']),
       salesPersonName: json['sales_person_name'] as String? ??
           (json['sales_person'] is Map
               ? (json['sales_person'] as Map)['name'] as String?
