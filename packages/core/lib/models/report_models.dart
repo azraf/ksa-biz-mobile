@@ -176,6 +176,7 @@ class SalesPersonPerformanceRow extends Equatable {
     this.orders = 0,
     this.orderValue = 0,
     this.averageOrderValue = 0,
+    this.returns = 0,
     this.shopsServed = 0,
     this.totalCartons = 0,
     this.collected = 0,
@@ -191,6 +192,7 @@ class SalesPersonPerformanceRow extends Equatable {
   final int orders;
   final double orderValue;
   final double averageOrderValue;
+  final double returns;
   final int shopsServed;
   final double totalCartons;
   final double collected;
@@ -207,6 +209,7 @@ class SalesPersonPerformanceRow extends Equatable {
         orders: parseJsonInt(json['orders']),
         orderValue: parseJsonDouble(json['order_value']),
         averageOrderValue: parseJsonDouble(json['average_order_value']),
+        returns: parseJsonDouble(json['returns']),
         shopsServed: parseJsonInt(json['shops_served']),
         totalCartons: parseJsonDouble(json['total_cartons']),
         collected: parseJsonDouble(json['collected']),
@@ -225,6 +228,7 @@ class SalesPersonPerformanceRow extends Equatable {
         'orders': orders,
         'order_value': orderValue,
         'average_order_value': averageOrderValue,
+        'returns': returns,
         'shops_served': shopsServed,
         'total_cartons': totalCartons,
         'collected': collected,
@@ -276,11 +280,60 @@ class ProductPerformanceRow extends Equatable {
   List<Object?> get props => [salesPersonId, productId, cartons, revenue];
 }
 
+/// One day (short windows) or one week (long windows) of a single
+/// salesperson's sales / orders / collections.
+class PerformanceTrendRow extends Equatable {
+  const PerformanceTrendRow({
+    required this.key,
+    required this.label,
+    this.sales = 0,
+    this.orders = 0,
+    this.collections = 0,
+  });
+
+  final String key;
+  final String label;
+  final double sales;
+  final int orders;
+  final double collections;
+
+  factory PerformanceTrendRow.fromJson(Map<String, dynamic> json) =>
+      PerformanceTrendRow(
+        key: json['key']?.toString() ?? '',
+        label: json['label']?.toString() ?? '',
+        sales: parseJsonDouble(json['sales']),
+        orders: parseJsonInt(json['orders']),
+        collections: parseJsonDouble(json['collections']),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'key': key,
+        'label': label,
+        'sales': sales,
+        'orders': orders,
+        'collections': collections,
+      };
+
+  @override
+  List<Object?> get props => [key, sales, orders, collections];
+}
+
 class SalesPerformanceReport extends Equatable {
-  const SalesPerformanceReport({this.rows = const [], this.items});
+  const SalesPerformanceReport({
+    this.rows = const [],
+    this.items,
+    this.trend,
+    this.from,
+    this.to,
+  });
 
   final List<SalesPersonPerformanceRow> rows;
   final List<ProductPerformanceRow>? items;
+
+  /// Only present when the report covers exactly one salesperson.
+  final List<PerformanceTrendRow>? trend;
+  final String? from;
+  final String? to;
 
   factory SalesPerformanceReport.fromJson(Map<String, dynamic> json) =>
       SalesPerformanceReport(
@@ -292,15 +345,24 @@ class SalesPerformanceReport extends Equatable {
             ?.map((e) =>
                 ProductPerformanceRow.fromJson(e as Map<String, dynamic>))
             .toList(),
+        trend: (json['trend'] as List<dynamic>?)
+            ?.map(
+                (e) => PerformanceTrendRow.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        from: json['from']?.toString(),
+        to: json['to']?.toString(),
       );
 
   Map<String, dynamic> toJson() => {
         'rows': rows.map((r) => r.toJson()).toList(),
         'items': items?.map((i) => i.toJson()).toList(),
+        'trend': trend?.map((t) => t.toJson()).toList(),
+        'from': from,
+        'to': to,
       };
 
   @override
-  List<Object?> get props => [rows, items];
+  List<Object?> get props => [rows, items, trend, from, to];
 }
 
 class ReportResult<T> {

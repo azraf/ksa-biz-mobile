@@ -330,6 +330,7 @@ class HomeShell extends ConsumerWidget {
     return location.startsWith('/customers') ||
         location.startsWith('/watchlist') ||
         location.startsWith('/field-map') ||
+        location.startsWith('/performance') ||
         location.startsWith('/notifications') ||
         location.startsWith('/profile') ||
         location.startsWith('/plan/candidates');

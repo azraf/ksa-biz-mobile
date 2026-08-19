@@ -56,12 +56,16 @@ class ReportRepository {
 
   Future<ReportResult<SalesPerformanceReport>> performance({
     String? range,
+    String? fromDate,
+    String? toDate,
     List<int>? salesPersonIds,
     bool forceRefresh = false,
     ReportRevalidateCallback<SalesPerformanceReport>? onRevalidate,
   }) async {
     final query = <String, String>{};
     if (range != null) query['range'] = range;
+    if (fromDate != null) query['from_date'] = fromDate;
+    if (toDate != null) query['to_date'] = toDate;
     if (salesPersonIds != null && salesPersonIds.isNotEmpty) {
       query['sales_person_ids'] = salesPersonIds.join(',');
     }

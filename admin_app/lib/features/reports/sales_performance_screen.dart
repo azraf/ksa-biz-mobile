@@ -37,14 +37,9 @@ extension on _SortKey {
   };
 }
 
-const _rangeLabels = {
-  'this_month': 'This month',
-  'last_month': 'Last month',
-  'all': 'All time',
-};
-
 /// Admin/monitor "Sales Performance" — every salesperson (or a filtered
-/// selection), from a chosen window, with sort. Own copy per app rather than
+/// selection), from a chosen window, with sort. Tapping one person (or
+/// selecting exactly one) opens the full KPI + trend detail for them. Own copy per app rather than
 /// a shared widget, matching how SalesReportScreen etc. are already
 /// duplicated per app instead of factored into packages/core.
 class SalesPerformanceScreen extends ConsumerStatefulWidget {
@@ -57,7 +52,7 @@ class SalesPerformanceScreen extends ConsumerStatefulWidget {
 
 class _SalesPerformanceScreenState
     extends ConsumerState<SalesPerformanceScreen> {
-  String _range = 'all';
+  PerformancePeriod _period = const PerformancePeriod.preset('all');
   Set<int> _salesPersonIds = {};
   _SortKey _sortKey = _SortKey.orderValue;
   bool _sortAsc = false;
@@ -78,7 +73,9 @@ class _SalesPerformanceScreenState
         ref
             .read(reportRepositoryProvider)
             .performance(
-              range: _range,
+              range: _period.range,
+              fromDate: _period.fromDate,
+              toDate: _period.toDate,
               salesPersonIds: _salesPersonIds.isEmpty
                   ? null
                   : _salesPersonIds.toList(),
@@ -109,6 +106,13 @@ class _SalesPerformanceScreenState
     final currency = NumberFormat.currency(symbol: 'SAR ');
     final rows = _sortedRows;
     final items = _result?.data.items;
+    final report = _result?.data;
+    // The server only sends a trend for a single-person report; that is the
+    // signal to switch from the ranking list to the detail view.
+    final detailRow = report?.trend != null && rows.length == 1
+        ? rows.first
+        : null;
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -123,11 +127,6 @@ class _SalesPerformanceScreenState
         ],
       ),
       endDrawer: _FiltersDrawer(
-        range: _range,
-        onRangeChanged: (v) {
-          setState(() => _range = v);
-          _load();
-        },
         salesPersons: _salesPersons,
         selectedIds: _salesPersonIds,
         onSalesPersonsChanged: (v) {
@@ -153,44 +152,86 @@ class _SalesPerformanceScreenState
                       title: 'Showing cached data',
                       subtitle: 'Connect to refresh from server',
                     ),
-                  Text(
-                    _rangeLabels[_range] ?? _range,
-                    style: Theme.of(context).textTheme.titleMedium,
+                  PerformancePeriodChips(
+                    value: _period,
+                    showAll: true,
+                    onChanged: (p) {
+                      setState(() => _period = p);
+                      _load();
+                    },
                   ),
-                  const SizedBox(height: 8),
-                  if (rows.isEmpty) const Text('No sales people recorded yet.'),
-                  ...rows.map(
-                    (r) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        title: Text(r.name),
-                        subtitle: Text(
-                          '${r.orders} orders · ${r.totalCartons.toStringAsFixed(1)} cartons · '
-                          '${r.newShops} new clients',
-                        ),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              currency.format(r.orderValue),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            if (r.outstanding > 0)
-                              Text(
-                                'Due ${currency.format(r.outstanding)}',
-                                style: const TextStyle(
-                                  color: Colors.red,
-                                  fontSize: 12,
-                                ),
-                              ),
-                          ],
+                  if (report?.from != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        report!.from == report.to
+                            ? report.from!
+                            : '${report.from} → ${report.to}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ),
-                  ),
+                  const SizedBox(height: 12),
+                  if (detailRow != null) ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            detailRow.name,
+                            style: theme.textTheme.titleMedium,
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: () {
+                            setState(() => _salesPersonIds = {});
+                            _load();
+                          },
+                          icon: const Icon(Icons.close, size: 16),
+                          label: const Text('All people'),
+                        ),
+                      ],
+                    ),
+                    PerformanceDetail(row: detailRow, trend: report?.trend),
+                  ] else if (rows.isEmpty)
+                    const Text('No sales people recorded yet.'),
+                  if (detailRow == null)
+                    ...rows.map(
+                      (r) => Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          onTap: () {
+                            setState(() => _salesPersonIds = {r.id});
+                            _load();
+                          },
+                          title: Text(r.name),
+                          subtitle: Text(
+                            '${r.orders} orders · ${r.totalCartons.toStringAsFixed(1)} cartons · '
+                            '${r.newShops} new clients',
+                          ),
+                          trailing: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                currency.format(r.orderValue),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              if (r.outstanding > 0)
+                                Text(
+                                  'Due ${currency.format(r.outstanding)}',
+                                  style: TextStyle(
+                                    color: theme.colorScheme.error,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   if (items != null) ...[
                     const Divider(height: 32),
                     const Text(
@@ -210,8 +251,8 @@ class _SalesPerformanceScreenState
                     Padding(
                       padding: const EdgeInsets.only(top: 16),
                       child: Text(
-                        'Select 5 or fewer sales people to see the item breakdown.',
-                        style: Theme.of(context).textTheme.bodySmall,
+                        'Tap a sales person for their detail, or select up to 5 for the item breakdown.',
+                        style: theme.textTheme.bodySmall,
                       ),
                     ),
                 ],
@@ -223,8 +264,6 @@ class _SalesPerformanceScreenState
 
 class _FiltersDrawer extends StatelessWidget {
   const _FiltersDrawer({
-    required this.range,
-    required this.onRangeChanged,
     required this.salesPersons,
     required this.selectedIds,
     required this.onSalesPersonsChanged,
@@ -234,8 +273,6 @@ class _FiltersDrawer extends StatelessWidget {
     required this.onSortDirChanged,
   });
 
-  final String range;
-  final ValueChanged<String> onRangeChanged;
   final List<SalesPersonModel> salesPersons;
   final Set<int> selectedIds;
   final ValueChanged<Set<int>> onSalesPersonsChanged;
@@ -265,23 +302,6 @@ class _FiltersDrawer extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              initialValue: range,
-              isExpanded: true,
-              decoration: const InputDecoration(
-                labelText: 'Period',
-                isDense: true,
-              ),
-              items: _rangeLabels.entries
-                  .map(
-                    (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
-                  )
-                  .toList(),
-              onChanged: (v) {
-                if (v != null) onRangeChanged(v);
-              },
-            ),
-            const SizedBox(height: 12),
             if (salesPersons.isNotEmpty)
               SalesPersonMultiSelectTile(
                 salesPersons: salesPersons,

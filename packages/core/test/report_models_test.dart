@@ -68,10 +68,41 @@ void main() {
         ProductPerformanceRow(
             salesPersonId: 1, productId: 2, productName: 'Rice', cartons: 3.5)
       ],
+      trend: [
+        PerformanceTrendRow(
+            key: '2026-08-01', label: '01 Aug 2026', sales: 120, orders: 2)
+      ],
+      from: '2026-08-01',
+      to: '2026-08-07',
     );
 
     final restored = SalesPerformanceReport.fromJson(original.toJson());
 
     expect(restored, original);
+    expect(restored.trend!.single.orders, 2);
+  });
+
+  test('parses returns and trend from the server payload', () {
+    final report = SalesPerformanceReport.fromJson({
+      'rows': [
+        {'id': 1, 'name': 'Sam', 'returns': '12.50'},
+      ],
+      'trend': [
+        {
+          'key': '2026-08-03',
+          'label': 'Week of 03 Aug 2026',
+          'sales': 900,
+          'orders': 4,
+          'collections': '150.00',
+        },
+      ],
+      'from': '2026-06-01',
+      'to': '2026-08-31',
+    });
+
+    expect(report.rows.single.returns, 12.5);
+    expect(report.trend, hasLength(1));
+    expect(report.trend!.first.collections, 150);
+    expect(report.from, '2026-06-01');
   });
 }

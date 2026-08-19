@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 
 import '../../providers/repositories.dart';
 
+/// The logged-in salesperson's own performance. The server locks the
+/// report to their sales_person id; this screen only picks the period.
 class PerformanceReviewScreen extends ConsumerStatefulWidget {
   const PerformanceReviewScreen({super.key});
 
@@ -15,7 +17,7 @@ class PerformanceReviewScreen extends ConsumerStatefulWidget {
 
 class _PerformanceReviewScreenState
     extends ConsumerState<PerformanceReviewScreen> {
-  String _range = 'this_month';
+  PerformancePeriod _period = PerformancePeriod.thisMonth;
   ReportResult<SalesPerformanceReport>? _result;
   bool _loading = true;
 
@@ -30,7 +32,12 @@ class _PerformanceReviewScreenState
     try {
       _result = await ref
           .read(reportRepositoryProvider)
-          .performance(range: _range, forceRefresh: force);
+          .performance(
+            range: _period.range,
+            fromDate: _period.fromDate,
+            toDate: _period.toDate,
+            forceRefresh: force,
+          );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -38,31 +45,38 @@ class _PerformanceReviewScreenState
 
   @override
   Widget build(BuildContext context) {
-    final currency = NumberFormat.currency(symbol: 'SAR ');
-    final rows = _result?.data.rows ?? const [];
-    final row = rows.isEmpty ? null : rows.first;
+    final currency = NumberFormat.currency(symbol: 'SAR ', decimalDigits: 0);
+    final report = _result?.data;
+    final row = (report?.rows.isEmpty ?? true) ? null : report!.rows.first;
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Performance Review')),
       body: RefreshIndicator(
         onRefresh: () => _load(force: true),
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
-            Center(
-              child: SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(value: 'this_month', label: Text('This month')),
-                  ButtonSegment(value: 'last_month', label: Text('Last month')),
-                ],
-                selected: {_range},
-                onSelectionChanged: (selection) {
-                  setState(() => _range = selection.first);
-                  _load();
-                },
-              ),
+            PerformancePeriodChips(
+              value: _period,
+              onChanged: (p) {
+                setState(() => _period = p);
+                _load();
+              },
             ),
-            const SizedBox(height: 16),
+            if (report?.from != null)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.sm),
+                child: Text(
+                  report!.from == report.to
+                      ? report.from!
+                      : '${report.from} → ${report.to}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            const SizedBox(height: AppSpacing.lg),
             if (_loading)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 32),
@@ -81,53 +95,19 @@ class _PerformanceReviewScreenState
                   title: 'Showing cached data',
                   subtitle: 'Connect to refresh from server',
                 ),
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: AppSpacing.md,
-                crossAxisSpacing: AppSpacing.md,
-                childAspectRatio: 1.6,
-                children: [
-                  KpiCard(
-                    title: 'Orders',
-                    value: '${row.orders}',
-                    icon: Icons.receipt_long,
+              PerformanceDetail(row: row, trend: report?.trend),
+              const SectionHeader(title: 'By item'),
+              if (report?.items?.isEmpty ?? true)
+                Text(
+                  'No items sold in this period.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
-                  KpiCard(
-                    title: 'Sales',
-                    value: currency.format(row.orderValue),
-                    icon: Icons.point_of_sale,
-                  ),
-                  KpiCard(
-                    title: 'Cartons',
-                    value: row.totalCartons.toStringAsFixed(1),
-                    icon: Icons.inventory_2_outlined,
-                  ),
-                  KpiCard(
-                    title: 'Collected',
-                    value: currency.format(row.collected),
-                    icon: Icons.payments,
-                  ),
-                  KpiCard(
-                    title: 'Due',
-                    value: currency.format(row.outstanding),
-                    icon: Icons.warning_amber_outlined,
-                  ),
-                  KpiCard(
-                    title: 'New clients',
-                    value: '${row.newShops}',
-                    icon: Icons.person_add_alt,
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              const Text(
-                'By item',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              ...(_result?.data.items ?? []).map(
+                ),
+              ...(report?.items ?? []).map(
                 (i) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
                   title: Text(i.productName),
                   trailing: Text(
                     '${i.cartons.toStringAsFixed(1)} CTN — ${currency.format(i.revenue)}',
