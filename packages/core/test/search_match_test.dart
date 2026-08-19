@@ -25,6 +25,10 @@ void main() {
     expect(none.items, isEmpty);
     expect(none.isFuzzy, isFalse);
 
+    final punct = SearchMatch.filterOrFuzzy(['Al Rayah, Madinah'], 'rayyah', (s) => [s]);
+    expect(punct.items, ['Al Rayah, Madinah']);
+    expect(punct.isFuzzy, isTrue);
+
     final exact = SearchMatch.filterOrFuzzy(items, 'sna', (s) => [s]);
     expect(exact.items, ['Snacks']);
     expect(exact.isFuzzy, isFalse);

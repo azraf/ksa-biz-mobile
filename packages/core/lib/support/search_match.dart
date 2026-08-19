@@ -30,7 +30,7 @@ class SearchMatch {
     if (toks.isEmpty) return 0;
     final words = fields
         .whereType<String>()
-        .expand((f) => normalize(f).split(RegExp(r'\s+')))
+        .expand((f) => normalize(f).split(RegExp(r'[\s,;:.()/\-]+')))
         .where((w) => w.isNotEmpty)
         .toList();
     var total = 0;
