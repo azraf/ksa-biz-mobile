@@ -3651,6 +3651,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No orders yet.'**
   String get customerOrdersEmpty;
+
+  /// No description provided for @commonSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get commonSearch;
+
+  /// No description provided for @commonClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get commonClear;
+
+  /// No description provided for @commonStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get commonStatus;
+
+  /// No description provided for @commonClearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get commonClearFilters;
+
+  /// No description provided for @statusInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get statusInactive;
+
+  /// No description provided for @statusAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get statusAll;
+
+  /// No description provided for @searchFiltersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search & filters'**
+  String get searchFiltersTitle;
+
+  /// No description provided for @searchNoExactMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No exact match for “{query}” — showing most likely results.'**
+  String searchNoExactMatch(String query);
+
+  /// No description provided for @searchWatchlistHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search place, address or note'**
+  String get searchWatchlistHint;
 }
 
 class _AppLocalizationsDelegate

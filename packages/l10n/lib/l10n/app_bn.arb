@@ -583,7 +583,7 @@
   "statusPending": "মুলতুবি",
   "statusDraft": "খসড়া",
   "planPurposeField": "উদ্দেশ্য",
-  "orderDraftEditableNotice": "এই অর্ডারটি একটি খসড়া \u2014 বিক্রয়কর্মী নিশ্চিত করার আগ পর্যন্ত আপনি এটি সম্পাদনা করতে পারবেন।",
+  "orderDraftEditableNotice": "এই অর্ডারটি একটি খসড়া — বিক্রয়কর্মী নিশ্চিত করার আগ পর্যন্ত আপনি এটি সম্পাদনা করতে পারবেন।",
   "commonEdit": "সম্পাদনা",
   "statusPartial": "আংশিক",
   "statusPaid": "পরিশোধিত",
@@ -817,5 +817,21 @@
   "customerMoneyNextPayment": "পরবর্তী পেমেন্ট",
   "customerMoneyLastPayment": "সর্বশেষ পেমেন্ট",
   "customerOrdersTitle": "অর্ডার",
-  "customerOrdersEmpty": "এখনও কোনো অর্ডার নেই।"
+  "customerOrdersEmpty": "এখনও কোনো অর্ডার নেই।",
+  "commonSearch": "খুঁজুন",
+  "commonClear": "মুছুন",
+  "commonStatus": "অবস্থা",
+  "commonClearFilters": "ফিল্টার মুছুন",
+  "statusInactive": "নিষ্ক্রিয়",
+  "statusAll": "সব",
+  "searchFiltersTitle": "খোঁজ ও ফিল্টার",
+  "searchNoExactMatch": "“{query}”-এর সাথে হুবহু মিল নেই — সবচেয়ে কাছাকাছি ফলাফল দেখানো হচ্ছে।",
+  "@searchNoExactMatch": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "searchWatchlistHint": "স্থান, ঠিকানা বা নোট খুঁজুন"
 }

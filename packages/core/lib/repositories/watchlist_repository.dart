@@ -7,11 +7,14 @@ class WatchlistRepository {
 
   final ApiClient _api;
 
+  /// [status]: 'active' | 'archived' | 'all'. When [search] is set the server
+  /// returns active items first, then archived (unless narrowed by [status]).
   Future<PaginatedResponse<WatchlistItemModel>> list({
     int? salesPersonId,
     String status = 'active',
     String? archivedReason,
     String sort = 'created_at',
+    String? search,
     int page = 1,
     int perPage = 20,
   }) async {
@@ -23,6 +26,7 @@ class WatchlistRepository {
     };
     if (salesPersonId != null) query['sales_person_id'] = '$salesPersonId';
     if (archivedReason != null) query['archived_reason'] = archivedReason;
+    if (search != null && search.trim().isNotEmpty) query['search'] = search.trim();
 
     final response = await _api.get('/watchlist-items', query: query);
     return PaginatedResponse.fromJson(response, WatchlistItemModel.fromJson);

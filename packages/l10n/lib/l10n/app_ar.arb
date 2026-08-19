@@ -583,7 +583,7 @@
   "statusPending": "معلق",
   "statusDraft": "مسودة",
   "planPurposeField": "الغرض",
-  "orderDraftEditableNotice": "هذا الطلب مسودة \u2014 يمكنك تعديله حتى يؤكده مندوب المبيعات.",
+  "orderDraftEditableNotice": "هذا الطلب مسودة — يمكنك تعديله حتى يؤكده مندوب المبيعات.",
   "commonEdit": "تعديل",
   "statusPartial": "جزئي",
   "statusPaid": "مدفوع",
@@ -817,5 +817,21 @@
   "customerMoneyNextPayment": "الدفعة التالية",
   "customerMoneyLastPayment": "آخر دفعة",
   "customerOrdersTitle": "الطلبات",
-  "customerOrdersEmpty": "لا توجد طلبات بعد."
+  "customerOrdersEmpty": "لا توجد طلبات بعد.",
+  "commonSearch": "بحث",
+  "commonClear": "مسح",
+  "commonStatus": "الحالة",
+  "commonClearFilters": "مسح عوامل التصفية",
+  "statusInactive": "غير نشط",
+  "statusAll": "الكل",
+  "searchFiltersTitle": "البحث والتصفية",
+  "searchNoExactMatch": "لا توجد نتيجة مطابقة لـ “{query}” — يتم عرض أقرب النتائج.",
+  "@searchNoExactMatch": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "searchWatchlistHint": "ابحث بالاسم أو العنوان أو الملاحظة"
 }

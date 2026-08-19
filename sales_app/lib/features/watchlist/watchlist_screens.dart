@@ -35,6 +35,17 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
   String _status = 'active';
   ListSortMode _sortMode = ListSortMode.date;
   Position? _position;
+  final _searchController = TextEditingController();
+  bool _isFuzzy = false;
+
+  String get _search => _searchController.text.trim();
+  bool get _searching => _search.isNotEmpty;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -62,11 +73,15 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
       final apiSort = _sortMode == ListSortMode.distance
           ? 'created_at'
           : _sortMode.watchlistApiSortParam();
-      final items = await ref.read(offlineWatchlistRepositoryProvider).listLocalAndRemote(
+      // A search shows both sections (Active, then Archived) unless the
+      // status filter was set explicitly to archived.
+      final result = await ref.read(offlineWatchlistRepositoryProvider).searchLocalAndRemote(
             salesPersonId: spId,
-            status: _status,
+            status: _searching && _status == 'active' ? 'all' : _status,
             sort: apiSort,
+            search: _searching ? _search : null,
           );
+      final items = result.items;
       Position? pos;
       if (_sortMode == ListSortMode.distance && await AppPermissions.requestLocation()) {
         try {
@@ -74,7 +89,24 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
         } catch (_) {}
       }
       var sorted = items;
-      if (_sortMode == ListSortMode.distance && pos != null) {
+      if (_searching) {
+        // Keep the server's active-first order so sections stay contiguous;
+        // re-sort by the chosen mode inside each section only.
+        List<WatchlistItemModel> within(List<WatchlistItemModel> part) => _sortMode == ListSortMode.distance
+            ? (pos == null
+                ? part
+                : sortByListMode(part, ListSortMode.distance,
+                    distanceMeters: (item) =>
+                        GpsParser.distanceMeters(pos!.latitude, pos.longitude, item.gps) ?? double.infinity))
+            : sortByListMode(part, _sortMode,
+                dateIso: (item) => item.createdAt,
+                name: (item) => item.displayTitle,
+                salesPerson: (item) => item.salesPerson?.name);
+        sorted = [
+          ...within(items.where((i) => i.isActive).toList()),
+          ...within(items.where((i) => !i.isActive).toList()),
+        ];
+      } else if (_sortMode == ListSortMode.distance && pos != null) {
         sorted = sortByListMode(
           items,
           ListSortMode.distance,
@@ -92,6 +124,7 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
       }
       setState(() {
         _items = sorted;
+        _isFuzzy = result.isFuzzy;
         _position = pos;
         _loading = false;
       });
@@ -132,27 +165,36 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
               tooltip: l10n.salesWatchlistViewMap,
               onPressed: _openMap,
             ),
-          ListSortButton(
-            modes: const [ListSortMode.distance, ListSortMode.date, ListSortMode.name],
-            selected: _sortMode,
-            onSelected: (mode) async {
-              _sortMode = mode;
-              await ListSortPreference(ref.read(sharedPreferencesProvider)).write(_listKey, mode);
-              await _load();
-            },
-          ),
-          PopupMenuButton<String>(
-            initialValue: _status,
-            onSelected: (v) {
-              setState(() => _status = v);
-              _load();
-            },
-            itemBuilder: (_) => [
-              PopupMenuItem(value: 'active', child: Text(l10n.salesWatchlistActive)),
-              PopupMenuItem(value: 'archived', child: Text(l10n.salesWatchlistArchived)),
-            ],
-          ),
+          FiltersDrawerButton(active: _searching || _status != 'active'),
         ],
+      ),
+      // Search / status / sort live in the drawer so the list gets the full
+      // height; the shell's bottom nav is untouched.
+      endDrawer: ListFiltersDrawer(
+        searchController: _searchController,
+        onSearchChanged: (_) => _load(),
+        searchHint: l10n.searchWatchlistHint,
+        statusOptions: [
+          MapEntry('active', l10n.salesWatchlistActive),
+          MapEntry('archived', l10n.salesWatchlistArchived),
+        ],
+        status: _status,
+        onStatusChanged: (v) {
+          setState(() => _status = v ?? 'active');
+          _load();
+        },
+        sortModes: const [ListSortMode.distance, ListSortMode.date, ListSortMode.name],
+        sort: _sortMode,
+        onSortChanged: (mode) async {
+          _sortMode = mode;
+          await ListSortPreference(ref.read(sharedPreferencesProvider)).write(_listKey, mode);
+          await _load();
+        },
+        onClear: () {
+          _searchController.clear();
+          setState(() => _status = 'active');
+          _load();
+        },
       ),
       floatingActionButton: TranslucentFab(
         onOpen: () => context.push('/watchlist/create'),
@@ -173,28 +215,32 @@ class _WatchlistListScreenState extends ConsumerState<WatchlistListScreen> {
                     )
                   : RefreshIndicator(
                       onRefresh: _load,
-                      child: ListView.builder(
+                      child: ListView(
                         padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.fabClearance),
-                        itemCount: _items.length,
-                        itemBuilder: (_, i) {
-                          final item = _items[i];
-                          return ListTile(
+                        children: sectionedChildren<WatchlistItemModel>(
+                          _items,
+                          banner: _searching && _isFuzzy ? FuzzyMatchBanner(query: _search) : null,
+                          sectionOf: (item) => _searching
+                              ? (item.isActive ? l10n.salesWatchlistActive : l10n.salesWatchlistArchived)
+                              : null,
+                          itemBuilder: (item) => ListTile(
                             leading: item.isLocalOnly
                                 ? Icon(Icons.cloud_off, color: AppColors.warning(context))
                                 : const Icon(Icons.place),
-                            title: Text(item.displayTitle),
-                            subtitle: Text(
+                            title: HighlightText(item.displayTitle, query: _searching ? _search : null),
+                            subtitle: HighlightText(
                               [
                                 if (item.createdAt != null) formatAppDateTime(item.createdAt),
                                 if (_position != null && _sortMode == ListSortMode.distance)
                                   '${((GpsParser.distanceMeters(_position!.latitude, _position!.longitude, item.gps) ?? 0) / 1000).toStringAsFixed(1)} km',
                                 item.noteText ?? item.gps,
                               ].where((s) => s.isNotEmpty).join(' · '),
+                              query: _searching ? _search : null,
                             ),
                             trailing: const Icon(Icons.chevron_right),
                             onTap: () => context.push('/watchlist/${item.id}'),
-                          );
-                        },
+                          ),
+                        ),
                       ),
                     ),
     );
@@ -746,9 +792,18 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
                 itemBuilder: (_, i) {
                   final img = item.images[i];
                   if (img.url == null) return const SizedBox.shrink();
+                  final gallery = [
+                    for (final m in item.images)
+                      if (m.url != null) MediaViewerItem(url: m.url),
+                  ];
                   return SizedBox(
                     width: 100,
-                    child: MediaImageTile(url: img.url, height: 100),
+                    child: MediaImageTile(
+                      url: img.url,
+                      height: 100,
+                      gallery: gallery,
+                      galleryIndex: gallery.indexWhere((g) => g.url == img.url),
+                    ),
                   );
                 },
               ),

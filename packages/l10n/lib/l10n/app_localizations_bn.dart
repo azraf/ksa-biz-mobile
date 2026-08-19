@@ -1957,4 +1957,33 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get customerOrdersEmpty => 'এখনও কোনো অর্ডার নেই।';
+
+  @override
+  String get commonSearch => 'খুঁজুন';
+
+  @override
+  String get commonClear => 'মুছুন';
+
+  @override
+  String get commonStatus => 'অবস্থা';
+
+  @override
+  String get commonClearFilters => 'ফিল্টার মুছুন';
+
+  @override
+  String get statusInactive => 'নিষ্ক্রিয়';
+
+  @override
+  String get statusAll => 'সব';
+
+  @override
+  String get searchFiltersTitle => 'খোঁজ ও ফিল্টার';
+
+  @override
+  String searchNoExactMatch(String query) {
+    return '“$query”-এর সাথে হুবহু মিল নেই — সবচেয়ে কাছাকাছি ফলাফল দেখানো হচ্ছে।';
+  }
+
+  @override
+  String get searchWatchlistHint => 'স্থান, ঠিকানা বা নোট খুঁজুন';
 }

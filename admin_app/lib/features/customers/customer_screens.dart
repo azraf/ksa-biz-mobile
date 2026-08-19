@@ -130,17 +130,19 @@ class _CustomerVansScreenState extends ConsumerState<CustomerVansScreen> {
     final l10n = AppLocalizations.of(context);
     final repo = ref.watch(customerRepositoryProvider);
     return CrudListScreen<CustomerVanModel>(
-      key: ValueKey('$_reloadToken-$_sortMode'),
+      key: ValueKey(_reloadToken),
       title: 'Customer Vans',
       loadItems: () async => (await repo.vans(query: CustomerListQuery(sort: _sortMode.apiSortParam()))).items,
+      searchItems: (q) => repo.vans(query: CustomerListQuery(search: q, sort: _sortMode.apiSortParam())),
+      searchHint: l10n.salesPickerSearchHint,
+      sectionOf: (v) => v.isInactive ? l10n.statusInactive : l10n.statusActive,
       itemTitle: (v) => v.name,
       itemSubtitle: customerListSubtitle,
       sortModes: const [ListSortMode.date, ListSortMode.name, ListSortMode.area, ListSortMode.salesPerson],
       initialSortMode: _sortMode,
       onSortChanged: (mode) async {
-        _sortMode = mode;
+        _sortMode = mode; // CrudListScreen reloads itself; no token bump (keeps the search text)
         await ListSortPreference(ref.read(sharedPreferencesProvider)).write(_listKey, mode);
-        setState(() => _reloadToken++);
       },
       sortItems: (items, mode) => sortByListMode(
         items,
@@ -250,18 +252,20 @@ class _CustomerImportersScreenState extends ConsumerState<CustomerImportersScree
     final l10n = AppLocalizations.of(context);
     final repo = ref.watch(customerRepositoryProvider);
     return CrudListScreen<CustomerImporterModel>(
-      key: ValueKey('$_reloadToken-$_sortMode'),
+      key: ValueKey(_reloadToken),
       title: 'Customer Importers',
       loadItems: () async =>
           (await repo.importers(query: CustomerListQuery(sort: _sortMode.apiSortParam()))).items,
+      searchItems: (q) => repo.importers(query: CustomerListQuery(search: q, sort: _sortMode.apiSortParam())),
+      searchHint: l10n.salesPickerSearchHint,
+      sectionOf: (v) => v.isInactive ? l10n.statusInactive : l10n.statusActive,
       itemTitle: (v) => v.name,
       itemSubtitle: customerListSubtitle,
       sortModes: const [ListSortMode.date, ListSortMode.name, ListSortMode.area, ListSortMode.salesPerson],
       initialSortMode: _sortMode,
       onSortChanged: (mode) async {
-        _sortMode = mode;
+        _sortMode = mode; // CrudListScreen reloads itself; no token bump (keeps the search text)
         await ListSortPreference(ref.read(sharedPreferencesProvider)).write(_listKey, mode);
-        setState(() => _reloadToken++);
       },
       sortItems: (items, mode) => sortByListMode(
         items,
@@ -353,10 +357,13 @@ class _CustomerShopsScreenState extends ConsumerState<CustomerShopsScreen> {
     final l10n = AppLocalizations.of(context);
     final repo = ref.watch(customerRepositoryProvider);
     return CrudListScreen<CustomerShopModel>(
-      key: ValueKey('$_reloadToken-$_sortMode'),
+      key: ValueKey(_reloadToken),
       title: 'Customer Shops',
       loadItems: () async =>
           (await repo.shops(query: CustomerListQuery(sort: _sortMode.apiSortParam()))).items,
+      searchItems: (q) => repo.shops(query: CustomerListQuery(search: q, sort: _sortMode.apiSortParam())),
+      searchHint: l10n.salesPickerSearchHint,
+      sectionOf: (s) => s.isInactive ? l10n.statusInactive : l10n.statusActive,
       itemTitle: (s) => s.name,
       itemSubtitle: customerListSubtitle,
       sortModes: const [
@@ -367,9 +374,8 @@ class _CustomerShopsScreenState extends ConsumerState<CustomerShopsScreen> {
       ],
       initialSortMode: _sortMode,
       onSortChanged: (mode) async {
-        _sortMode = mode;
+        _sortMode = mode; // CrudListScreen reloads itself; no token bump (keeps the search text)
         await ListSortPreference(ref.read(sharedPreferencesProvider)).write(_listKey, mode);
-        setState(() => _reloadToken++);
       },
       sortItems: (items, mode) => sortByListMode(
         items,

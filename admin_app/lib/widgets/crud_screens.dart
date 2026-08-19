@@ -1,5 +1,6 @@
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
+import 'package:l10n/l10n.dart';
 
 import 'field_config.dart';
 
@@ -32,6 +33,9 @@ class CrudListScreen<T> extends StatefulWidget {
     this.onEmptyAction,
     this.extraActions,
     this.itemLeading,
+    this.searchItems,
+    this.searchHint,
+    this.sectionOf,
   });
 
   final String title;
@@ -55,6 +59,16 @@ class CrudListScreen<T> extends StatefulWidget {
   final List<Widget>? extraActions;
   final Widget Function(T item)? itemLeading;
 
+  /// Server-side search. When set, the screen gets an end drawer holding the
+  /// search field (+ sort), a filter button in the app bar, and the list is
+  /// loaded from here instead of [loadItems] while a term is present.
+  final Future<PaginatedResponse<T>> Function(String search)? searchItems;
+  final String? searchHint;
+
+  /// Section label per item while a search term is active (items arrive
+  /// pre-ordered by section from the server).
+  final String? Function(T item)? sectionOf;
+
   @override
   State<CrudListScreen<T>> createState() => _CrudListScreenState<T>();
 }
@@ -62,18 +76,41 @@ class CrudListScreen<T> extends StatefulWidget {
 class _CrudListScreenState<T> extends State<CrudListScreen<T>> {
   late Future<List<T>> _future;
   ListSortMode? _sortMode;
+  final _searchController = TextEditingController();
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isFuzzy = false;
+
+  String get _search => _searchController.text.trim();
+  bool get _searching => widget.searchItems != null && _search.isNotEmpty;
 
   @override
   void initState() {
     super.initState();
     _sortMode = widget.initialSortMode;
-    _future = widget.loadItems();
+    _future = _load();
   }
 
-  void _reload() => setState(() => _future = widget.loadItems());
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<List<T>> _load() async {
+    if (!_searching) {
+      _isFuzzy = false;
+      return widget.loadItems();
+    }
+    final page = await widget.searchItems!(_search);
+    _isFuzzy = page.isFuzzy;
+    return page.items;
+  }
+
+  void _reload() => setState(() => _future = _load());
 
   List<T> _applySort(List<T> items) {
-    if (_sortMode == null || widget.sortItems == null) return items;
+    // While searching the server orders sections (Active first); keep it.
+    if (_searching || _sortMode == null || widget.sortItems == null) return items;
     return widget.sortItems!(items, _sortMode!);
   }
 
@@ -95,19 +132,18 @@ class _CrudListScreenState<T> extends State<CrudListScreen<T>> {
             onAction: widget.onEmptyAction,
           );
         }
-        return RefreshIndicator(
-          onRefresh: () async => _reload(),
-          child: ListView.separated(
-            itemCount: items.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final item = items[index];
+        final highlight = _searching ? _search : null;
+        final children = sectionedChildren<T>(
+          items,
+          banner: _searching && _isFuzzy ? FuzzyMatchBanner(query: _search) : null,
+          sectionOf: (item) => _searching ? widget.sectionOf?.call(item) : null,
+          itemBuilder: (item) {
               final pending = widget.isPending?.call(item) ?? false;
               final subtitle = widget.itemSubtitle?.call(item);
               return ListTile(
                 leading: widget.itemLeading?.call(item),
-                title: Text(widget.itemTitle(item)),
-                subtitle: subtitle != null && subtitle.isNotEmpty ? Text(subtitle) : null,
+                title: HighlightText(widget.itemTitle(item), query: highlight),
+                subtitle: subtitle != null && subtitle.isNotEmpty ? HighlightText(subtitle, query: highlight) : null,
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -129,18 +165,52 @@ class _CrudListScreenState<T> extends State<CrudListScreen<T>> {
                 ),
                 onTap: () => widget.onTap(item),
               );
-            },
+          },
+        );
+        return RefreshIndicator(
+          onRefresh: () async => _reload(),
+          child: ListView.separated(
+            itemCount: children.length,
+            separatorBuilder: (_, _) => const Divider(height: 1),
+            itemBuilder: (context, index) => children[index],
           ),
         );
       },
     );
   }
 
+  Widget? _filtersDrawer() {
+    if (widget.searchItems == null) return null;
+    return ListFiltersDrawer(
+      searchController: _searchController,
+      onSearchChanged: (_) => _reload(),
+      searchHint: widget.searchHint,
+      sortModes: widget.sortModes ?? const [],
+      sort: _sortMode,
+      onSortChanged: _onSortSelected,
+      onClear: () {
+        _searchController.clear();
+        _reload();
+      },
+    );
+  }
+
+  void _onSortSelected(ListSortMode mode) {
+    setState(() => _sortMode = mode);
+    widget.onSortChanged?.call(mode);
+    if (widget.sortItems != null && !_searching) {
+      setState(() {});
+    } else {
+      _reload();
+    }
+  }
+
   List<Widget> _headerActions() {
     final actions = <Widget>[
       IconButton(icon: const Icon(Icons.refresh), onPressed: _reload),
     ];
-    if (widget.sortModes != null &&
+    if (widget.searchItems == null &&
+        widget.sortModes != null &&
         widget.sortModes!.isNotEmpty &&
         _sortMode != null &&
         widget.onSortChanged != null) {
@@ -148,15 +218,7 @@ class _CrudListScreenState<T> extends State<CrudListScreen<T>> {
         ListSortButton(
           modes: widget.sortModes!,
           selected: _sortMode!,
-          onSelected: (mode) {
-            setState(() => _sortMode = mode);
-            widget.onSortChanged?.call(mode);
-            if (widget.sortItems != null) {
-              setState(() {});
-            } else {
-              _reload();
-            }
-          },
+          onSelected: _onSortSelected,
         ),
       );
     }
@@ -166,13 +228,21 @@ class _CrudListScreenState<T> extends State<CrudListScreen<T>> {
     if (widget.onAdd != null) {
       actions.add(IconButton(icon: const Icon(Icons.add), onPressed: widget.onAdd));
     }
+    if (widget.searchItems != null) {
+      // Search + sort live in the end drawer so the list gets the full height.
+      actions.add(IconButton(
+        tooltip: AppLocalizations.of(context).searchFiltersTitle,
+        icon: Badge(isLabelVisible: _searching, smallSize: 8, child: const Icon(Icons.tune)),
+        onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+      ));
+    }
     return actions;
   }
 
   @override
   Widget build(BuildContext context) {
     if (widget.embedded) {
-      return Column(
+      final column = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
@@ -197,9 +267,13 @@ class _CrudListScreenState<T> extends State<CrudListScreen<T>> {
           Expanded(child: _buildBody()),
         ],
       );
+      if (widget.searchItems == null) return column;
+      return Scaffold(key: _scaffoldKey, endDrawer: _filtersDrawer(), body: column);
     }
 
     return Scaffold(
+      key: _scaffoldKey,
+      endDrawer: _filtersDrawer(),
       appBar: AppBar(
         leading: widget.showDrawerButton
             ? Builder(

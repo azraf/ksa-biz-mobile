@@ -6,6 +6,7 @@ class PaginatedResponse<T> {
     required this.currentPage,
     required this.lastPage,
     required this.total,
+    this.searchMode = 'exact',
   });
 
   final List<T> items;
@@ -13,7 +14,11 @@ class PaginatedResponse<T> {
   final int lastPage;
   final int total;
 
+  /// 'exact' | 'fuzzy' — the server fell back to "most likely" matches.
+  final String searchMode;
+
   bool get hasMore => currentPage < lastPage;
+  bool get isFuzzy => searchMode == 'fuzzy';
 
   static PaginatedResponse<T> fromJson<T>(
     Map<String, dynamic> json,
@@ -25,6 +30,7 @@ class PaginatedResponse<T> {
       currentPage: parseJsonInt(json['current_page'], fallback: 1),
       lastPage: parseJsonInt(json['last_page'], fallback: 1),
       total: parseJsonInt(json['total'], fallback: data.length),
+      searchMode: json['search_mode'] as String? ?? 'exact',
     );
   }
 }

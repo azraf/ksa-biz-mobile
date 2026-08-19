@@ -1945,4 +1945,33 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get customerOrdersEmpty => 'لا توجد طلبات بعد.';
+
+  @override
+  String get commonSearch => 'بحث';
+
+  @override
+  String get commonClear => 'مسح';
+
+  @override
+  String get commonStatus => 'الحالة';
+
+  @override
+  String get commonClearFilters => 'مسح عوامل التصفية';
+
+  @override
+  String get statusInactive => 'غير نشط';
+
+  @override
+  String get statusAll => 'الكل';
+
+  @override
+  String get searchFiltersTitle => 'البحث والتصفية';
+
+  @override
+  String searchNoExactMatch(String query) {
+    return 'لا توجد نتيجة مطابقة لـ “$query” — يتم عرض أقرب النتائج.';
+  }
+
+  @override
+  String get searchWatchlistHint => 'ابحث بالاسم أو العنوان أو الملاحظة';
 }

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:core/core.dart' hide showQuickCreateCustomerSheet;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,11 +19,39 @@ class CustomerDetailRouteArgs {
   final dynamic customer;
 }
 
-class CustomersHubScreen extends ConsumerWidget {
+class CustomersHubScreen extends ConsumerStatefulWidget {
   const CustomersHubScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CustomersHubScreen> createState() => _CustomersHubScreenState();
+}
+
+class _CustomersHubScreenState extends ConsumerState<CustomersHubScreen> with SingleTickerProviderStateMixin {
+  static const _types = ['customer_shop', 'customer_van', 'customer_importer'];
+
+  late final TabController _tabs = TabController(length: _types.length, vsync: this)..addListener(_onTab);
+  final _keys = List.generate(_types.length, (_) => GlobalKey<_CustomerTypeListState>());
+  // Search/sort live in each tab's end drawer (list gets the full height);
+  // these notifiers only drive the badge on the app-bar filter button.
+  final _filtersActive = List.generate(_types.length, (_) => ValueNotifier<bool>(false));
+
+  void _onTab() {
+    if (!_tabs.indexIsChanging) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    for (final n in _filtersActive) {
+      n.dispose();
+    }
+    super.dispose();
+  }
+
+  _CustomerTypeListState? get _current => _keys[_tabs.index].currentState;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final spId = requireSalesPersonId(ref.watch(authProvider));
     if (spId == null) {
@@ -38,44 +64,68 @@ class CustomersHubScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.salesCustomersTitle),
+        actions: [
+          if (_tabs.index == 0)
+            IconButton(
+              icon: const Icon(Icons.map_outlined),
+              tooltip: l10n.salesCustomersNearby,
+              onPressed: () => _current?.openMap(),
+            ),
+          IconButton(
+            icon: const Icon(Icons.person_add_outlined),
+            tooltip: l10n.commonCreateCustomer,
+            onPressed: () => _current?.openQuickCreate(),
+          ),
+          ValueListenableBuilder<bool>(
+            valueListenable: _filtersActive[_tabs.index],
+            builder: (context, active, _) => IconButton(
+              tooltip: l10n.searchFiltersTitle,
+              icon: Badge(isLabelVisible: active, smallSize: 8, child: const Icon(Icons.tune)),
+              onPressed: () => _current?.openFilters(),
+            ),
+          ),
+        ],
       ),
-      body: DefaultTabController(
-        length: 3,
-        child: Column(
-          children: [
-            Material(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                    child: Text(
-                      l10n.salesCustomersAssignedOnly,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
+      body: Column(
+        children: [
+          Material(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Text(
+                    l10n.salesCustomersAssignedOnly,
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
-                  TabBar(
-                    tabs: [
-                      Tab(text: l10n.salesCustomersShops),
-                      Tab(text: l10n.salesCustomersVans),
-                      Tab(text: l10n.salesCustomersImporters),
-                    ],
+                ),
+                TabBar(
+                  controller: _tabs,
+                  tabs: [
+                    Tab(text: l10n.salesCustomersShops),
+                    Tab(text: l10n.salesCustomersVans),
+                    Tab(text: l10n.salesCustomersImporters),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabs,
+              children: [
+                for (var i = 0; i < _types.length; i++)
+                  _CustomerTypeList(
+                    key: _keys[i],
+                    customerType: _types[i],
+                    salesPersonId: spId,
+                    filtersActive: _filtersActive[i],
                   ),
-                ],
-              ),
+              ],
             ),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  _CustomerTypeList(customerType: 'customer_shop', salesPersonId: spId),
-                  _CustomerTypeList(customerType: 'customer_van', salesPersonId: spId),
-                  _CustomerTypeList(customerType: 'customer_importer', salesPersonId: spId),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -83,12 +133,15 @@ class CustomersHubScreen extends ConsumerWidget {
 
 class _CustomerTypeList extends ConsumerStatefulWidget {
   const _CustomerTypeList({
+    super.key,
     required this.customerType,
     required this.salesPersonId,
+    required this.filtersActive,
   });
 
   final String customerType;
   final int salesPersonId;
+  final ValueNotifier<bool> filtersActive;
 
   @override
   ConsumerState<_CustomerTypeList> createState() => _CustomerTypeListState();
@@ -98,7 +151,8 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
   static const _perPage = 25;
 
   final _searchController = TextEditingController();
-  Timer? _debounce;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isFuzzy = false;
   bool _loading = true;
   String? _error;
   List<dynamic> _items = [];
@@ -119,21 +173,27 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
       _listKey(),
       defaultMode: prefs.defaultForList(_listKey()),
     );
-    _searchController.addListener(_onSearchChanged);
     _load();
   }
 
   @override
   void dispose() {
-    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
-  void _onSearchChanged() {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () => _load(page: 1));
+  String get _search => _searchController.text.trim();
+
+  void _onSearchChanged(String value) {
+    widget.filtersActive.value = value.isNotEmpty;
+    _load(page: 1);
   }
+
+  void openFilters() => _scaffoldKey.currentState?.openEndDrawer();
+
+  void openMap() => _openMap();
+
+  Future<void> openQuickCreate() => _openQuickCreate();
 
   Future<void> _captureLocation() async {
     if (!await AppPermissions.requestLocation()) return;
@@ -145,7 +205,7 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
 
   Future<void> _load({int? page, bool append = false}) async {
     if (page != null) _page = page;
-    final search = _searchController.text.trim();
+    final search = _search;
     final repo = ref.read(offlineCustomerRepositoryProvider);
 
     // Cache-first paint: on a cold first load (nothing on screen yet), show
@@ -154,9 +214,10 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
     if (!append && _page == 1 && _items.isEmpty) {
       try {
         final cached = await _cachedPage(repo, search);
-        if (cached.isNotEmpty && mounted) {
+        if (cached.items.isNotEmpty && mounted) {
           setState(() {
-            _items = _clientSort(cached);
+            _items = _clientSort(cached.items);
+            _isFuzzy = cached.isFuzzy;
             _loading = false;
           });
         }
@@ -223,6 +284,7 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
           _items = items;
         }
         _lastPage = result.lastPage;
+        if (!append) _isFuzzy = result.isFuzzy;
         _loading = false;
         _loadingMore = false;
       });
@@ -239,15 +301,15 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
     }
   }
 
-  Future<List<dynamic>> _cachedPage(OfflineCustomerRepository repo, String search) async {
+  Future<PaginatedResponse<dynamic>> _cachedPage(OfflineCustomerRepository repo, String search) async {
     final s = search.isEmpty ? null : search;
     switch (widget.customerType) {
       case 'customer_van':
-        return (await repo.cachedVans(search: s, perPage: _perPage)).items;
+        return repo.cachedVans(search: s, perPage: _perPage);
       case 'customer_importer':
-        return (await repo.cachedImporters(search: s, perPage: _perPage)).items;
+        return repo.cachedImporters(search: s, perPage: _perPage);
       default:
-        return (await repo.cachedShops(search: s, perPage: _perPage)).items;
+        return repo.cachedShops(search: s, perPage: _perPage);
     }
   }
 
@@ -262,6 +324,9 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
   }
 
   List<dynamic> _clientSort(List<dynamic> items) {
+    // While searching the server orders Active before Inactive so the list can
+    // be sectioned; re-sorting client-side would interleave the sections.
+    if (_search.isNotEmpty) return items;
     return sortByListMode(
       items,
       _sortMode,
@@ -327,6 +392,13 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
     return '';
   }
 
+  bool _isInactive(dynamic item) => switch (item) {
+        CustomerShopModel(:final isInactive) => isInactive,
+        CustomerVanModel(:final isInactive) => isInactive,
+        CustomerImporterModel(:final isInactive) => isInactive,
+        _ => false,
+      };
+
   String? _phone(dynamic item) {
     if (item is CustomerShopModel) return item.primaryContact?.contactMobile;
     if (item is CustomerVanModel) return item.mobile;
@@ -379,86 +451,75 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final searching = _search.isNotEmpty;
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    labelText: l10n.salesPickerSearchHint,
-                    prefixIcon: const Icon(Icons.search),
-                    isDense: true,
-                  ),
-                ),
-              ),
-              if (widget.customerType == 'customer_shop' && _items.isNotEmpty)
-                IconButton(
-                  icon: const Icon(Icons.map_outlined),
-                  tooltip: l10n.salesCustomersNearby,
-                  onPressed: _openMap,
-                ),
-              ListSortButton(
-                modes: _sortModes(),
-                selected: _sortMode,
-                onSelected: _onSortChanged,
-              ),
-              IconButton(
-                icon: const Icon(Icons.person_add_outlined),
-                tooltip: l10n.commonCreateCustomer,
-                onPressed: _openQuickCreate,
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: _loading
-              ? LoadingView(message: l10n.commonLoading)
-              : _error != null
-                  ? ErrorView(message: _error!, onRetry: () => _load(page: 1))
-                  : _items.isEmpty
-                      ? EmptyView(
-                          message: l10n.salesCustomersEmpty,
-                          actionLabel: l10n.commonCreateCustomer,
-                          onAction: _openQuickCreate,
-                        )
-                      : RefreshIndicator(
-                          onRefresh: () => _load(page: 1),
-                          child: ListView.builder(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            itemCount: _items.length + (_page < _lastPage ? 1 : 0),
-                            itemBuilder: (_, index) {
-                              if (index >= _items.length) {
-                                if (!_loadingMore) _loadMore();
-                                return const Padding(
-                                  padding: EdgeInsets.all(16),
-                                  child: Center(child: CircularProgressIndicator()),
-                                );
-                              }
-                              final item = _items[index];
-                              return _CustomerListTile(
+    // Nested Scaffold only to host the end drawer — the shell's bottom nav is
+    // untouched, and the list gets the whole tab height.
+    return Scaffold(
+      key: _scaffoldKey,
+      endDrawer: ListFiltersDrawer(
+        searchController: _searchController,
+        onSearchChanged: _onSearchChanged,
+        searchHint: l10n.salesPickerSearchHint,
+        sortModes: _sortModes(),
+        sort: _sortMode,
+        onSortChanged: _onSortChanged,
+        onClear: () {
+          _searchController.clear();
+          _onSearchChanged('');
+        },
+      ),
+      body: _loading
+          ? LoadingView(message: l10n.commonLoading)
+          : _error != null
+              ? ErrorView(message: _error!, onRetry: () => _load(page: 1))
+              : _items.isEmpty
+                  ? EmptyView(
+                      message: l10n.salesCustomersEmpty,
+                      actionLabel: l10n.commonCreateCustomer,
+                      onAction: _openQuickCreate,
+                    )
+                  : RefreshIndicator(
+                      onRefresh: () => _load(page: 1),
+                      child: Builder(builder: (context) {
+                        final children = sectionedChildren<dynamic>(
+                          _items,
+                          banner: searching && _isFuzzy ? FuzzyMatchBanner(query: _search) : null,
+                          sectionOf: (item) => searching
+                              ? (_isInactive(item) ? l10n.statusInactive : l10n.statusActive)
+                              : null,
+                          itemBuilder: (item) => _CustomerListTile(
+                            customerType: widget.customerType,
+                            name: _itemName(item),
+                            subtitle: customerListSubtitle(item),
+                            metrics: _metrics(item),
+                            phoneNumber: _phone(item),
+                            highlight: searching ? _search : null,
+                            onTap: () => context.push(
+                              _detailPath(item),
+                              extra: CustomerDetailRouteArgs(
                                 customerType: widget.customerType,
-                                name: _itemName(item),
-                                subtitle: customerListSubtitle(item),
-                                metrics: _metrics(item),
-                                phoneNumber: _phone(item),
-                                onTap: () => context.push(
-                                  _detailPath(item),
-                                  extra: CustomerDetailRouteArgs(
-                                    customerType: widget.customerType,
-                                    customer: item,
-                                  ),
-                                ),
-                              );
-                            },
+                                customer: item,
+                              ),
+                            ),
                           ),
-                        ),
-        ),
-      ],
+                        );
+                        return ListView.builder(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          itemCount: children.length + (_page < _lastPage ? 1 : 0),
+                          itemBuilder: (_, index) {
+                            if (index >= children.length) {
+                              if (!_loadingMore) _loadMore();
+                              return const Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Center(child: CircularProgressIndicator()),
+                              );
+                            }
+                            return children[index];
+                          },
+                        );
+                      }),
+                    ),
     );
   }
 }
@@ -472,6 +533,7 @@ class _CustomerListTile extends StatelessWidget {
     required this.metrics,
     required this.phoneNumber,
     required this.onTap,
+    this.highlight,
   });
 
   final String customerType;
@@ -480,6 +542,7 @@ class _CustomerListTile extends StatelessWidget {
   final CustomerMetricsFields? metrics;
   final String? phoneNumber;
   final VoidCallback onTap;
+  final String? highlight;
 
   IconData get _leadingIcon => switch (customerType) {
         'customer_shop' => Icons.store,
@@ -504,11 +567,12 @@ class _CustomerListTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(name, style: theme.textTheme.titleMedium),
+                  HighlightText(name, query: highlight, style: theme.textTheme.titleMedium),
                   if (subtitle.isNotEmpty) ...[
                     const SizedBox(height: 2),
-                    Text(
+                    HighlightText(
                       subtitle,
+                      query: highlight,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),

@@ -4,6 +4,7 @@ import '../models/admin_models.dart';
 import '../models/customer.dart';
 import '../models/customer_assignment_models.dart';
 import '../models/paginated_response.dart';
+import '../support/search_match.dart';
 import '../offline/local_database.dart';
 import 'customer_repository.dart';
 
@@ -232,13 +233,12 @@ class OfflineCustomerRepository {
     required int perPage,
   }) async {
     final cached = await _db.getCachedEntities('customer_shop');
-    final items = cached
+    final all = cached
         .map((e) => CustomerShopModel.fromJson(e))
         .where((e) => !e.isSystem)
-        .where((e) => _matchesShopSearch(e, search))
         .toList()
       ..sort((a, b) => a.name.compareTo(b.name));
-    return _pageSlice(items, page, perPage);
+    return _searchSlice(all, search, (e) => [e.name, e.primaryContact?.contactName, e.primaryContact?.contactMobile], page, perPage);
   }
 
   Future<PaginatedResponse<CustomerVanModel>> _cachedVansPage({
@@ -247,12 +247,11 @@ class OfflineCustomerRepository {
     required int perPage,
   }) async {
     final cached = await _db.getCachedEntities('customer_van');
-    final items = cached
+    final all = cached
         .map((e) => CustomerVanModel.fromJson(e))
-        .where((e) => _matchesNameOrMobile(e.name, e.mobile, search))
         .toList()
       ..sort((a, b) => a.name.compareTo(b.name));
-    return _pageSlice(items, page, perPage);
+    return _searchSlice(all, search, (e) => [e.name, e.mobile], page, perPage);
   }
 
   Future<PaginatedResponse<CustomerImporterModel>> _cachedImportersPage({
@@ -261,12 +260,11 @@ class OfflineCustomerRepository {
     required int perPage,
   }) async {
     final cached = await _db.getCachedEntities('customer_importer');
-    final items = cached
+    final all = cached
         .map((e) => CustomerImporterModel.fromJson(e))
-        .where((e) => _matchesNameOrMobile(e.name, e.mobile, search))
         .toList()
       ..sort((a, b) => a.name.compareTo(b.name));
-    return _pageSlice(items, page, perPage);
+    return _searchSlice(all, search, (e) => [e.name, e.mobile], page, perPage);
   }
 
   PaginatedResponse<T> _pageSlice<T>(List<T> items, int page, int perPage) {
@@ -277,23 +275,40 @@ class OfflineCustomerRepository {
     return PaginatedResponse(items: slice, currentPage: page, lastPage: lastPage, total: total);
   }
 
-  bool _matchesShopSearch(CustomerShopModel shop, String? search) {
-    if (search == null || search.isEmpty) return true;
-    final s = search.toLowerCase();
-    if (shop.name.toLowerCase().contains(s)) return true;
-    final pc = shop.primaryContact;
-    if (pc?.contactName?.toLowerCase().contains(s) ?? false) return true;
-    if (pc?.contactMobile?.contains(search.replaceAll(RegExp(r'\D'), '')) ?? false) return true;
-    return false;
+  /// Offline search over the cached list: same multi-word matcher (and
+  /// fuzzy fallback) as the server; digits-only queries also match a phone
+  /// with punctuation stripped. Active customers first while searching so the
+  /// screen can section, exactly like the live response.
+  PaginatedResponse<T> _searchSlice<T>(
+    List<T> items,
+    String? search,
+    Iterable<String?> Function(T) fields,
+    int page,
+    int perPage,
+  ) {
+    if (search == null || search.trim().isEmpty) return _pageSlice(items, page, perPage);
+    final digits = search.replaceAll(RegExp(r'\D'), '');
+    final phoneMode = digits.length >= 7; // same heuristic as the server
+    final r = phoneMode
+        ? SearchMatch.filterOrFuzzy(items, digits, (e) => fields(e).map((f) => f?.replaceAll(RegExp(r'\D'), '')))
+        : SearchMatch.filterOrFuzzy(items, search, fields);
+    final sorted = [...r.items]..sort((a, b) => (_isInactive(a) ? 1 : 0).compareTo(_isInactive(b) ? 1 : 0));
+    final pageResult = _pageSlice(sorted, page, perPage);
+    return PaginatedResponse(
+      items: pageResult.items,
+      currentPage: pageResult.currentPage,
+      lastPage: pageResult.lastPage,
+      total: pageResult.total,
+      searchMode: r.isFuzzy ? 'fuzzy' : 'exact',
+    );
   }
 
-  bool _matchesNameOrMobile(String name, String? mobile, String? search) {
-    if (search == null || search.isEmpty) return true;
-    final s = search.toLowerCase();
-    if (name.toLowerCase().contains(s)) return true;
-    if (mobile != null && mobile.contains(search.replaceAll(RegExp(r'\D'), ''))) return true;
-    return false;
-  }
+  bool _isInactive(Object? e) => switch (e) {
+        CustomerShopModel s => s.isInactive,
+        CustomerVanModel v => v.isInactive,
+        CustomerImporterModel i => i.isInactive,
+        _ => false,
+      };
 
   Future<void> _cacheShopsBatch(List<CustomerShopModel> shops) async {
     await _db.cacheEntitiesBatch(

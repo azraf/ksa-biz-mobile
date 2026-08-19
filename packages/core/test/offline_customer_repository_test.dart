@@ -69,4 +69,35 @@ void main() {
     expect(result.items, isNotEmpty);
     expect(result.items.first.name, 'zzz-cache-first-test-marker');
   });
+
+  test('cached search: multi-word AND, no match-all on letters, fuzzy fallback, active first', () async {
+    await LocalDatabase.instance.cacheEntitiesBatch(
+      entityType: 'customer_van',
+      entities: const [
+        (entityId: 999910, data: {'id': 999910, 'name': 'Zed Alpha Van', 'mobile': '0501112222', 'is_inactive': true}),
+        (entityId: 999911, data: {'id': 999911, 'name': 'Zed Beta Van', 'mobile': '0503334444', 'is_inactive': false}),
+      ],
+    );
+
+    var r = await repo().cachedVans(search: 'zed van');
+    expect(r.items.map((v) => v.name), ['Zed Beta Van', 'Zed Alpha Van']); // active first
+    expect(r.isFuzzy, isFalse);
+
+    r = await repo().cachedVans(search: 'zed alpha');
+    expect(r.items.map((v) => v.name), ['Zed Alpha Van']);
+
+    // Letters that match nothing must not return every row (old contains('') bug).
+    r = await repo().cachedVans(search: 'qqqqqq');
+    expect(r.items, isEmpty);
+    expect(r.isFuzzy, isFalse);
+
+    // Misspelling → most likely
+    r = await repo().cachedVans(search: 'zed betta');
+    expect(r.items.map((v) => v.name), ['Zed Beta Van']);
+    expect(r.isFuzzy, isTrue);
+
+    // Phone digits with formatting
+    r = await repo().cachedVans(search: '050 333 4444');
+    expect(r.items.map((v) => v.name), ['Zed Beta Van']);
+  });
 }

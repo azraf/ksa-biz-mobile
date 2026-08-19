@@ -1,4 +1,5 @@
 import '../models/watchlist_item.dart';
+import '../support/search_match.dart';
 import '../offline/local_database.dart';
 import '../offline/sync_queue_item.dart';
 import 'watchlist_repository.dart';
@@ -20,12 +21,23 @@ class OfflineWatchlistRepository {
     required int salesPersonId,
     String status = 'active',
     String sort = 'created_at',
+    String? search,
+  }) async => (await searchLocalAndRemote(salesPersonId: salesPersonId, status: status, sort: sort, search: search)).items;
+
+  /// Like [listLocalAndRemote] but also reports whether the result is a
+  /// "most likely" (fuzzy) match. Offline, the cached items are filtered with
+  /// the same matcher the server uses; [status] 'all' returns both statuses.
+  Future<({List<WatchlistItemModel> items, bool isFuzzy})> searchLocalAndRemote({
+    required int salesPersonId,
+    String status = 'active',
+    String sort = 'created_at',
+    String? search,
   }) async {
-    final local = await _localItems(salesPersonId, status);
+    final local = await _localItems(salesPersonId, status, search);
     if (!_isOnline()) return local;
 
     try {
-      final remote = await _remote.list(salesPersonId: salesPersonId, status: status, sort: sort);
+      final remote = await _remote.list(salesPersonId: salesPersonId, status: status, sort: sort, search: search);
       for (final item in remote.items) {
         await _db.cacheEntity(
           entityType: 'watchlist',
@@ -33,19 +45,29 @@ class OfflineWatchlistRepository {
           data: _toCache(item),
         );
       }
-      final pending = local.where((e) => e.isLocalOnly).toList();
-      return [...pending, ...remote.items];
+      final pending = local.items.where((e) => e.isLocalOnly).toList();
+      return (items: [...pending, ...remote.items], isFuzzy: remote.isFuzzy);
     } catch (_) {
       return local;
     }
   }
 
-  Future<List<WatchlistItemModel>> _localItems(int salesPersonId, String status) async {
+  Future<({List<WatchlistItemModel> items, bool isFuzzy})> _localItems(
+    int salesPersonId,
+    String status,
+    String? search,
+  ) async {
     final cached = await _db.getCachedEntities('watchlist');
-    return cached
-        .where((e) => e['sales_person_id'] == salesPersonId && (e['status'] as String? ?? 'active') == status)
+    final items = cached
+        .where((e) =>
+            e['sales_person_id'] == salesPersonId &&
+            (status == 'all' || (e['status'] as String? ?? 'active') == status))
         .map((e) => WatchlistItemModel.fromJson(e))
         .toList();
+    if (search == null || search.trim().isEmpty) return (items: items, isFuzzy: false);
+    // Active first so the screen can section, same as the server.
+    items.sort((a, b) => (a.isActive ? 0 : 1).compareTo(b.isActive ? 0 : 1));
+    return SearchMatch.filterOrFuzzy(items, search, (i) => [i.placeName, i.noteText, i.gps]);
   }
 
   Future<WatchlistItemModel> create({

@@ -1952,4 +1952,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get customerOrdersEmpty => 'No orders yet.';
+
+  @override
+  String get commonSearch => 'Search';
+
+  @override
+  String get commonClear => 'Clear';
+
+  @override
+  String get commonStatus => 'Status';
+
+  @override
+  String get commonClearFilters => 'Clear filters';
+
+  @override
+  String get statusInactive => 'Inactive';
+
+  @override
+  String get statusAll => 'All';
+
+  @override
+  String get searchFiltersTitle => 'Search & filters';
+
+  @override
+  String searchNoExactMatch(String query) {
+    return 'No exact match for “$query” — showing most likely results.';
+  }
+
+  @override
+  String get searchWatchlistHint => 'Search place, address or note';
 }

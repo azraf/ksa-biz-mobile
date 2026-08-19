@@ -699,7 +699,7 @@
   "statusPending": "Pending",
   "statusDraft": "Draft",
   "planPurposeField": "Purpose",
-  "orderDraftEditableNotice": "This order is a draft \u2014 you can still edit it until the salesperson confirms it.",
+  "orderDraftEditableNotice": "This order is a draft — you can still edit it until the salesperson confirms it.",
   "commonEdit": "Edit",
   "statusPartial": "Partial",
   "statusPaid": "Paid",
@@ -924,5 +924,21 @@
         "type": "int"
       }
     }
-  }
+  },
+  "commonSearch": "Search",
+  "commonClear": "Clear",
+  "commonStatus": "Status",
+  "commonClearFilters": "Clear filters",
+  "statusInactive": "Inactive",
+  "statusAll": "All",
+  "searchFiltersTitle": "Search & filters",
+  "searchNoExactMatch": "No exact match for “{query}” — showing most likely results.",
+  "@searchNoExactMatch": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "searchWatchlistHint": "Search place, address or note"
 }
