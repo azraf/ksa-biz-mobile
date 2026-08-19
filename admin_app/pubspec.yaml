@@ -1,7 +1,7 @@
 name: admin_app
 description: KSA Biz admin mobile app with offline support.
 publish_to: 'none'
-version: 3.1.1+7
+version: 3.2.0+8
 
 environment:
   sdk: ^3.11.3
