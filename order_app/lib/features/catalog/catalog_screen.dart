@@ -142,7 +142,9 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                                           width: 48,
                                           height: 48,
                                           child: MediaImageTile(
-                                              url: item.product.featureImageUrl, height: 48),
+                                              url: item.product.featureImageUrl,
+                                              height: 48,
+                                              tapToView: false),
                                         )
                                       : CircleAvatar(child: Text('${i + 1}')),
                                   title: Text(item.product.name),

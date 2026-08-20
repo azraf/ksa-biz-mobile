@@ -37,13 +37,31 @@ class UsersScreen extends ConsumerWidget {
       title: user == null ? 'New User' : 'Edit User',
       initialValues: user == null
           ? {}
-          : {'name': user.name, 'email': user.email, 'language': user.language},
+          : {
+              'name': user.name,
+              'email': user.email,
+              'phone': user.phone,
+              'language': user.language,
+            },
       fields: [
         const FieldConfig(key: 'name', label: 'Name', required: true),
         const FieldConfig(key: 'email', label: 'Email', type: FieldType.email, required: true),
+        const FieldConfig(key: 'phone', label: 'Phone'),
+        FieldConfig(
+          key: 'language',
+          label: 'Language',
+          type: FieldType.dropdown,
+          options: const [
+            DropdownOption(value: 'en', label: 'English'),
+            DropdownOption(value: 'ar', label: 'Arabic'),
+          ],
+        ),
         if (user == null) ...[
           const FieldConfig(key: 'password', label: 'Password', type: FieldType.password, required: true),
           const FieldConfig(key: 'password_confirmation', label: 'Confirm Password', type: FieldType.password, required: true),
+        ] else ...[
+          const FieldConfig(key: 'password', label: 'New password', type: FieldType.password),
+          const FieldConfig(key: 'password_confirmation', label: 'Confirm new password', type: FieldType.password),
         ],
         const FieldConfig(
           key: 'roles',
@@ -55,6 +73,12 @@ class UsersScreen extends ConsumerWidget {
         final admin = ref.read(adminRepositoriesProvider);
         final rolesStr = v.remove('roles')?.toString() ?? '';
         final roleList = rolesStr.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+        final password = v.remove('password')?.toString();
+        final passwordConfirm = v.remove('password_confirmation')?.toString();
+        if (password != null && password.isNotEmpty) {
+          v['password'] = password;
+          v['password_confirmation'] = passwordConfirm ?? password;
+        }
         if (user == null) {
           v['roles'] = roleList.isEmpty ? ['admin'] : roleList;
           await admin.users.create(v);

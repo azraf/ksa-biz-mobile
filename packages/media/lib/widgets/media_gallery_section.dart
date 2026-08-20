@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'media_audio_player.dart';
 import 'media_image_tile.dart';
+import 'media_image_viewer.dart';
 import 'media_video_player.dart';
 
 class MediaGallerySection extends StatelessWidget {
@@ -23,12 +24,27 @@ class MediaGallerySection extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    // Viewer items in display order so the full-screen viewer can page
+    // through the record's images with prev/next.
+    final viewerItems = <MediaViewerItem>[
+      for (final local in localItems)
+        if (local.kind == MediaKind.image) MediaViewerItem(localPath: local.path),
+      for (final item in remoteItems)
+        if (item.type == 'gallery' || item.mimeType?.startsWith('image/') == true)
+          MediaViewerItem(url: item.url),
+    ];
+
     final images = <Widget>[];
     final players = <Widget>[];
 
     for (final local in localItems) {
       if (local.kind == MediaKind.image) {
-        images.add(MediaImageTile(localPath: local.path, height: 100));
+        images.add(MediaImageTile(
+          localPath: local.path,
+          height: 100,
+          gallery: viewerItems,
+          galleryIndex: images.length,
+        ));
       } else if (local.kind == MediaKind.audio) {
         players.add(ListTile(
           leading: const Icon(Icons.audiotrack),
@@ -46,7 +62,12 @@ class MediaGallerySection extends StatelessWidget {
 
     for (final item in remoteItems) {
       if (item.type == 'gallery' || item.mimeType?.startsWith('image/') == true) {
-        images.add(MediaImageTile(url: item.url, height: 100));
+        images.add(MediaImageTile(
+          url: item.url,
+          height: 100,
+          gallery: viewerItems,
+          galleryIndex: images.length,
+        ));
       } else if (item.isAudio && item.url != null) {
         players.add(MediaAudioPlayer(url: item.url!, title: item.originalName ?? item.type));
       } else if (item.isVideo && item.url != null) {

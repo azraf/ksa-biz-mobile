@@ -9,6 +9,7 @@ class PurchaseItemModel extends Equatable {
     required this.purchaseId,
     required this.productId,
     required this.quantity,
+    this.unitId,
     this.unitPrice,
     this.unitCost,
     this.discount,
@@ -22,6 +23,7 @@ class PurchaseItemModel extends Equatable {
   final int purchaseId;
   final int productId;
   final int quantity;
+  final int? unitId;
   final double? unitPrice;
   final double? unitCost;
   final double? discount;
@@ -35,6 +37,7 @@ class PurchaseItemModel extends Equatable {
         purchaseId: json['purchase_id'] as int,
         productId: json['product_id'] as int,
         quantity: json['quantity'] as int? ?? 0,
+        unitId: json['unit_id'] as int?,
         unitPrice: _toDouble(json['unit_price'] ?? json['unit_cost']),
         unitCost: _toDouble(json['unit_cost']),
         discount: _toDouble(json['discount']),
@@ -55,6 +58,7 @@ class PurchaseItemModel extends Equatable {
   Map<String, dynamic> toJson() => {
         'product_id': productId,
         'quantity': quantity,
+        if (unitId != null) 'unit_id': unitId,
         if (unitPrice != null) 'unit_price': unitPrice,
         if (unitCost != null) 'unit_cost': unitCost,
         if (discount != null) 'discount': discount,

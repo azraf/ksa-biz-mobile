@@ -25,6 +25,9 @@ Future<void> main() async {
     return;
   }
   final prefs = await SharedPreferences.getInstance();
+  if (!prefs.containsKey(AppConfig.appLocaleKey)) {
+    await prefs.setString(AppConfig.appLocaleKey, 'bn');
+  }
   await PushNotificationService.instance.initialize();
 
   runApp(

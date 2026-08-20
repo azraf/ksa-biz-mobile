@@ -184,7 +184,7 @@ class ProductsScreen extends ConsumerWidget {
       itemLeading: (p) => SizedBox(
         width: 48,
         height: 48,
-        child: MediaImageTile(url: p.featureImageUrl, height: 48),
+        child: MediaImageTile(url: p.featureImageUrl, height: 48, tapToView: false),
       ),
       itemTitle: (p) => '${p.name} — ${p.price}',
       onTap: (p) => context.push('/catalog/products/${p.id}'),

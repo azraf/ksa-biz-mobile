@@ -8,4 +8,5 @@ export 'models/compressed_media.dart';
 export 'widgets/media_audio_player.dart';
 export 'widgets/media_gallery_section.dart';
 export 'widgets/media_image_tile.dart';
+export 'widgets/media_image_viewer.dart';
 export 'widgets/media_video_player.dart';

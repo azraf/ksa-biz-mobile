@@ -317,6 +317,7 @@ class AdminUserModel extends Equatable {
     required this.id,
     required this.name,
     this.email,
+    this.phone,
     this.language,
     this.roles = const [],
     this.avatarUrl,
@@ -325,6 +326,7 @@ class AdminUserModel extends Equatable {
   final int id;
   final String name;
   final String? email;
+  final String? phone;
   final String? language;
   final List<String> roles;
   final String? avatarUrl;
@@ -333,6 +335,7 @@ class AdminUserModel extends Equatable {
         id: json['id'] as int,
         name: json['name'] as String? ?? '',
         email: json['email'] as String?,
+        phone: json['phone'] as String?,
         language: json['language'] as String?,
         roles: (json['roles'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
         avatarUrl: json['avatar_url'] as String?,
@@ -341,6 +344,7 @@ class AdminUserModel extends Equatable {
   Map<String, dynamic> toJson() => {
         'name': name,
         if (email != null) 'email': email,
+        if (phone != null) 'phone': phone,
         if (language != null) 'language': language,
       };
 

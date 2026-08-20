@@ -6,6 +6,7 @@ class CategoryModel extends Equatable {
     required this.name,
     this.slug,
     this.parentId,
+    this.order = 0,
     this.children = const [],
   });
 
@@ -13,6 +14,7 @@ class CategoryModel extends Equatable {
   final String name;
   final String? slug;
   final int? parentId;
+  final int order;
   final List<CategoryModel> children;
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) => CategoryModel(
@@ -20,6 +22,7 @@ class CategoryModel extends Equatable {
         name: json['name'] as String? ?? '',
         slug: json['slug'] as String?,
         parentId: json['parent_id'] as int?,
+        order: json['order'] as int? ?? 0,
         children: (json['children'] as List<dynamic>? ?? [])
             .map((e) => CategoryModel.fromJson(e as Map<String, dynamic>))
             .toList(),
@@ -28,7 +31,8 @@ class CategoryModel extends Equatable {
   Map<String, dynamic> toJson() => {
         'name': name,
         if (slug != null) 'slug': slug,
-        if (parentId != null) 'parent_id': parentId,
+        'parent_id': parentId,
+        'order': order,
       };
 
   @override
