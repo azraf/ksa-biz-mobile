@@ -418,6 +418,7 @@ class SyncService {
         salesPersonId: payload['sales_person_id'] as int,
         placeName: payload['place_name'] as String?,
         noteText: payload['note_text'] as String?,
+        phone: payload['phone'] as String?,
         clientRequestId: payload['client_request_id'] as String?,
       );
       if (item.localId != null) {
@@ -436,6 +437,7 @@ class SyncService {
             'gps': created.gps,
             'place_name': created.placeName,
             'note_text': created.noteText,
+            'phone': created.phone,
             'status': created.status,
           },
         );

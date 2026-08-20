@@ -238,7 +238,7 @@ class OfflineCustomerRepository {
         .where((e) => !e.isSystem)
         .toList()
       ..sort((a, b) => a.name.compareTo(b.name));
-    return _searchSlice(all, search, (e) => [e.name, e.primaryContact?.contactName, e.primaryContact?.contactMobile], page, perPage);
+    return _searchSlice(all, search, (e) => [e.name, e.mobile, e.primaryContact?.contactName, e.primaryContact?.contactMobile], page, perPage);
   }
 
   Future<PaginatedResponse<CustomerVanModel>> _cachedVansPage({
@@ -320,6 +320,8 @@ class OfflineCustomerRepository {
   Map<String, dynamic> _shopData(CustomerShopModel shop) => {
         'id': shop.id,
         'name': shop.name,
+        if (shop.mobile != null) 'mobile': shop.mobile,
+        if (shop.email != null) 'email': shop.email,
         if (shop.gps != null) 'gps': shop.gps,
         'is_system': shop.isSystem,
         if (shop.areaId != null) 'area_id': shop.areaId,

@@ -38,6 +38,7 @@ class QuickCreateCustomerHost {
     required String gps,
     String? placeName,
     String? noteText,
+    String? phone,
     File? photoFile,
   })? createOfflineProspect;
 }
@@ -151,7 +152,7 @@ class _QuickShopCreateSheetState extends State<QuickShopCreateSheet> {
       await widget.host.createOfflineProspect!(
         gps: _gps!,
         placeName: name,
-        noteText: phone.isEmpty ? null : phone,
+        phone: phone.isEmpty ? null : phone,
         photoFile: _photo == null ? null : File(_photo!.path),
       );
       if (!mounted) return;
@@ -253,8 +254,10 @@ class _QuickShopCreateSheetState extends State<QuickShopCreateSheet> {
       }
 
       final account = _accountFieldsKey.currentState?.accountValues();
+      final contactName = _contactNameController.text.trim();
       final shop = await repo.createShop(
         name: name,
+        mobile: phone.isEmpty ? null : phone,
         gps: _gps,
         salesPersonId: widget.salesPersonId ?? _selectedSalesPersonId,
         createUser: _createUser,
@@ -267,13 +270,13 @@ class _QuickShopCreateSheetState extends State<QuickShopCreateSheet> {
       // The shop exists from here on: secondary failures must not read as a
       // failed create (that invites a duplicate retry).
       var partial = false;
-      if (phone.isNotEmpty) {
-        final contactName = _contactNameController.text.trim();
+      // The number is on the shop row now; a *named* person is still a contact.
+      if (contactName.isNotEmpty) {
         try {
           await repo.createShopContact(
             shopId: shop.id,
-            contactName: contactName.isEmpty ? name : contactName,
-            contactMobile: phone,
+            contactName: contactName,
+            contactMobile: phone.isEmpty ? null : phone,
           );
         } catch (_) {
           partial = true;

@@ -42,6 +42,7 @@ class WatchlistRepository {
     required int salesPersonId,
     String? placeName,
     String? noteText,
+    String? phone,
     String? clientRequestId,
   }) async {
     final response = await _api.post('/watchlist-items', body: {
@@ -49,6 +50,7 @@ class WatchlistRepository {
       'sales_person_id': salesPersonId,
       if (placeName != null) 'place_name': placeName,
       if (noteText != null) 'note_text': noteText,
+      if (phone != null) 'phone': phone,
       if (clientRequestId != null) 'client_request_id': clientRequestId,
     });
     return WatchlistItemModel.fromJson(response['data'] as Map<String, dynamic>);

@@ -121,6 +121,8 @@ class CustomerRepository {
 
   Future<CustomerShopModel> createShop({
     required String name,
+    String? mobile,
+    String? email,
     String? gps,
     int? areaId,
     int? salesPersonId,
@@ -131,6 +133,8 @@ class CustomerRepository {
     String? userPasswordConfirmation,
   }) async {
     final body = <String, dynamic>{'name': name};
+    if (mobile != null && mobile.isNotEmpty) body['mobile'] = mobile;
+    if (email != null && email.isNotEmpty) body['email'] = email;
     if (gps != null) body['gps'] = gps;
     if (areaId != null) body['area_id'] = areaId;
     if (salesPersonId != null) body['sales_person_id'] = salesPersonId;

@@ -22,6 +22,7 @@ class ShopEditScreen extends ConsumerStatefulWidget {
 
 class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
   final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _picker = ImagePicker();
   String? _gps;
   XFile? _shopPhoto;
@@ -40,6 +41,7 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
     final shop = _shop;
     if (shop != null) {
       _nameController.text = shop.name;
+      _phoneController.text = shop.primaryPhone ?? '';
       _gps = shop.gps;
       _priorityRating = shop.metrics.priorityRating;
       _paymentOverride = shop.metrics.paymentReliabilityOverride;
@@ -53,6 +55,7 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -101,12 +104,19 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
     setState(() => _saving = true);
     try {
       final repo = ref.read(customerRepositoryProvider);
+      final phone = _phoneController.text.trim();
       CustomerShopModel shop;
       if (_shop == null) {
-        shop = await repo.createShop(name: name, gps: _gps, salesPersonId: _salesPersonId);
+        shop = await repo.createShop(
+          name: name,
+          mobile: phone.isEmpty ? null : phone,
+          gps: _gps,
+          salesPersonId: _salesPersonId,
+        );
       } else {
         await ref.read(apiClientProvider).put('/customer-shops/${_shop!.id}', body: {
           'name': name,
+          'mobile': phone, // empty string clears it
           'gps': _gps,
           if (_priorityRating != null) 'priority_rating': _priorityRating,
           'payment_reliability_override': _paymentOverride,
@@ -148,6 +158,16 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
             controller: _nameController,
             decoration: const InputDecoration(labelText: 'Name'),
           ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _phoneController,
+            keyboardType: TextInputType.phone,
+            decoration: const InputDecoration(labelText: 'Phone'),
+          ),
+          if (_shop?.primaryPhone?.isNotEmpty == true) ...[
+            const SizedBox(height: 8),
+            ContactActionButtons(phoneNumber: _shop!.primaryPhone!, compact: true),
+          ],
           const SizedBox(height: 16),
           GpsLocationRow(
             gps: _gps,

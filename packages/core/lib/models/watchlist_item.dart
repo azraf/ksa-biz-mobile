@@ -10,6 +10,7 @@ class WatchlistItemModel extends Equatable {
     required this.gps,
     this.placeName,
     this.noteText,
+    this.phone,
     this.status = 'active',
     this.archivedReason,
     this.customerShopId,
@@ -26,6 +27,7 @@ class WatchlistItemModel extends Equatable {
   final String gps;
   final String? placeName;
   final String? noteText;
+  final String? phone;
   final String status;
   final String? archivedReason;
   final int? customerShopId;
@@ -56,6 +58,7 @@ class WatchlistItemModel extends Equatable {
       gps: json['gps'] as String? ?? '',
       placeName: json['place_name'] as String?,
       noteText: json['note_text'] as String?,
+      phone: json['phone'] as String?,
       status: json['status'] as String? ?? 'active',
       archivedReason: json['archived_reason'] as String?,
       customerShopId: json['customer_shop_id'] as int?,
@@ -72,6 +75,7 @@ class WatchlistItemModel extends Equatable {
         'gps': gps,
         if (placeName != null) 'place_name': placeName,
         if (noteText != null) 'note_text': noteText,
+        if (phone != null) 'phone': phone,
         'sales_person_id': salesPersonId,
       };
 
@@ -88,6 +92,7 @@ class WatchlistItemModel extends Equatable {
       gps: gps,
       placeName: placeName,
       noteText: noteText,
+      phone: phone,
       status: status ?? this.status,
       archivedReason: archivedReason ?? this.archivedReason,
       customerShopId: customerShopId ?? this.customerShopId,

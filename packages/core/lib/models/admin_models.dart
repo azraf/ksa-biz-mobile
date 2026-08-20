@@ -62,6 +62,8 @@ class CustomerShopModel extends Equatable {
   const CustomerShopModel({
     required this.id,
     required this.name,
+    this.mobile,
+    this.email,
     this.gps,
     this.isSystem = false,
     this.contactsCount,
@@ -82,6 +84,9 @@ class CustomerShopModel extends Equatable {
 
   final int id;
   final String name;
+  /// The shop's own number (customer_shops.mobile); see [primaryPhone].
+  final String? mobile;
+  final String? email;
   final String? gps;
   final bool isSystem;
   final int? contactsCount;
@@ -105,6 +110,8 @@ class CustomerShopModel extends Equatable {
       CustomerShopModel(
         id: json['id'] as int,
         name: json['name'] as String? ?? '',
+        mobile: json['mobile'] as String?,
+        email: json['email'] as String?,
         gps: json['gps'] as String?,
         isSystem: parseJsonBool(json['is_system']),
         contactsCount: json['contacts_count'] as int?,
@@ -134,14 +141,20 @@ class CustomerShopModel extends Equatable {
             parseJsonBool(json['allow_user_account_creation']),
       );
 
+  /// Column first; legacy shops may only carry the number on a contact.
+  String? get primaryPhone =>
+      (mobile != null && mobile!.isNotEmpty) ? mobile : primaryContact?.contactMobile;
+
   Map<String, dynamic> toJson() => {
         'name': name,
+        if (mobile != null) 'mobile': mobile,
+        if (email != null) 'email': email,
         if (gps != null) 'gps': gps,
         if (isSystem) 'is_system': isSystem,
       };
 
   @override
-  List<Object?> get props => [id, name, isSystem, user, allowUserAccountCreation];
+  List<Object?> get props => [id, name, mobile, isSystem, user, allowUserAccountCreation];
 }
 
 class CustomerShopContactModel extends Equatable {

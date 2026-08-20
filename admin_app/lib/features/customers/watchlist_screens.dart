@@ -201,6 +201,15 @@ class _AdminWatchlistDetailScreenState extends ConsumerState<AdminWatchlistDetai
         children: [
           Text('Salesperson: ${item.salesPerson?.name ?? item.salesPersonId}'),
           GpsLocationRow(gps: item.gps),
+          if (item.phone?.isNotEmpty == true) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(child: SelectableText(item.phone!)),
+                ContactActionButtons(phoneNumber: item.phone!, compact: true),
+              ],
+            ),
+          ],
           if (item.createdAt != null) ...[
             const SizedBox(height: 8),
             Text(formatAppDateTime(item.createdAt), style: Theme.of(context).textTheme.bodySmall),

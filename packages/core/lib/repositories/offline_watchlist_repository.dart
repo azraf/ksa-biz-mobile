@@ -67,7 +67,7 @@ class OfflineWatchlistRepository {
     if (search == null || search.trim().isEmpty) return (items: items, isFuzzy: false);
     // Active first so the screen can section, same as the server.
     items.sort((a, b) => (a.isActive ? 0 : 1).compareTo(b.isActive ? 0 : 1));
-    return SearchMatch.filterOrFuzzy(items, search, (i) => [i.placeName, i.noteText, i.gps]);
+    return SearchMatch.filterOrFuzzy(items, search, (i) => [i.placeName, i.noteText, i.gps, i.phone]);
   }
 
   Future<WatchlistItemModel> create({
@@ -75,6 +75,7 @@ class OfflineWatchlistRepository {
     required int salesPersonId,
     String? placeName,
     String? noteText,
+    String? phone,
   }) async {
     if (_isOnline()) {
       final item = await _remote.create(
@@ -82,6 +83,7 @@ class OfflineWatchlistRepository {
         salesPersonId: salesPersonId,
         placeName: placeName,
         noteText: noteText,
+        phone: phone,
       );
       await _db.cacheEntity(entityType: 'watchlist', entityId: item.id, data: _toCache(item));
       return item;
@@ -95,6 +97,7 @@ class OfflineWatchlistRepository {
       gps: gps,
       placeName: placeName,
       noteText: noteText,
+      phone: phone,
       isLocalOnly: true,
       createdAt: DateTime.now().toIso8601String(),
     );
@@ -173,6 +176,7 @@ class OfflineWatchlistRepository {
         'gps': item.gps,
         'place_name': item.placeName,
         'note_text': item.noteText,
+        'phone': item.phone,
         'status': item.status,
         'archived_reason': item.archivedReason,
         'customer_shop_id': item.customerShopId,

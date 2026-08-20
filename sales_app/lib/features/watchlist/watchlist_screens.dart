@@ -257,6 +257,7 @@ class WatchlistCreateScreen extends ConsumerStatefulWidget {
 class _WatchlistCreateScreenState extends ConsumerState<WatchlistCreateScreen> {
   final _noteController = TextEditingController();
   final _placeController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _recorder = AudioRecorder();
   final _picker = ImagePicker();
   String? _gps;
@@ -279,6 +280,7 @@ class _WatchlistCreateScreenState extends ConsumerState<WatchlistCreateScreen> {
   void dispose() {
     _noteController.dispose();
     _placeController.dispose();
+    _phoneController.dispose();
     _recorder.dispose();
     super.dispose();
   }
@@ -306,6 +308,7 @@ class _WatchlistCreateScreenState extends ConsumerState<WatchlistCreateScreen> {
         salesPersonId: spId,
         placeName: _placeController.text.trim().isEmpty ? null : _placeController.text.trim(),
         noteText: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+        phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
       );
       final facade = ref.read(mediaCaptureFacadeProvider);
       final localId = item.isLocalOnly ? item.id : null;
@@ -399,6 +402,12 @@ class _WatchlistCreateScreenState extends ConsumerState<WatchlistCreateScreen> {
           TextField(
             controller: _placeController,
             decoration: InputDecoration(labelText: l10n.salesWatchlistPlaceName, border: const OutlineInputBorder()),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _phoneController,
+            keyboardType: TextInputType.phone,
+            decoration: InputDecoration(labelText: l10n.commonPhone, border: const OutlineInputBorder()),
           ),
           const SizedBox(height: 12),
           TextField(
@@ -507,6 +516,7 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
         item = await ref.read(watchlistRepositoryProvider).get(widget.id);
       }
       _nameController.text = item.placeName ?? '';
+      _phoneController.text = item.phone ?? '';
       setState(() {
         _item = item;
         _loading = false;
@@ -758,6 +768,15 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
               ),
             ),
           GpsLocationRow(gps: item.gps),
+          if (item.phone?.isNotEmpty == true) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(child: SelectableText(item.phone!)),
+                ContactActionButtons(phoneNumber: item.phone!, compact: true),
+              ],
+            ),
+          ],
           if (item.createdAt != null) ...[
             const SizedBox(height: 8),
             Text(

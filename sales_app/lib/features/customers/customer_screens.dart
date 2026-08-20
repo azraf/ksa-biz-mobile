@@ -400,7 +400,7 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
       };
 
   String? _phone(dynamic item) {
-    if (item is CustomerShopModel) return item.primaryContact?.contactMobile;
+    if (item is CustomerShopModel) return item.primaryPhone;
     if (item is CustomerVanModel) return item.mobile;
     if (item is CustomerImporterModel) return item.mobile;
     return null;
@@ -690,7 +690,14 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
           ],
           if (phone != null && phone.isNotEmpty) ...[
             const SizedBox(height: 8),
-            ContactActionButtons(phoneNumber: phone),
+            Row(
+              children: [
+                Expanded(
+                  child: SelectableText(phone, style: Theme.of(context).textTheme.titleMedium),
+                ),
+                ContactActionButtons(phoneNumber: phone, compact: true),
+              ],
+            ),
           ],
           if (metrics != null) ...[
             const SizedBox(height: 12),
@@ -788,7 +795,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
   }
 
   String? _phone(dynamic customer) {
-    if (customer is CustomerShopModel) return customer.primaryContact?.contactMobile;
+    if (customer is CustomerShopModel) return customer.primaryPhone;
     if (customer is CustomerVanModel) return customer.mobile;
     if (customer is CustomerImporterModel) return customer.mobile;
     return null;

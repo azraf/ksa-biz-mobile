@@ -440,6 +440,15 @@ class _AdminCustomerDetailScreenState extends ConsumerState<_AdminCustomerDetail
     setState(() => _future = widget.loadCustomer());
   }
 
+  String? _mobileOf(dynamic c) {
+    final m = c is CustomerVanModel
+        ? c.mobile
+        : c is CustomerImporterModel
+            ? c.mobile
+            : null;
+    return (m == null || m.isEmpty) ? null : m;
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<dynamic>(
@@ -464,6 +473,17 @@ class _AdminCustomerDetailScreenState extends ConsumerState<_AdminCustomerDetail
           body: ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              if (_mobileOf(customer) case final String mobile) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: SelectableText(mobile, style: Theme.of(context).textTheme.titleMedium),
+                    ),
+                    ContactActionButtons(phoneNumber: mobile, compact: true),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
               CustomerLoginAccountSection(
                 customerType: widget.customerType,
                 customerId: widget.customerId,

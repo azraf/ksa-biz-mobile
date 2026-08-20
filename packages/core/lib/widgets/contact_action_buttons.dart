@@ -77,9 +77,11 @@ class ContactActionButtons extends StatelessWidget {
   }
 }
 
-/// First active shop contact mobile, if any.
+/// The shop's number, else the first active contact's mobile.
 String? shopContactPhone(CustomerShopModel? shop) {
-  if (shop == null || shop.contacts.isEmpty) return null;
+  if (shop == null) return null;
+  if (shop.mobile != null && shop.mobile!.isNotEmpty) return shop.mobile;
+  if (shop.contacts.isEmpty) return null;
   for (final contact in shop.contacts) {
     if (contact.active && contact.contactMobile != null && contact.contactMobile!.isNotEmpty) {
       return contact.contactMobile;
