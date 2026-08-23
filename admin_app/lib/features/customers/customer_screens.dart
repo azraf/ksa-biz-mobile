@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:l10n/l10n.dart';
 
+import '../../providers/auth_provider.dart';
 import '../../providers/connectivity_provider.dart';
 import '../../providers/repositories.dart';
 import '../../widgets/crud_screens.dart';
@@ -69,6 +70,14 @@ core.QuickCreateCustomerHost _quickCreateHost(WidgetRef ref) {
     isOnline: () => ref.read(onlineStatusProvider),
     attachShopPhoto: (file, shopId) =>
         ref.read(mediaCaptureFacadeProvider).attachShopPhoto(file, shopId),
+    createShopDiaryNote: (body, shopId) =>
+        ref.read(offlineDiaryRepositoryProvider).createNote(
+              customerType: 'customer_shop',
+              customerId: shopId,
+              noteType: 'text',
+              body: body,
+              salesPersonId: ref.read(authProvider).effectiveSalesPersonId,
+            ),
     showSalesPersonPicker: true,
   );
 }

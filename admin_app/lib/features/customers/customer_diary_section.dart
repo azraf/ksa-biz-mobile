@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media/widgets/customer_diary_section.dart' as shared;
 
+import '../../providers/auth_provider.dart';
 import '../../providers/repositories.dart';
 
 /// Thin wrapper so existing call sites keep their import; the widget itself is
@@ -27,6 +28,9 @@ class CustomerDiarySection extends ConsumerWidget {
       orderId: orderId,
       diaryRepository: ref.watch(offlineDiaryRepositoryProvider),
       mediaCaptureFacade: ref.watch(mediaCaptureFacadeProvider),
+      // Without this admin-authored notes carry no sales_person_id, unlike the
+      // identical sales_app wrapper.
+      salesPersonId: ref.watch(authProvider).effectiveSalesPersonId,
     );
   }
 }

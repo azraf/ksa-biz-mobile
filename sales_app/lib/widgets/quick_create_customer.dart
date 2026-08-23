@@ -20,6 +20,14 @@ Future<dynamic> showQuickCreateCustomerSheet({
       isOnline: () => ref.read(onlineStatusProvider),
       attachShopPhoto: (file, shopId) =>
           ref.read(mediaCaptureFacadeProvider).attachShopPhoto(file, shopId),
+      createShopDiaryNote: (body, shopId) =>
+          ref.read(offlineDiaryRepositoryProvider).createNote(
+                customerType: 'customer_shop',
+                customerId: shopId,
+                noteType: 'text',
+                body: body,
+                salesPersonId: offlineSalesPersonId,
+              ),
       createOfflineProspect: offlineSalesPersonId == null
           ? null
           : ({required gps, placeName, noteText, phone, photoFile}) async {

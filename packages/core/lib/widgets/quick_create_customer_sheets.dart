@@ -19,6 +19,7 @@ class QuickCreateCustomerHost {
     required this.customerRepository,
     required this.isOnline,
     this.attachShopPhoto,
+    this.createShopDiaryNote,
     this.showSalesPersonPicker = false,
     this.createOfflineProspect,
   });
@@ -26,6 +27,9 @@ class QuickCreateCustomerHost {
   final CustomerRepository customerRepository;
   final bool Function() isOnline;
   final Future<void> Function(File file, int shopId)? attachShopPhoto;
+
+  /// Flushes a note typed before the shop existed onto the new shop's diary.
+  final Future<void> Function(String body, int shopId)? createShopDiaryNote;
 
   /// Admin only: show an optional salesperson dropdown (sales apps auto-assign
   /// the logged-in salesperson instead).
@@ -94,6 +98,7 @@ class _QuickShopCreateSheetState extends State<QuickShopCreateSheet> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _contactNameController = TextEditingController();
+  final _noteController = TextEditingController();
   final _userEmailController = TextEditingController();
   final _userPhoneController = TextEditingController();
   final _userPasswordController = TextEditingController();
@@ -127,6 +132,7 @@ class _QuickShopCreateSheetState extends State<QuickShopCreateSheet> {
     _nameController.dispose();
     _phoneController.dispose();
     _contactNameController.dispose();
+    _noteController.dispose();
     _userEmailController.dispose();
     _userPhoneController.dispose();
     _userPasswordController.dispose();
@@ -149,9 +155,11 @@ class _QuickShopCreateSheetState extends State<QuickShopCreateSheet> {
     setState(() => _saving = true);
     try {
       final phone = _phoneController.text.trim();
+      final note = _noteController.text.trim();
       await widget.host.createOfflineProspect!(
         gps: _gps!,
         placeName: name,
+        noteText: note.isEmpty ? null : note,
         phone: phone.isEmpty ? null : phone,
         photoFile: _photo == null ? null : File(_photo!.path),
       );
@@ -289,6 +297,14 @@ class _QuickShopCreateSheetState extends State<QuickShopCreateSheet> {
           partial = true;
         }
       }
+      final note = _noteController.text.trim();
+      if (note.isNotEmpty && widget.host.createShopDiaryNote != null) {
+        try {
+          await widget.host.createShopDiaryNote!(note, shop.id);
+        } catch (_) {
+          partial = true;
+        }
+      }
       if (!mounted) return;
       final messenger = ScaffoldMessenger.of(context);
       Navigator.pop(context, shop);
@@ -380,6 +396,18 @@ class _QuickShopCreateSheetState extends State<QuickShopCreateSheet> {
               padding: const EdgeInsets.only(top: 8),
               child: Image.file(File(_photo!.path), height: 120, fit: BoxFit.cover),
             ),
+          const SizedBox(height: 12),
+          // Captured before the shop exists, so it is flushed to the new shop's
+          // diary right after create (or rides along on the prospect offline).
+          TextField(
+            controller: _noteController,
+            maxLines: 3,
+            textInputAction: TextInputAction.newline,
+            decoration: InputDecoration(
+              labelText: l10n.commonNotesOptional,
+              border: const OutlineInputBorder(),
+            ),
+          ),
           const SizedBox(height: 16),
           FilledButton(
             onPressed: _saving ? null : _save,

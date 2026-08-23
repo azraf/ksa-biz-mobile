@@ -642,6 +642,15 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
     if (name == null || name.isEmpty) return;
     setState(() => _working = true);
     try {
+      // Drain queued photos/recordings first: conversion copies what is on the
+      // server, so anything still in the upload queue would otherwise arrive
+      // afterwards. (The server forwards late arrivals too, but flushing here
+      // means the new shop's diary is complete the moment it opens.)
+      try {
+        await ref.read(mediaUploadRepositoryProvider).uploadPendingBlobs();
+      } catch (_) {
+        // Offline or a flaky upload: convert anyway, the server forwards later.
+      }
       await ref.read(watchlistRepositoryProvider).convertToShop(
             _item!.id,
             name: name,

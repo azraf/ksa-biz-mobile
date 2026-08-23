@@ -44,6 +44,7 @@ class LocalDatabase {
       },
     );
     await _resetStuckStatuses(db);
+    await _repairOrphanedMediaParents(db);
     return db;
   }
 
@@ -640,6 +641,19 @@ class LocalDatabase {
     );
   }
 
+  /// Releases a row still claimed as 'syncing' after its handler returned
+  /// without finishing (missing repository, unsupported operation). Without
+  /// this the row is invisible to [pendingQueue] until the next app start.
+  Future<void> releaseUnfinishedClaim(int id) async {
+    final db = await database;
+    await db.update(
+      'sync_queue',
+      {'status': 'pending'},
+      where: "id = ? AND status = 'syncing'",
+      whereArgs: [id],
+    );
+  }
+
   Future<void> resolveMediaBlobParents({
     required String parentEntityType,
     required int parentLocalId,
@@ -652,6 +666,35 @@ class LocalDatabase {
       where: 'parent_entity_type = ? AND parent_local_id = ? AND parent_server_id IS NULL',
       whereArgs: [parentEntityType, parentLocalId],
     );
+  }
+
+  /// One-time repair for blobs orphaned by a sync path that forgot to call
+  /// [resolveMediaBlobParents] (the bulk `diary` case did until 2026-08-23).
+  /// Their queue rows are already 'done' and will never be reprocessed, so the
+  /// parent id has to be recovered from the queue directly. `purgeDoneQueue`
+  /// drops done rows after 7 days, so anything older is unrecoverable.
+  /// Returns the number of blobs re-parented.
+  Future<int> repairOrphanedMediaParents() async =>
+      _repairOrphanedMediaParents(await database);
+
+  /// Takes the [Database] directly: this runs from _open(), where the
+  /// `database` getter would recurse back into _open().
+  Future<int> _repairOrphanedMediaParents(Database db) async {
+    const matchesQueueRow = '''
+      SELECT q.server_id FROM sync_queue q
+       WHERE q.entity_type = media_blobs.parent_entity_type
+         AND q.local_id = media_blobs.parent_local_id
+         AND q.server_id IS NOT NULL
+       LIMIT 1
+    ''';
+    return db.rawUpdate('''
+      UPDATE media_blobs
+         SET parent_server_id = ($matchesQueueRow)
+       WHERE parent_server_id IS NULL
+         AND parent_local_id IS NOT NULL
+         AND status != 'done'
+         AND ($matchesQueueRow) IS NOT NULL
+    ''');
   }
 
   Future<void> deleteMediaBlob(int id) async {

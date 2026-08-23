@@ -27,6 +27,9 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
   String? _gps;
   XFile? _shopPhoto;
   bool _saving = false;
+  /// Set when this screen created the shop, so backing out still refreshes the
+  /// list even though we stayed on the page to let the diary be used.
+  bool _createdShop = false;
   int? _priorityRating;
   String? _paymentOverride;
   int? _salesPersonId;
@@ -106,6 +109,7 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
       final repo = ref.read(customerRepositoryProvider);
       final phone = _phoneController.text.trim();
       CustomerShopModel shop;
+      final wasNew = _shop == null;
       if (_shop == null) {
         shop = await repo.createShop(
           name: name,
@@ -136,7 +140,21 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
       if (_shopPhoto != null) {
         await ref.read(mediaCaptureFacadeProvider).attachShopPhoto(File(_shopPhoto!.path), shop.id);
       }
-      if (mounted) Navigator.pop(context, true);
+      if (!mounted) return;
+      if (wasNew) {
+        // Stay on the screen so the diary — which needs a real shop id and is
+        // hidden while `_shop` is null — becomes usable straight after saving.
+        setState(() {
+          _shop = shop;
+          _shopPhoto = null;
+        });
+        _createdShop = true;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Shop created. You can now add diary notes.')),
+        );
+        return;
+      }
+      Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
@@ -148,6 +166,16 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) Navigator.pop(context, _createdShop);
+      },
+      child: _buildScaffold(context),
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context) {
     final shop = _shop;
     return Scaffold(
       appBar: AppBar(title: Text(shop == null ? 'New Shop' : 'Edit Shop')),

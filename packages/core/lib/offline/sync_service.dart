@@ -245,12 +245,26 @@ class SyncService {
           await db.removeCachedEntity('watchlist', item.localId!);
         }
       case 'diary':
-        if (item.operation == 'create' && item.localId != null) {
+        if (item.operation == 'create' && item.localId != null && serverId != null) {
+          // Must mirror _syncDiary: without the remap the note's photo/voice
+          // blob keeps parent_server_id = NULL, uploadPendingBlobs skips it
+          // forever, and the recording is silently never delivered.
+          await db.resolveMediaBlobParents(
+            parentEntityType: 'diary',
+            parentLocalId: item.localId!,
+            parentServerId: serverId,
+          );
           final payload = item.payload;
           final customerType = payload['customer_type'] as String?;
           final customerId = payload['customer_id'] as int?;
-          if (customerType != null && customerId != null && serverId != null) {
-            final key = 'diary_${customerType}_$customerId';
+          final orderId = payload['order_id'] as int?;
+          // Order-scoped notes cache under a different key than customer ones.
+          final key = orderId != null
+              ? 'diary_order_$orderId'
+              : (customerType != null && customerId != null
+                    ? 'diary_${customerType}_$customerId'
+                    : null);
+          if (key != null) {
             await db.removeCachedEntity(key, item.localId!);
           }
         }
@@ -298,6 +312,10 @@ class SyncService {
         default:
           await db.updateQueueStatus(item.id, status: 'failed', errorMessage: 'Unknown entity');
       }
+      // Handlers early-return when their repository is absent or the operation
+      // is unsupported, leaving the row claimed. Hand it back so the next pass
+      // retries it instead of waiting for an app restart.
+      await db.releaseUnfinishedClaim(item.id);
     } on ApiException catch (e) {
       await _markFailed(item, e.message);
     } catch (e) {

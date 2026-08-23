@@ -134,4 +134,48 @@ void main() {
     expect(await db.getLastSyncAt(), isNull);
     expect(tempFile.existsSync(), isFalse);
   });
+
+  test('repairOrphanedMediaParents recovers blobs from their done queue row', () async {
+    final db = LocalDatabase.instance;
+    final database = await db.database;
+    final now = DateTime.now().toIso8601String();
+
+    // A diary note that synced before the bulk path remapped media parents.
+    await database.insert('sync_queue', {
+      'entity_type': 'diary',
+      'operation': 'create',
+      'local_id': -999,
+      'server_id': 4242,
+      'payload': '{}',
+      'status': 'done',
+      'created_at': now,
+    });
+
+    Future<int> blob(int parentLocalId) => database.insert('media_blobs', {
+      'local_path': '/tmp/voice-$parentLocalId.m4a',
+      'mime_type': 'audio/mp4',
+      'media_kind': 'recording_audio',
+      'parent_entity_type': 'diary',
+      'parent_local_id': parentLocalId,
+      'upload_endpoint': '/customer-diary-notes/{parent_id}/recording',
+      'upload_field': 'file',
+      'status': 'pending',
+      'created_at': now,
+    });
+
+    final recoverable = await blob(-999);
+    final orphan = await blob(-888); // no queue row: must be left alone
+
+    expect(await db.repairOrphanedMediaParents(), 1);
+
+    Future<Object?> parentOf(int id) async => (await database.query(
+      'media_blobs',
+      columns: ['parent_server_id'],
+      where: 'id = ?',
+      whereArgs: [id],
+    )).first['parent_server_id'];
+
+    expect(await parentOf(recoverable), 4242);
+    expect(await parentOf(orphan), isNull);
+  });
 }
