@@ -940,5 +940,40 @@
       }
     }
   },
-  "searchWatchlistHint": "Search place, address or note"
+  "searchWatchlistHint": "Search place, address or note",
+  "commonProductsTitle": "Products",
+  "commonProductsAllTab": "All Products",
+  "commonProductsMyVanTab": "My Van",
+  "commonProductSources": "Inventory sources",
+  "commonProductSourceWarehouse": "Warehouse",
+  "commonProductSourceMyVan": "My van",
+  "commonProductSourceOtherVans": "Other vans",
+  "commonProductInStockOnly": "In stock only",
+  "commonProductInStock": "In stock",
+  "commonProductOutOfStock": "Out of stock",
+  "commonProductLowStock": "Low stock",
+  "commonProductBrand": "Brand",
+  "commonProductCategory": "Category",
+  "commonProductAllBrands": "All brands",
+  "commonProductAllCategories": "All categories",
+  "commonProductSortName": "Name (A–Z)",
+  "commonProductSortStockDesc": "Stock (high to low)",
+  "commonProductSortStockAsc": "Stock (low to high)",
+  "commonProductSortPriceAsc": "Price (low to high)",
+  "commonProductSortPriceDesc": "Price (high to low)",
+  "commonProductViewGrid": "Grid view",
+  "commonProductViewList": "List view",
+  "commonProductStockAsOf": "Stock as of {time}",
+  "@commonProductStockAsOf": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "commonProductTotalStock": "Total",
+  "commonProductStockBreakdown": "Stock by source",
+  "commonProductNoImage": "No image",
+  "salesProductLoadToVan": "Load to my van",
+  "salesProductDetailTitle": "Product"
 }

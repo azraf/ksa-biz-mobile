@@ -48,7 +48,9 @@ class ReferenceDataPrefetcher {
         await _prefetchPages(_customerRepo.importers);
       }
       await _customerRepo.prefetchWalkInShop();
-      await _prefetchPages(_productRepo.list);
+      // withStock so the offline catalog carries a stock snapshot, not just
+      // names and prices.
+      await _prefetchPages(({int page = 1}) => _productRepo.list(page: page, withStock: true));
       _lastPrefetchAt = DateTime.now();
       _lastSalesPersonId = salesPersonId;
     } catch (e) {

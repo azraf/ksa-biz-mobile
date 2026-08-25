@@ -202,6 +202,18 @@ class OrderRepository {
     return DiscountApprovalRequestModel.fromJson(response['data'] as Map<String, dynamic>);
   }
 
+  /// Generate (or fetch, idempotent) the ZATCA e-invoice for an order.
+  Future<OrderZatcaModel> generateZatcaInvoice(int orderId) async {
+    final response = await _api.post('/orders/$orderId/zatca-invoice', body: {});
+    return OrderZatcaModel.fromJson(response['data'] as Map<String, dynamic>?);
+  }
+
+  /// Record a successful print (drives the COPY label on reprints).
+  Future<OrderZatcaModel> markZatcaInvoicePrinted(int orderId) async {
+    final response = await _api.post('/orders/$orderId/zatca-invoice/printed', body: {});
+    return OrderZatcaModel.fromJson(response['data'] as Map<String, dynamic>?);
+  }
+
   Future<OrderModel> addItem(int orderId, Map<String, dynamic> item) async {
     final response = await _api.post('/orders/$orderId/items', body: item);
     return OrderModel.fromJson(response['order'] as Map<String, dynamic>);

@@ -7,6 +7,57 @@ import 'package:l10n/l10n.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/connectivity_provider.dart';
 import '../../providers/repositories.dart';
+import '../products/product_screens.dart';
+
+/// The Van tab: what is on this van, and the whole company catalogue beside
+/// it. Same shape as PlanHubScreen — the shell supplies the Scaffold.
+class VanHubScreen extends StatefulWidget {
+  const VanHubScreen({super.key, this.initialTab});
+
+  /// 'products' opens the All Products segment.
+  final String? initialTab;
+
+  @override
+  State<VanHubScreen> createState() => _VanHubScreenState();
+}
+
+class _VanHubScreenState extends State<VanHubScreen> {
+  late bool _showProducts = widget.initialTab == 'products';
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    final segments = Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      child: SegmentedButton<bool>(
+        segments: [
+          ButtonSegment(
+            value: false,
+            icon: const Icon(Icons.local_shipping_outlined),
+            label: Text(l10n.commonProductsMyVanTab),
+          ),
+          ButtonSegment(
+            value: true,
+            icon: const Icon(Icons.inventory_2_outlined),
+            label: Text(l10n.commonProductsAllTab),
+          ),
+        ],
+        selected: {_showProducts},
+        onSelectionChanged: (selection) =>
+            setState(() => _showProducts = selection.first),
+      ),
+    );
+
+    // All Products hosts the segments itself so its filter drawer covers the
+    // whole tab; My Van has no drawer, so a plain Column is enough.
+    if (_showProducts) return AllProductsScreen(header: segments);
+
+    return Column(
+      children: [segments, const Expanded(child: VanStockScreen())],
+    );
+  }
+}
 
 class VanStockScreen extends ConsumerStatefulWidget {
   const VanStockScreen({super.key});

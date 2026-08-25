@@ -40,6 +40,7 @@ class OrderModel extends Equatable {
     this.customerShopName,
     this.customerShopAreaName,
     this.createdAt,
+    this.zatca,
   });
 
   final int id;
@@ -78,6 +79,9 @@ class OrderModel extends Equatable {
   final String? customerShopName;
   final String? customerShopAreaName;
   final String? createdAt;
+
+  /// Null when the server has e-invoicing off or the row predates ZATCA.
+  final OrderZatcaModel? zatca;
 
   bool get isCancelled => status == 'cancelled';
 
@@ -136,6 +140,9 @@ class OrderModel extends Equatable {
           : null,
       customerShopAreaName: _customerShopAreaName(json['customer_shop']),
       createdAt: json['created_at']?.toString(),
+      zatca: json['zatca'] is Map
+          ? OrderZatcaModel.fromJson(json['zatca'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -158,4 +165,41 @@ class OrderModel extends Equatable {
 
   @override
   List<Object?> get props => [id, status, paymentStatus, totalBill, amountPaid, amountDue];
+}
+
+
+/// ZATCA e-invoice state for one order (`zatca` block on the order API).
+class OrderZatcaModel extends Equatable {
+  const OrderZatcaModel({
+    this.invoiceGenerated = false,
+    this.icv,
+    this.uuid,
+    this.qr,
+    this.status,
+    this.printCount = 0,
+  });
+
+  final bool invoiceGenerated;
+  final int? icv;
+  final String? uuid;
+
+  /// Base64 TLV payload for the invoice QR code.
+  final String? qr;
+  final String? status;
+  final int printCount;
+
+  factory OrderZatcaModel.fromJson(Map<String, dynamic>? json) {
+    if (json == null) return const OrderZatcaModel();
+    return OrderZatcaModel(
+      invoiceGenerated: json['invoice_generated'] == true,
+      icv: json['icv'] as int?,
+      uuid: json['uuid'] as String?,
+      qr: json['qr'] as String?,
+      status: json['status'] as String?,
+      printCount: json['print_count'] as int? ?? 0,
+    );
+  }
+
+  @override
+  List<Object?> get props => [invoiceGenerated, icv, status, printCount];
 }

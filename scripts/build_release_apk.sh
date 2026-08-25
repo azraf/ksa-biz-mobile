@@ -91,7 +91,9 @@ SYMBOLS_DIR="$APP_BUILTS_DIR/symbols/$APP_NAME-$VERSION"
 
 echo "Building release APK for $APP_NAME (version $VERSION)..."
 
-"$SCRIPT_DIR/prepare_android_toolchain.sh" release
+# Sourced: it exports JAVA_HOME and puts flutter on PATH for the steps below.
+# shellcheck source=prepare_android_toolchain.sh
+source "$SCRIPT_DIR/prepare_android_toolchain.sh" release
 flutter pub get
 "$SCRIPT_DIR/patch_wakelock_plus.sh"
 if [[ "${KSA_WAKELOCK_PATCH_APPLIED:-0}" == "1" ]]; then

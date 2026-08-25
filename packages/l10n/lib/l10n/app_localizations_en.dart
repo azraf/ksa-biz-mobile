@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -1981,4 +1982,90 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchWatchlistHint => 'Search place, address or note';
+
+  @override
+  String get commonProductsTitle => 'Products';
+
+  @override
+  String get commonProductsAllTab => 'All Products';
+
+  @override
+  String get commonProductsMyVanTab => 'My Van';
+
+  @override
+  String get commonProductSources => 'Inventory sources';
+
+  @override
+  String get commonProductSourceWarehouse => 'Warehouse';
+
+  @override
+  String get commonProductSourceMyVan => 'My van';
+
+  @override
+  String get commonProductSourceOtherVans => 'Other vans';
+
+  @override
+  String get commonProductInStockOnly => 'In stock only';
+
+  @override
+  String get commonProductInStock => 'In stock';
+
+  @override
+  String get commonProductOutOfStock => 'Out of stock';
+
+  @override
+  String get commonProductLowStock => 'Low stock';
+
+  @override
+  String get commonProductBrand => 'Brand';
+
+  @override
+  String get commonProductCategory => 'Category';
+
+  @override
+  String get commonProductAllBrands => 'All brands';
+
+  @override
+  String get commonProductAllCategories => 'All categories';
+
+  @override
+  String get commonProductSortName => 'Name (A–Z)';
+
+  @override
+  String get commonProductSortStockDesc => 'Stock (high to low)';
+
+  @override
+  String get commonProductSortStockAsc => 'Stock (low to high)';
+
+  @override
+  String get commonProductSortPriceAsc => 'Price (low to high)';
+
+  @override
+  String get commonProductSortPriceDesc => 'Price (high to low)';
+
+  @override
+  String get commonProductViewGrid => 'Grid view';
+
+  @override
+  String get commonProductViewList => 'List view';
+
+  @override
+  String commonProductStockAsOf(String time) {
+    return 'Stock as of $time';
+  }
+
+  @override
+  String get commonProductTotalStock => 'Total';
+
+  @override
+  String get commonProductStockBreakdown => 'Stock by source';
+
+  @override
+  String get commonProductNoImage => 'No image';
+
+  @override
+  String get salesProductLoadToVan => 'Load to my van';
+
+  @override
+  String get salesProductDetailTitle => 'Product';
 }

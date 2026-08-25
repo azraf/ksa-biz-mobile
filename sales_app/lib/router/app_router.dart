@@ -21,6 +21,7 @@ import '../features/orders/order_detail_screen.dart';
 import '../features/orders/order_edit_screen.dart';
 import '../features/orders/order_list_screen.dart';
 import '../features/performance/performance_screen.dart';
+import '../features/products/product_screens.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/van_stock/damage_replacement_screen.dart';
 import '../features/van_stock/load_van_screen.dart';
@@ -92,6 +93,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/profile',
                 builder: (context, state) => const ProfileScreen(),
+              ),
+              GoRoute(
+                path: '/printer-settings',
+                builder: (context, state) => const PrinterSetupScreen(),
               ),
               GoRoute(
                 path: '/field-map',
@@ -241,11 +246,21 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/van-stock',
-                builder: (context, state) => const VanStockScreen(),
+                builder: (context, state) =>
+                    VanHubScreen(initialTab: state.uri.queryParameters['tab']),
                 routes: [
                   GoRoute(
+                    path: 'products/:id',
+                    builder: (_, state) => ProductDetailScreen(
+                      productId: int.parse(state.pathParameters['id']!),
+                    ),
+                  ),
+                  GoRoute(
                     path: 'load',
-                    builder: (_, _) => const LoadVanScreen(),
+                    builder: (_, state) => LoadVanScreen(
+                      preselectProductId:
+                          int.tryParse(state.uri.queryParameters['product'] ?? ''),
+                    ),
                   ),
                   GoRoute(
                     path: 'transfer',
@@ -302,6 +317,7 @@ class HomeShell extends ConsumerWidget {
       return l10n.salesTitleConvertOrder;
     if (RegExp(r'/manual-orders/\d+').hasMatch(location))
       return l10n.salesTitleManualOrder;
+    if (location.contains('/van-stock/products')) return l10n.salesProductDetailTitle;
     if (location.contains('/van-stock/load')) return l10n.salesTitleLoadVan;
     if (location.contains('/van-stock/transfer'))
       return l10n.salesTitleTransferStock;
@@ -333,7 +349,8 @@ class HomeShell extends ConsumerWidget {
         location.startsWith('/performance') ||
         location.startsWith('/notifications') ||
         location.startsWith('/profile') ||
-        location.startsWith('/plan/candidates');
+        location.startsWith('/plan/candidates') ||
+        location.startsWith('/van-stock/products');
   }
 
   @override

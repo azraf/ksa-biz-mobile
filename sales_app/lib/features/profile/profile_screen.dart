@@ -52,6 +52,11 @@ class ProfileScreen extends ConsumerWidget {
             onTap: () => context.push('/notifications'),
           ),
           ListTile(
+            leading: const Icon(Icons.print_outlined),
+            title: const Text('Printer settings'),
+            onTap: () => context.push('/printer-settings'),
+          ),
+          ListTile(
             leading: const Icon(Icons.cloud_off_outlined),
             title: Text(l10n.salesOfflineHelpTitle),
             onTap: () {

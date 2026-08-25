@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -1974,4 +1975,90 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get searchWatchlistHint => 'ابحث بالاسم أو العنوان أو الملاحظة';
+
+  @override
+  String get commonProductsTitle => 'المنتجات';
+
+  @override
+  String get commonProductsAllTab => 'كل المنتجات';
+
+  @override
+  String get commonProductsMyVanTab => 'شاحنتي';
+
+  @override
+  String get commonProductSources => 'مصادر المخزون';
+
+  @override
+  String get commonProductSourceWarehouse => 'المستودع';
+
+  @override
+  String get commonProductSourceMyVan => 'شاحنتي';
+
+  @override
+  String get commonProductSourceOtherVans => 'شاحنات أخرى';
+
+  @override
+  String get commonProductInStockOnly => 'المتوفر فقط';
+
+  @override
+  String get commonProductInStock => 'متوفر';
+
+  @override
+  String get commonProductOutOfStock => 'غير متوفر';
+
+  @override
+  String get commonProductLowStock => 'مخزون منخفض';
+
+  @override
+  String get commonProductBrand => 'العلامة التجارية';
+
+  @override
+  String get commonProductCategory => 'الفئة';
+
+  @override
+  String get commonProductAllBrands => 'كل العلامات';
+
+  @override
+  String get commonProductAllCategories => 'كل الفئات';
+
+  @override
+  String get commonProductSortName => 'الاسم (أ–ي)';
+
+  @override
+  String get commonProductSortStockDesc => 'المخزون (من الأعلى)';
+
+  @override
+  String get commonProductSortStockAsc => 'المخزون (من الأقل)';
+
+  @override
+  String get commonProductSortPriceAsc => 'السعر (من الأقل)';
+
+  @override
+  String get commonProductSortPriceDesc => 'السعر (من الأعلى)';
+
+  @override
+  String get commonProductViewGrid => 'عرض شبكي';
+
+  @override
+  String get commonProductViewList => 'عرض قائمة';
+
+  @override
+  String commonProductStockAsOf(String time) {
+    return 'المخزون حتى $time';
+  }
+
+  @override
+  String get commonProductTotalStock => 'الإجمالي';
+
+  @override
+  String get commonProductStockBreakdown => 'المخزون حسب المصدر';
+
+  @override
+  String get commonProductNoImage => 'لا توجد صورة';
+
+  @override
+  String get salesProductLoadToVan => 'تحميل إلى شاحنتي';
+
+  @override
+  String get salesProductDetailTitle => 'المنتج';
 }

@@ -290,6 +290,15 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             ),
           ),
         ),
+        const SizedBox(height: 8),
+        OrderInvoiceSection(
+          order: order,
+          repository: ref.read(orderRepositoryProvider),
+          api: ref.read(apiClientProvider),
+          isOnline: ref.watch(isOnlineProvider) && !pending,
+          onChanged: _load,
+          onOpenPrinterSettings: () => context.push('/printer-settings'),
+        ),
         if (_customerDiaryTarget(order) != null)
           ListTile(
             title: Text(l10n.commonCustomer),

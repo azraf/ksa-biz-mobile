@@ -44,6 +44,7 @@ class MoreHubScreen extends StatelessWidget {
           ),
         ]),
         _section(context, 'Expenses', [
+          _tile(context, 'Printer settings', Icons.print, '/more/printer-settings'),
           _tile(context, 'Expenses', Icons.payments, '/more/expenses/list'),
           _tile(
             context,

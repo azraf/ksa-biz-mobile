@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:l10n/l10n.dart';
 
+import '../../providers/connectivity_provider.dart';
 import '../../providers/repositories.dart';
 import '../customers/customer_diary_section.dart';
 import '../../widgets/crud_screens.dart';
@@ -533,6 +534,15 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
               ],
             ),
           ),
+        ),
+        const SizedBox(height: 8),
+        OrderInvoiceSection(
+          order: order,
+          repository: ref.read(orderRepositoryProvider),
+          api: ref.read(apiClientProvider),
+          isOnline: ref.watch(onlineStatusProvider) && !pendingSync,
+          onChanged: _load,
+          onOpenPrinterSettings: () => context.push('/more/printer-settings'),
         ),
         if (order.customerShopName != null)
           ListTile(

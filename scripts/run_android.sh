@@ -112,7 +112,9 @@ if [[ -z "$DEVICE_ID" ]]; then
   exit 1
 fi
 
-"$SCRIPT_DIR/prepare_android_toolchain.sh"
+# Sourced: it exports JAVA_HOME and puts flutter on PATH for the steps below.
+# shellcheck source=prepare_android_toolchain.sh
+source "$SCRIPT_DIR/prepare_android_toolchain.sh" dev
 flutter pub get
 "$SCRIPT_DIR/patch_wakelock_plus.sh"
 

@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -1986,4 +1987,90 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get searchWatchlistHint => 'স্থান, ঠিকানা বা নোট খুঁজুন';
+
+  @override
+  String get commonProductsTitle => 'পণ্যসমূহ';
+
+  @override
+  String get commonProductsAllTab => 'সব পণ্য';
+
+  @override
+  String get commonProductsMyVanTab => 'আমার ভ্যান';
+
+  @override
+  String get commonProductSources => 'ইনভেন্টরি উৎস';
+
+  @override
+  String get commonProductSourceWarehouse => 'গুদাম';
+
+  @override
+  String get commonProductSourceMyVan => 'আমার ভ্যান';
+
+  @override
+  String get commonProductSourceOtherVans => 'অন্যান্য ভ্যান';
+
+  @override
+  String get commonProductInStockOnly => 'শুধু স্টকে আছে';
+
+  @override
+  String get commonProductInStock => 'স্টকে আছে';
+
+  @override
+  String get commonProductOutOfStock => 'স্টকে নেই';
+
+  @override
+  String get commonProductLowStock => 'স্টক কম';
+
+  @override
+  String get commonProductBrand => 'ব্র্যান্ড';
+
+  @override
+  String get commonProductCategory => 'ক্যাটাগরি';
+
+  @override
+  String get commonProductAllBrands => 'সব ব্র্যান্ড';
+
+  @override
+  String get commonProductAllCategories => 'সব ক্যাটাগরি';
+
+  @override
+  String get commonProductSortName => 'নাম (অ–হ)';
+
+  @override
+  String get commonProductSortStockDesc => 'স্টক (বেশি থেকে কম)';
+
+  @override
+  String get commonProductSortStockAsc => 'স্টক (কম থেকে বেশি)';
+
+  @override
+  String get commonProductSortPriceAsc => 'দাম (কম থেকে বেশি)';
+
+  @override
+  String get commonProductSortPriceDesc => 'দাম (বেশি থেকে কম)';
+
+  @override
+  String get commonProductViewGrid => 'গ্রিড ভিউ';
+
+  @override
+  String get commonProductViewList => 'লিস্ট ভিউ';
+
+  @override
+  String commonProductStockAsOf(String time) {
+    return '$time পর্যন্ত স্টক';
+  }
+
+  @override
+  String get commonProductTotalStock => 'মোট';
+
+  @override
+  String get commonProductStockBreakdown => 'উৎস অনুযায়ী স্টক';
+
+  @override
+  String get commonProductNoImage => 'ছবি নেই';
+
+  @override
+  String get salesProductLoadToVan => 'আমার ভ্যানে লোড করুন';
+
+  @override
+  String get salesProductDetailTitle => 'পণ্য';
 }

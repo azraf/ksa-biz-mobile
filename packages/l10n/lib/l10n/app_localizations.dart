@@ -3705,6 +3705,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search place, address or note'**
   String get searchWatchlistHint;
+
+  /// No description provided for @commonProductsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Products'**
+  String get commonProductsTitle;
+
+  /// No description provided for @commonProductsAllTab.
+  ///
+  /// In en, this message translates to:
+  /// **'All Products'**
+  String get commonProductsAllTab;
+
+  /// No description provided for @commonProductsMyVanTab.
+  ///
+  /// In en, this message translates to:
+  /// **'My Van'**
+  String get commonProductsMyVanTab;
+
+  /// No description provided for @commonProductSources.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory sources'**
+  String get commonProductSources;
+
+  /// No description provided for @commonProductSourceWarehouse.
+  ///
+  /// In en, this message translates to:
+  /// **'Warehouse'**
+  String get commonProductSourceWarehouse;
+
+  /// No description provided for @commonProductSourceMyVan.
+  ///
+  /// In en, this message translates to:
+  /// **'My van'**
+  String get commonProductSourceMyVan;
+
+  /// No description provided for @commonProductSourceOtherVans.
+  ///
+  /// In en, this message translates to:
+  /// **'Other vans'**
+  String get commonProductSourceOtherVans;
+
+  /// No description provided for @commonProductInStockOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'In stock only'**
+  String get commonProductInStockOnly;
+
+  /// No description provided for @commonProductInStock.
+  ///
+  /// In en, this message translates to:
+  /// **'In stock'**
+  String get commonProductInStock;
+
+  /// No description provided for @commonProductOutOfStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of stock'**
+  String get commonProductOutOfStock;
+
+  /// No description provided for @commonProductLowStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Low stock'**
+  String get commonProductLowStock;
+
+  /// No description provided for @commonProductBrand.
+  ///
+  /// In en, this message translates to:
+  /// **'Brand'**
+  String get commonProductBrand;
+
+  /// No description provided for @commonProductCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get commonProductCategory;
+
+  /// No description provided for @commonProductAllBrands.
+  ///
+  /// In en, this message translates to:
+  /// **'All brands'**
+  String get commonProductAllBrands;
+
+  /// No description provided for @commonProductAllCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'All categories'**
+  String get commonProductAllCategories;
+
+  /// No description provided for @commonProductSortName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name (A–Z)'**
+  String get commonProductSortName;
+
+  /// No description provided for @commonProductSortStockDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock (high to low)'**
+  String get commonProductSortStockDesc;
+
+  /// No description provided for @commonProductSortStockAsc.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock (low to high)'**
+  String get commonProductSortStockAsc;
+
+  /// No description provided for @commonProductSortPriceAsc.
+  ///
+  /// In en, this message translates to:
+  /// **'Price (low to high)'**
+  String get commonProductSortPriceAsc;
+
+  /// No description provided for @commonProductSortPriceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Price (high to low)'**
+  String get commonProductSortPriceDesc;
+
+  /// No description provided for @commonProductViewGrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid view'**
+  String get commonProductViewGrid;
+
+  /// No description provided for @commonProductViewList.
+  ///
+  /// In en, this message translates to:
+  /// **'List view'**
+  String get commonProductViewList;
+
+  /// No description provided for @commonProductStockAsOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock as of {time}'**
+  String commonProductStockAsOf(String time);
+
+  /// No description provided for @commonProductTotalStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get commonProductTotalStock;
+
+  /// No description provided for @commonProductStockBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock by source'**
+  String get commonProductStockBreakdown;
+
+  /// No description provided for @commonProductNoImage.
+  ///
+  /// In en, this message translates to:
+  /// **'No image'**
+  String get commonProductNoImage;
+
+  /// No description provided for @salesProductLoadToVan.
+  ///
+  /// In en, this message translates to:
+  /// **'Load to my van'**
+  String get salesProductLoadToVan;
+
+  /// No description provided for @salesProductDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Product'**
+  String get salesProductDetailTitle;
 }
 
 class _AppLocalizationsDelegate

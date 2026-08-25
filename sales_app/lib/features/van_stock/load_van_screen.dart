@@ -23,13 +23,18 @@ class _LoadLine {
 }
 
 class LoadVanScreen extends ConsumerStatefulWidget {
-  const LoadVanScreen({super.key});
+  const LoadVanScreen({super.key, this.preselectProductId});
+
+  /// Ticked and scrolled to on open, so "Load to my van" on a product page
+  /// lands on that product.
+  final int? preselectProductId;
 
   @override
   ConsumerState<LoadVanScreen> createState() => _LoadVanScreenState();
 }
 
 class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
+  final _scrollController = ScrollController();
   List<_LoadLine> _lines = [];
   bool _loading = true;
   bool _submitting = false;
@@ -45,6 +50,7 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
     for (final line in _lines) {
       line.controller.dispose();
     }
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -69,6 +75,7 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
             .toList();
         _loading = false;
       });
+      _applyPreselection();
     } catch (e) {
       setState(() => _loading = false);
       if (mounted) showAppErrorSnackBar(context, e);
@@ -128,6 +135,23 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
     }
   }
 
+  /// Tick the product we were sent here for and bring it into view.
+  void _applyPreselection() {
+    final wanted = widget.preselectProductId;
+    if (wanted == null) return;
+    final index = _lines.indexWhere((line) => line.productId == wanted);
+    if (index < 0) return;
+    setState(() => _lines[index].selected = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      _scrollController.animateTo(
+        (index * 72.0).clamp(0, _scrollController.position.maxScrollExtent),
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -144,6 +168,7 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
       body: _lines.isEmpty
           ? EmptyView(message: l10n.salesVanLoadNoStock)
           : ListView.builder(
+              controller: _scrollController,
               itemCount: _lines.length,
               itemBuilder: (_, i) {
                 final line = _lines[i];

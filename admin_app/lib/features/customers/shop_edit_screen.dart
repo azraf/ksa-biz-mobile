@@ -23,6 +23,7 @@ class ShopEditScreen extends ConsumerStatefulWidget {
 class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _vatNumberController = TextEditingController();
   final _picker = ImagePicker();
   String? _gps;
   XFile? _shopPhoto;
@@ -45,6 +46,7 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
     if (shop != null) {
       _nameController.text = shop.name;
       _phoneController.text = shop.primaryPhone ?? '';
+      _vatNumberController.text = shop.vatNumber ?? '';
       _gps = shop.gps;
       _priorityRating = shop.metrics.priorityRating;
       _paymentOverride = shop.metrics.paymentReliabilityOverride;
@@ -58,6 +60,7 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _vatNumberController.dispose();
     _phoneController.dispose();
     super.dispose();
   }
@@ -117,10 +120,15 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
           gps: _gps,
           salesPersonId: _salesPersonId,
         );
+        final vat = _vatNumberController.text.trim();
+        if (vat.isNotEmpty) {
+          await ref.read(apiClientProvider).put('/customer-shops/${shop.id}', body: {'vat_number': vat});
+        }
       } else {
         await ref.read(apiClientProvider).put('/customer-shops/${_shop!.id}', body: {
           'name': name,
           'mobile': phone, // empty string clears it
+          'vat_number': _vatNumberController.text.trim(),
           'gps': _gps,
           if (_priorityRating != null) 'priority_rating': _priorityRating,
           'payment_reliability_override': _paymentOverride,
@@ -191,6 +199,17 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
             controller: _phoneController,
             keyboardType: TextInputType.phone,
             decoration: const InputDecoration(labelText: 'Phone'),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _vatNumberController,
+            keyboardType: TextInputType.number,
+            maxLength: 15,
+            decoration: const InputDecoration(
+              labelText: 'VAT number (optional)',
+              helperText: 'Printed on invoices when set',
+              counterText: '',
+            ),
           ),
           if (_shop?.primaryPhone?.isNotEmpty == true) ...[
             const SizedBox(height: 8),

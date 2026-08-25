@@ -64,6 +64,7 @@ class CustomerShopModel extends Equatable {
     required this.name,
     this.mobile,
     this.email,
+    this.vatNumber,
     this.gps,
     this.isSystem = false,
     this.contactsCount,
@@ -87,6 +88,9 @@ class CustomerShopModel extends Equatable {
   /// The shop's own number (customer_shops.mobile); see [primaryPhone].
   final String? mobile;
   final String? email;
+
+  /// Buyer VAT registration number — printed on ZATCA invoices when set.
+  final String? vatNumber;
   final String? gps;
   final bool isSystem;
   final int? contactsCount;
@@ -112,6 +116,7 @@ class CustomerShopModel extends Equatable {
         name: json['name'] as String? ?? '',
         mobile: json['mobile'] as String?,
         email: json['email'] as String?,
+        vatNumber: json['vat_number'] as String?,
         gps: json['gps'] as String?,
         isSystem: parseJsonBool(json['is_system']),
         contactsCount: json['contacts_count'] as int?,
@@ -149,6 +154,7 @@ class CustomerShopModel extends Equatable {
         'name': name,
         if (mobile != null) 'mobile': mobile,
         if (email != null) 'email': email,
+        if (vatNumber != null) 'vat_number': vatNumber,
         if (gps != null) 'gps': gps,
         if (isSystem) 'is_system': isSystem,
       };

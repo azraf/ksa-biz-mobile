@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:l10n/l10n.dart';
 import 'package:media/media.dart';
 
 import '../../providers/repositories.dart';
@@ -173,22 +174,79 @@ class CategoriesScreen extends ConsumerWidget {
 }
 
 // --- Products ---
-class ProductsScreen extends ConsumerWidget {
+class ProductsScreen extends ConsumerStatefulWidget {
   const ProductsScreen({super.key});
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProductsScreen> createState() => _ProductsScreenState();
+}
+
+class _ProductsScreenState extends ConsumerState<ProductsScreen> {
+  List<ProductSourceOption> _sources = [];
+  List<({int id, String name})> _brands = [];
+  List<({int id, String name})> _categories = [];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadLookups());
+  }
+
+  /// Filter options for the drawer: every van by name (an admin may see them,
+  /// unlike a salesperson), plus brands and categories.
+  Future<void> _loadLookups() async {
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    try {
+      final persons = await ref.read(customerRepositoryProvider).salesPersons();
+      final repos = ref.read(adminRepositoriesProvider);
+      final brands = await repos.brands.list();
+      final categories = await repos.categories.list();
+      if (!mounted) return;
+      setState(() {
+        _sources = [
+          ProductSourceOption(
+            key: 'warehouse',
+            label: l10n.commonProductSourceWarehouse,
+          ),
+          ...persons.items.map(
+            (p) => ProductSourceOption(key: 'van:${p.id}', label: p.name),
+          ),
+        ];
+        _brands = brands.map((b) => (id: b.id, name: b.name)).toList();
+        _categories = categories.map((c) => (id: c.id, name: c.name)).toList();
+      });
+    } catch (_) {
+      // Leave the filters out rather than blocking the list.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final repo = ref.watch(productRepositoryProvider);
-    return CrudListScreen<ProductModel>(
+    return ProductBrowser(
       title: 'Products',
-      loadItems: () async => (await repo.list()).items,
-      itemLeading: (p) => SizedBox(
-        width: 48,
-        height: 48,
-        child: MediaImageTile(url: p.featureImageUrl, height: 48, tapToView: false),
+      sourceOptions: _sources,
+      brands: _brands,
+      categories: _categories,
+      imageBuilder: (url, height) =>
+          MediaImageTile(url: url, height: height, tapToView: false),
+      load: (query) => repo.list(
+        page: query.page,
+        search: query.search,
+        brandId: query.brandId,
+        categoryId: query.categoryId,
+        sources: query.sources,
+        inStock: query.inStock,
+        sort: query.sort.apiValue,
+        withStock: true,
       ),
-      itemTitle: (p) => '${p.name} — ${p.price}',
-      onTap: (p) => context.push('/catalog/products/${p.id}'),
-      onAdd: () => context.push('/catalog/products/create'),
+      onTapProduct: (p) => context.push('/catalog/products/${p.id}'),
+      floatingActionButton: TranslucentFab(
+        onOpen: () => context.push('/catalog/products/create'),
+        icon: const Icon(Icons.add),
+        label: 'New product',
+      ),
     );
   }
 }
@@ -380,7 +438,18 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 final img = p.galleryImages[i];
                 return Stack(
                   children: [
-                    SizedBox(width: 100, child: MediaImageTile(url: img.url, height: 100)),
+                    SizedBox(
+                      width: 100,
+                      child: MediaImageTile(
+                        url: img.url,
+                        height: 100,
+                        // Pass the whole set so the viewer gets prev/next.
+                        gallery: p.galleryImages
+                            .map((g) => MediaViewerItem(url: g.url))
+                            .toList(),
+                        galleryIndex: i,
+                      ),
+                    ),
                     Positioned(
                       top: 0,
                       right: 0,

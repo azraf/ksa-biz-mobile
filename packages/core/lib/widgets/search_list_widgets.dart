@@ -200,6 +200,7 @@ class ListFiltersDrawer extends StatelessWidget {
     this.statusOptions = const [],
     this.status,
     this.onStatusChanged,
+    this.extra = const [],
     required this.onClear,
   });
 
@@ -215,6 +216,9 @@ class ListFiltersDrawer extends StatelessWidget {
   final List<MapEntry<String, String>> statusOptions;
   final String? status;
   final ValueChanged<String?>? onStatusChanged;
+
+  /// Extra controls (brand, source, stock…) rendered above the clear button.
+  final List<Widget> extra;
 
   final VoidCallback onClear;
 
@@ -237,7 +241,13 @@ class ListFiltersDrawer extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(l10n.searchFiltersTitle, style: Theme.of(context).textTheme.titleLarge),
+                Expanded(
+                  child: Text(
+                    l10n.searchFiltersTitle,
+                    style: Theme.of(context).textTheme.titleLarge,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
                 IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop()),
               ],
             ),
@@ -264,6 +274,10 @@ class ListFiltersDrawer extends StatelessWidget {
                   if (v != null) onSortChanged?.call(v);
                 },
               ),
+            ],
+            for (final control in extra) ...[
+              const SizedBox(height: AppSpacing.lg),
+              control,
             ],
             const SizedBox(height: AppSpacing.lg),
             TextButton.icon(

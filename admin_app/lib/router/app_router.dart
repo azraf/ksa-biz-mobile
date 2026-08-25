@@ -263,6 +263,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (_, _) => const MoreHubScreen(),
                 routes: [
                   GoRoute(
+                    path: 'printer-settings',
+                    builder: (_, _) => const PrinterSetupScreen(),
+                  ),
+                  GoRoute(
                     path: 'reports/sales',
                     builder: (_, _) => const SalesReportScreen(),
                   ),

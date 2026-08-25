@@ -210,6 +210,22 @@ class LocalDatabase {
     await batch.commit(noResult: true);
   }
 
+  /// Newest `updated_at` across an entity type, for an "as of" stamp on
+  /// screens served from cache. Null when nothing is cached.
+  Future<DateTime?> cachedAt(String entityType) async {
+    final db = await database;
+    final rows = await db.query(
+      'entity_cache',
+      columns: ['updated_at'],
+      where: 'entity_type = ?',
+      whereArgs: [entityType],
+      orderBy: 'updated_at DESC',
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return DateTime.tryParse(rows.first['updated_at'] as String? ?? '');
+  }
+
   Future<List<Map<String, dynamic>>> getCachedEntities(String entityType) async {
     final db = await database;
     final rows = await db.query(
