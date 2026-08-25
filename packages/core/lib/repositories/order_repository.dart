@@ -131,6 +131,7 @@ class OrderRepository {
     String? bankReference,
     String? notes,
     bool applyCredit = false,
+    String? clientRequestId,
   }) async {
     final body = <String, dynamic>{
       'amount': amount,
@@ -138,6 +139,9 @@ class OrderRepository {
       if (bankReference != null) 'bank_reference': bankReference,
       if (notes != null) 'notes': notes,
       if (applyCredit) 'apply_credit': true,
+      // Server dedupes per order on this key (max 36 chars) — retries and
+      // offline replays of the same payment must reuse the same id.
+      if (clientRequestId != null) 'client_request_id': clientRequestId,
     };
     final response = await _api.post('/orders/$orderId/payments', body: body);
     return OrderModel.fromJson(response['order'] as Map<String, dynamic>);

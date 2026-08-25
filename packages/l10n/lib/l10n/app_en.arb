@@ -37,6 +37,7 @@
   "commonCity": "City",
   "commonReason": "Reason",
   "commonQuantity": "Quantity",
+  "commonQuantityCartons": "Quantity (cartons)",
   "commonNotes": "Notes",
   "commonNotesOptional": "Notes (optional)",
   "commonItems": "Items",
@@ -633,13 +634,13 @@
   "salesVanDamageRecord": "Record replacement",
   "salesVanExchangeReturns": "Customer returns",
   "salesVanExchangeSelectReturn": "Select return product",
-  "salesVanExchangeReturnQty": "Return quantity",
+  "salesVanExchangeReturnQty": "Return quantity (cartons)",
   "salesVanExchangeSettlement": "Settlement",
   "salesVanExchangeGiveProduct": "Give another product",
   "salesVanExchangeCashRefund": "Cash refund",
   "salesVanExchangeGiveTo": "Give to customer",
   "salesVanExchangeSelectOut": "Select out product",
-  "salesVanExchangeOutQty": "Out quantity",
+  "salesVanExchangeOutQty": "Out quantity (cartons)",
   "salesVanExchangeCashAmount": "Cash amount (SAR)",
   "salesVanExchangeRecord": "Record exchange",
   "salesWatchlist": "Watch-list",
@@ -1000,5 +1001,129 @@
   "commonProductStockBreakdown": "Stock by source",
   "commonProductNoImage": "No image",
   "salesProductLoadToVan": "Load to my van",
-  "salesProductDetailTitle": "Product"
+  "salesProductDetailTitle": "Product",
+  "commonContinue": "Continue",
+  "commonCreated": "Created",
+  "commonName": "Name",
+  "commonAny": "Any",
+  "commonNotFound": "Not found",
+  "commonReasonRequired": "A reason is required",
+  "commonEnterQuantityMin": "Enter a quantity of 1 or more",
+  "commonEnterOneOrMore": "Enter 1 or more",
+  "commonEnterPriceMin": "Enter a price of 0 or more",
+  "commonEnterDiscountMin": "Enter a discount of 0 or more",
+  "commonDiscountExceedsTotal": "Discount cannot exceed the line total",
+  "commonPaymentNumber": "Payment #{id}",
+  "@commonPaymentNumber": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "commonRecordingRemaining": "{seconds}s remaining (max {maxMinutes} min)",
+  "@commonRecordingRemaining": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      },
+      "maxMinutes": {
+        "type": "int"
+      }
+    }
+  },
+  "authEmailOrPhone": "Email or phone",
+  "authSwitchUserTitle": "Switch user?",
+  "authSwitchUserBody": "Unsynced data from another user will be deleted (a recovery file will be saved). Continue?",
+  "authErrorInvalidCredentials": "Incorrect email or password. Please try again.",
+  "authErrorTimeout": "The request timed out. Check your connection and try again.",
+  "authErrorServer": "The server had a problem. Please try again in a moment.",
+  "authErrorNetwork": "Could not reach the server. Check your internet connection and try again.",
+  "customerTypeShop": "Shop",
+  "customerTypeVan": "Van",
+  "customerTypeImporter": "Importer",
+  "salesDuesIncludesUnsynced": "Includes unsynced payment",
+  "salesDashboardPartialLoadTitle": "Some data could not be loaded",
+  "salesDashboardPartialLoadSubtitle": "Check your connection and retry.",
+  "salesPrinterSettings": "Printer settings",
+  "salesPaymentExceedsDueTitle": "Amount exceeds due",
+  "salesPaymentExceedsDueBody": "Collecting {amount} is more than the {due} due. Record it anyway?",
+  "@salesPaymentExceedsDueBody": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "due": {
+        "type": "String"
+      }
+    }
+  },
+  "salesOrderChooseCustomerInstead": "Choose a customer instead",
+  "salesVanLoadAllConfirm": "This loads all available warehouse stock ({count} products) onto your van:",
+  "@salesVanLoadAllConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "salesWatchlistAtLocationConvert": "You're at this location — convert to shop?",
+  "salesWatchlistStars": "{count} stars",
+  "@salesWatchlistStars": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "orderConfirmOrder": "Confirm order",
+  "orderDeleteDraft": "Delete draft",
+  "orderDeleteDraftBody": "This draft will be removed permanently.",
+  "orderDraftDeleted": "Draft deleted",
+  "orderDraftDeleteOnline": "Connect to the internet to delete this draft",
+  "perfTitle": "Performance Review",
+  "perfNoActivity": "No activity in this period yet.",
+  "perfShowingPreviousData": "Showing previously loaded data.",
+  "perfCachedTitle": "Showing cached data",
+  "perfCachedSubtitle": "Connect to refresh from server",
+  "perfByItem": "By item",
+  "perfNoItemsSold": "No items sold in this period.",
+  "planCalendarMonth": "Month",
+  "fieldMapTitle": "Field map",
+  "fieldMapTitleFiltered": "Field map ({count})",
+  "@fieldMapTitleFiltered": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fieldMapFiltersSort": "Filters & sort",
+  "fieldMapSearchHint": "Search by name or phone",
+  "fieldMapFrequency": "Frequency",
+  "fieldMapAnyFrequency": "Any frequency",
+  "fieldMapPayment": "Payment",
+  "fieldMapAnyReliability": "Any reliability",
+  "fieldMapMinRating": "Min rating",
+  "fieldMapAnyRating": "Any rating",
+  "fieldMapStarsPlus": "{count}+ stars",
+  "@fieldMapStarsPlus": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fieldMapInactiveFor": "Inactive for",
+  "fieldMapDaysPlus": "{days}+ days",
+  "@fieldMapDaysPlus": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "fieldMapHasDue": "Has due",
+  "fieldMapNoDue": "No due",
+  "fieldMapNearestFirst": "Nearest first"
 }

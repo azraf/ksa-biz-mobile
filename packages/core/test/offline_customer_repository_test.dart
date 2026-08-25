@@ -24,6 +24,28 @@ class _ThrowingCustomerRepository extends CustomerRepository {
   }
 }
 
+/// A remote that always succeeds with a fixed shop list, to drive the live
+/// fetch → cacheBatch path (which tags rows with the fetching salesperson).
+class _FixedShopsRepository extends CustomerRepository {
+  _FixedShopsRepository(this._shops) : super(ApiClient());
+
+  final List<CustomerShopModel> _shops;
+
+  @override
+  Future<PaginatedResponse<CustomerShopModel>> shops({
+    CustomerListQuery? query,
+    String? search,
+    int page = 1,
+    int perPage = 25,
+  }) async =>
+      PaginatedResponse(
+        items: _shops,
+        currentPage: 1,
+        lastPage: 1,
+        total: _shops.length,
+      );
+}
+
 void main() {
   setUpAll(() {
     sqfliteFfiInit();
@@ -99,5 +121,66 @@ void main() {
     // Phone digits with formatting
     r = await repo().cachedVans(search: '050 333 4444');
     expect(r.items.map((v) => v.name), ['Zed Beta Van']);
+  });
+
+  group('per-salesperson cache scoping', () {
+    OfflineCustomerRepository fixedRepo(List<CustomerShopModel> shops) =>
+        OfflineCustomerRepository(
+          remote: _FixedShopsRepository(shops),
+          db: LocalDatabase.instance,
+          isOnline: () => true,
+        );
+
+    test('cached rows are visible only to the salesperson whose fetch cached them', () async {
+      const marker = 'zzz-sp-scope-test-marker';
+      const shop = CustomerShopModel(id: 999920, name: marker);
+
+      // Salesperson 71's live fetch caches (and tags) the row.
+      await fixedRepo([shop]).shops(search: marker, salesPersonId: 71, scoped: true);
+
+      final mine = await repo().cachedShops(search: marker, salesPersonId: 71);
+      expect(mine.items.map((s) => s.id), [999920]);
+
+      // Another salesperson on the same device must not see it offline.
+      final theirs = await repo().cachedShops(search: marker, salesPersonId: 72);
+      expect(theirs.items, isEmpty);
+
+      // Admin (null) sees everything.
+      final admin = await repo().cachedShops(search: marker);
+      expect(admin.items.map((s) => s.id), [999920]);
+    });
+
+    test('tags merge across salespeople and survive an untagged (admin) refetch', () async {
+      const marker = 'zzz-sp-merge-test-marker';
+      const shop = CustomerShopModel(id: 999921, name: marker);
+
+      await fixedRepo([shop]).shops(search: marker, salesPersonId: 73, scoped: true);
+      await fixedRepo([shop]).shops(search: marker, salesPersonId: 74, scoped: true);
+      // An admin fetch (no salesperson) must not strip the existing tags.
+      await fixedRepo([shop]).shops(search: marker);
+
+      final sp73 = await repo().cachedShops(search: marker, salesPersonId: 73);
+      final sp74 = await repo().cachedShops(search: marker, salesPersonId: 74);
+      final sp75 = await repo().cachedShops(search: marker, salesPersonId: 75);
+      expect(sp73.items.map((s) => s.id), [999921]);
+      expect(sp74.items.map((s) => s.id), [999921]);
+      expect(sp75.items, isEmpty);
+    });
+
+    test('offline shops() filters the cache by the requesting salesperson', () async {
+      const marker = 'zzz-sp-offline-scope-marker';
+      const shop = CustomerShopModel(id: 999922, name: marker);
+      await fixedRepo([shop]).shops(search: marker, salesPersonId: 76, scoped: true);
+
+      final offline = OfflineCustomerRepository(
+        remote: _ThrowingCustomerRepository(),
+        db: LocalDatabase.instance,
+        isOnline: () => false,
+      );
+      final mine = await offline.shops(search: marker, salesPersonId: 76);
+      expect(mine.items.map((s) => s.id), [999922]);
+      final theirs = await offline.shops(search: marker, salesPersonId: 77);
+      expect(theirs.items, isEmpty);
+    });
   });
 }

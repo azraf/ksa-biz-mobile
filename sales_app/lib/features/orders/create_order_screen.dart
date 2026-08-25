@@ -54,6 +54,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     final online = ref.read(onlineStatusProvider);
     if (!online) {
       final hasCatalog = await ref.read(referenceDataPrefetcherProvider).hasCachedCatalog();
+      if (!mounted) return;
       if (!hasCatalog) {
         setState(() {
           _catalogError = AppLocalizations.of(context).salesOrderGoOnlineCatalog;
@@ -66,6 +67,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     try {
       final types = await ref.read(offlineCustomerRepositoryProvider).customerTypes();
       final walkInId = await ref.read(offlineCustomerRepositoryProvider).walkInShopId();
+      if (!mounted) return;
       CustomerTypeModel? defaultType;
       if (types.isNotEmpty) {
         defaultType = types.firstWhere(
@@ -82,6 +84,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
       });
       unawaited(_resolveVatDefault());
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _catalogError = e.toString();
         _loadingTypes = false;
@@ -140,6 +143,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
       customerType: _selectedType!.typeName,
       salesPersonId: requireSalesPersonId(ref.read(authProvider)),
     );
+    if (!mounted) return;
     if (result != null) {
       setState(() => _selectedCustomer = result.customer);
       unawaited(_resolveVatDefault());
@@ -154,6 +158,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
       customerType: _selectedType!.typeName,
       salesPersonId: requireSalesPersonId(ref.read(authProvider)),
     );
+    if (!mounted) return;
     if (created != null) {
       setState(() => _selectedCustomer = created);
       unawaited(_resolveVatDefault());
@@ -184,6 +189,24 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     });
     unawaited(_resolveVatDefault());
   }
+
+  /// Way back out of walk-in mode to normal customer selection.
+  void _exitWalkInMode() {
+    setState(() {
+      _walkInMode = false;
+      _selectedCustomer = null;
+      _walkInNoteController.clear();
+    });
+  }
+
+  /// Friendly dropdown labels for the raw API type identifiers.
+  String _customerTypeLabel(AppLocalizations l10n, String typeName) =>
+      switch (typeName) {
+        'customer_shop' => l10n.customerTypeShop,
+        'customer_van' => l10n.customerTypeVan,
+        'customer_importer' => l10n.customerTypeImporter,
+        _ => typeName.replaceAll('_', ' '),
+      };
 
   Future<void> _submit({bool asDraft = false}) async {
     final l10n = AppLocalizations.of(context);
@@ -356,6 +379,14 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
               hintText: l10n.salesOrderWalkInNoteHint,
             ),
           ),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              onPressed: _exitWalkInMode,
+              icon: const Icon(Icons.arrow_back),
+              label: Text(l10n.salesOrderChooseCustomerInstead),
+            ),
+          ),
           const SizedBox(height: 12),
         ],
         if (!_walkInMode) ...[
@@ -364,7 +395,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
             initialValue: _selectedType,
             decoration: InputDecoration(labelText: l10n.salesOrderCustomerType),
             items: _types
-                .map((t) => DropdownMenuItem(value: t, child: Text(t.typeName)))
+                .map((t) => DropdownMenuItem(value: t, child: Text(_customerTypeLabel(l10n, t.typeName))))
                 .toList(),
             onChanged: (v) => setState(() {
               _selectedType = v;

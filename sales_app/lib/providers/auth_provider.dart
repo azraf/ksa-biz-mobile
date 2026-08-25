@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:core/core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:l10n/l10n.dart';
 
 import 'repositories.dart';
 
@@ -86,12 +87,15 @@ class AuthNotifier extends Notifier<AuthState> {
         biometricAvailable: await ref.read(biometricAuthServiceProvider).canCheckBiometrics(),
       );
       _runBackgroundAuthTasks();
-    } on ApiException catch (e) {
-      state = state.copyWith(isLoading: false, error: e.message);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, error: friendlyErrorMessage(_l10n, e));
     }
   }
+
+  /// Notifiers have no BuildContext; resolve the current locale's strings
+  /// directly so state-carried messages still follow the app language.
+  AppLocalizations get _l10n =>
+      lookupAppLocalizations(ref.read(localeNotifierProvider));
 
   Future<bool> enableBiometricLogin(String reason) async {
     final ok = await _authRepository.enableBiometric(reason: reason);
@@ -165,7 +169,16 @@ class AuthNotifier extends Notifier<AuthState> {
     // once already logged out.
     if (!state.isAuthenticated || state.isAppLocked) return;
     await _authRepository.clearSession();
-    state = const AuthState(isLoading: false);
+    // Keep the remembered email and biometric enrollment (clearSession
+    // preserves both on purpose) and tell the user why they are back at the
+    // login screen instead of dumping them there silently.
+    state = AuthState(
+      isLoading: false,
+      biometricEnabled: _authRepository.isBiometricEnabled,
+      biometricAvailable: state.biometricAvailable,
+      storedUserEmail: _authRepository.storedUserEmail,
+      error: _l10n.sessionExpired,
+    );
   }
 }
 

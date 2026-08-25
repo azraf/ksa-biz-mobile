@@ -93,6 +93,47 @@ void main() {
     expect(claimed, 1);
   });
 
+  test('pendingCount includes rows stuck in syncing', () async {
+    final db = LocalDatabase.instance;
+    final before = await db.pendingCount();
+    final database = await db.database;
+    final id = await database.insert('sync_queue', {
+      'entity_type': 'order',
+      'operation': 'create',
+      'payload': '{}',
+      'status': 'syncing',
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    // A row claimed mid-sync is still unsynced data: it must keep the badge
+    // and the logout guard's isFullySynced() from reading as clean.
+    expect(await db.pendingCount(), before + 1);
+    await db.deleteQueueItem(id);
+    expect(await db.pendingCount(), before);
+  });
+
+  test('a done row can never be re-claimed to syncing', () async {
+    final db = LocalDatabase.instance;
+    final id = await db.enqueue(
+      SyncQueueItem(
+        id: 0,
+        entityType: 'order',
+        operation: 'create',
+        localId: -4,
+        payload: const {},
+        status: 'pending',
+        retryCount: 0,
+        createdAt: DateTime.now().toIso8601String(),
+      ),
+    );
+    expect(await db.updateQueueStatus(id, status: 'syncing'), 1);
+    await db.updateQueueStatus(id, status: 'done', serverId: 4001);
+
+    expect(await db.updateQueueStatus(id, status: 'syncing'), 0);
+    final row = (await db.allQueueItems()).firstWhere((q) => q.id == id);
+    expect(row.status, 'done');
+    await db.deleteQueueItem(id);
+  });
+
   // Runs last in this file: wipeUserData() clears every table unconditionally,
   // which would break the assumptions of earlier tests if it ran before them.
   test('wipeUserData clears every table and deletes media files', () async {

@@ -1,9 +1,9 @@
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:l10n/l10n.dart';
 
+import '../../providers/format_providers.dart';
 import '../../providers/repositories.dart';
 import 'visit_form_sheet.dart';
 
@@ -67,7 +67,7 @@ class _CollectionCandidatesScreenState extends ConsumerState<CollectionCandidate
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final currency = NumberFormat.currency(symbol: 'SAR ', decimalDigits: 0);
+    final currency = ref.watch(wholeCurrencyFormatProvider);
 
     if (_loading) return const LoadingView();
     if (_error != null) return ErrorView(message: _error!, onRetry: _load);

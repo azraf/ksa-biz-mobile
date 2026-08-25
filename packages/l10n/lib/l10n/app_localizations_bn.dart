@@ -102,6 +102,9 @@ class AppLocalizationsBn extends AppLocalizations {
   String get commonQuantity => 'পরিমাণ';
 
   @override
+  String get commonQuantityCartons => 'পরিমাণ (কার্টন)';
+
+  @override
   String get commonNotes => 'নোট';
 
   @override
@@ -1219,7 +1222,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get salesVanExchangeSelectReturn => 'ফেরত পণ্য নির্বাচন';
 
   @override
-  String get salesVanExchangeReturnQty => 'ফেরত পরিমাণ';
+  String get salesVanExchangeReturnQty => 'ফেরত পরিমাণ (কার্টন)';
 
   @override
   String get salesVanExchangeSettlement => 'নিষ্পত্তি';
@@ -1237,7 +1240,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get salesVanExchangeSelectOut => 'আউট পণ্য নির্বাচন';
 
   @override
-  String get salesVanExchangeOutQty => 'আউট পরিমাণ';
+  String get salesVanExchangeOutQty => 'আউট পরিমাণ (কার্টন)';
 
   @override
   String get salesVanExchangeCashAmount => 'নগদ পরিমাণ (SAR)';
@@ -2108,4 +2111,215 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get salesProductDetailTitle => 'পণ্য';
+
+  @override
+  String get commonContinue => 'চালিয়ে যান';
+
+  @override
+  String get commonCreated => 'তৈরির তারিখ';
+
+  @override
+  String get commonName => 'নাম';
+
+  @override
+  String get commonAny => 'যেকোনো';
+
+  @override
+  String get commonNotFound => 'পাওয়া যায়নি';
+
+  @override
+  String get commonReasonRequired => 'কারণ প্রয়োজন';
+
+  @override
+  String get commonEnterQuantityMin => '১ বা তার বেশি পরিমাণ লিখুন';
+
+  @override
+  String get commonEnterOneOrMore => '১ বা তার বেশি লিখুন';
+
+  @override
+  String get commonEnterPriceMin => '০ বা তার বেশি মূল্য লিখুন';
+
+  @override
+  String get commonEnterDiscountMin => '০ বা তার বেশি ছাড় লিখুন';
+
+  @override
+  String get commonDiscountExceedsTotal =>
+      'ছাড় লাইনের মোটের চেয়ে বেশি হতে পারে না';
+
+  @override
+  String commonPaymentNumber(int id) {
+    return 'পেমেন্ট #$id';
+  }
+
+  @override
+  String commonRecordingRemaining(int seconds, int maxMinutes) {
+    return '$seconds সেকেন্ড বাকি (সর্বোচ্চ $maxMinutes মিনিট)';
+  }
+
+  @override
+  String get authEmailOrPhone => 'ইমেইল বা ফোন';
+
+  @override
+  String get authSwitchUserTitle => 'ব্যবহারকারী পরিবর্তন করবেন?';
+
+  @override
+  String get authSwitchUserBody =>
+      'অন্য ব্যবহারকারীর অসিঙ্ক করা ডেটা মুছে ফেলা হবে (একটি রিকভারি ফাইল সংরক্ষিত হবে)। চালিয়ে যাবেন?';
+
+  @override
+  String get authErrorInvalidCredentials =>
+      'ইমেইল বা পাসওয়ার্ড ভুল। আবার চেষ্টা করুন।';
+
+  @override
+  String get authErrorTimeout =>
+      'অনুরোধের সময় শেষ। সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।';
+
+  @override
+  String get authErrorServer =>
+      'সার্ভারে সমস্যা হয়েছে। একটু পরে আবার চেষ্টা করুন।';
+
+  @override
+  String get authErrorNetwork =>
+      'সার্ভারে পৌঁছানো যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।';
+
+  @override
+  String get customerTypeShop => 'দোকান';
+
+  @override
+  String get customerTypeVan => 'ভ্যান';
+
+  @override
+  String get customerTypeImporter => 'ইমপোর্টার';
+
+  @override
+  String get salesDuesIncludesUnsynced => 'অসিঙ্ক করা পেমেন্ট অন্তর্ভুক্ত';
+
+  @override
+  String get salesDashboardPartialLoadTitle => 'কিছু ডেটা লোড করা যায়নি';
+
+  @override
+  String get salesDashboardPartialLoadSubtitle =>
+      'সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।';
+
+  @override
+  String get salesPrinterSettings => 'প্রিন্টার সেটিংস';
+
+  @override
+  String get salesPaymentExceedsDueTitle => 'পরিমাণ বকেয়ার চেয়ে বেশি';
+
+  @override
+  String salesPaymentExceedsDueBody(String amount, String due) {
+    return '$amount সংগ্রহ বকেয়া $due-এর চেয়ে বেশি। তবুও রেকর্ড করবেন?';
+  }
+
+  @override
+  String get salesOrderChooseCustomerInstead =>
+      'এর পরিবর্তে একজন গ্রাহক নির্বাচন করুন';
+
+  @override
+  String salesVanLoadAllConfirm(int count) {
+    return 'এটি গুদামের সব উপলব্ধ স্টক ($countটি পণ্য) আপনার ভ্যানে লোড করবে:';
+  }
+
+  @override
+  String get salesWatchlistAtLocationConvert =>
+      'আপনি এই অবস্থানে আছেন — দোকানে রূপান্তর করবেন?';
+
+  @override
+  String salesWatchlistStars(int count) {
+    return '$count তারকা';
+  }
+
+  @override
+  String get orderConfirmOrder => 'অর্ডার নিশ্চিত করুন';
+
+  @override
+  String get orderDeleteDraft => 'খসড়া মুছুন';
+
+  @override
+  String get orderDeleteDraftBody => 'এই খসড়া স্থায়ীভাবে মুছে ফেলা হবে।';
+
+  @override
+  String get orderDraftDeleted => 'খসড়া মুছে ফেলা হয়েছে';
+
+  @override
+  String get orderDraftDeleteOnline => 'এই খসড়া মুছতে ইন্টারনেটে সংযুক্ত হোন';
+
+  @override
+  String get perfTitle => 'পারফরম্যান্স পর্যালোচনা';
+
+  @override
+  String get perfNoActivity => 'এই সময়ে এখনও কোনো কার্যকলাপ নেই।';
+
+  @override
+  String get perfShowingPreviousData => 'আগে লোড করা ডেটা দেখানো হচ্ছে।';
+
+  @override
+  String get perfCachedTitle => 'ক্যাশ করা ডেটা দেখানো হচ্ছে';
+
+  @override
+  String get perfCachedSubtitle => 'সার্ভার থেকে রিফ্রেশ করতে সংযুক্ত হোন';
+
+  @override
+  String get perfByItem => 'আইটেম অনুযায়ী';
+
+  @override
+  String get perfNoItemsSold => 'এই সময়ে কোনো আইটেম বিক্রি হয়নি।';
+
+  @override
+  String get planCalendarMonth => 'মাস';
+
+  @override
+  String get fieldMapTitle => 'ফিল্ড ম্যাপ';
+
+  @override
+  String fieldMapTitleFiltered(int count) {
+    return 'ফিল্ড ম্যাপ ($count)';
+  }
+
+  @override
+  String get fieldMapFiltersSort => 'ফিল্টার ও সাজানো';
+
+  @override
+  String get fieldMapSearchHint => 'নাম বা ফোন দিয়ে খুঁজুন';
+
+  @override
+  String get fieldMapFrequency => 'ফ্রিকোয়েন্সি';
+
+  @override
+  String get fieldMapAnyFrequency => 'যেকোনো ফ্রিকোয়েন্সি';
+
+  @override
+  String get fieldMapPayment => 'পেমেন্ট';
+
+  @override
+  String get fieldMapAnyReliability => 'যেকোনো নির্ভরযোগ্যতা';
+
+  @override
+  String get fieldMapMinRating => 'ন্যূনতম রেটিং';
+
+  @override
+  String get fieldMapAnyRating => 'যেকোনো রেটিং';
+
+  @override
+  String fieldMapStarsPlus(int count) {
+    return '$count+ তারকা';
+  }
+
+  @override
+  String get fieldMapInactiveFor => 'নিষ্ক্রিয় সময়';
+
+  @override
+  String fieldMapDaysPlus(int days) {
+    return '$days+ দিন';
+  }
+
+  @override
+  String get fieldMapHasDue => 'বকেয়া আছে';
+
+  @override
+  String get fieldMapNoDue => 'বকেয়া নেই';
+
+  @override
+  String get fieldMapNearestFirst => 'নিকটতম আগে';
 }

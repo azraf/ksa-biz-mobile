@@ -120,6 +120,74 @@ void main() {
     expect(_fieldText(tester, 'Total'), '55');
   });
 
+  testWidgets('save rejects qty < 1 with an inline error and keeps the dialog open', (tester) async {
+    final item = await _pumpEditor(tester, vat: const OrderVatSettings());
+
+    await tester.tap(find.byType(ListTile));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(_field('Quantity'), '0');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.text('Enter a quantity of 1 or more'), findsOneWidget);
+    expect(item.quantity, 2); // unchanged
+
+    // Fixing the quantity clears the error and lets the save through.
+    await tester.enterText(_field('Quantity'), '3');
+    await tester.pumpAndSettle();
+    expect(find.text('Enter a quantity of 1 or more'), findsNothing);
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(item.quantity, 3);
+  });
+
+  testWidgets('save rejects discount above the line value', (tester) async {
+    final item = await _pumpEditor(tester, vat: const OrderVatSettings());
+
+    await tester.tap(find.byType(ListTile));
+    await tester.pumpAndSettle();
+
+    // qty 2 x price 50 = 100 — a 150 discount is impossible.
+    await tester.enterText(_field('Discount'), '150');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.text('Discount cannot exceed the line total'), findsOneWidget);
+    expect(item.discount, 0); // unchanged
+
+    await tester.enterText(_field('Discount'), '10');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(item.discount, 10);
+    expect(item.lineTotal, 90); // (50 * 2) - 10, VAT off
+  });
+
+  testWidgets('save rejects a negative price', (tester) async {
+    final item = await _pumpEditor(tester, vat: const OrderVatSettings());
+
+    await tester.tap(find.byType(ListTile));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(_field('Price'), '-5');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.text('Enter a price of 0 or more'), findsOneWidget);
+    expect(item.price, 50); // unchanged
+  });
+
   testWidgets('with VAT disabled the editor renders like before', (tester) async {
     await _pumpEditor(tester, vat: const OrderVatSettings());
 

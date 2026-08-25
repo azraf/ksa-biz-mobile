@@ -80,8 +80,15 @@ class SyncService {
       if (queue.isNotEmpty) {
         final bulkHandled = await _tryBulkSync(queue);
         if (!bulkHandled) {
+          // A partial bulk pass may have completed some rows ('done') or
+          // scheduled retries before failing. Re-read the queue so the
+          // per-item fallback only sees rows still actionable — never
+          // re-sending ones the bulk pass already finished.
+          final remaining = await db.pendingQueue();
+          completed = math.max(0, queue.length - remaining.length);
+          _progressController.add(SyncProgress(completed: completed, total: queue.length));
           await _processQueueInParallel(
-            queue,
+            remaining,
             onItemComplete: () {
               completed++;
               _progressController.add(SyncProgress(completed: completed, total: queue.length));
@@ -159,18 +166,24 @@ class SyncService {
               clearNextRetryAt: true,
             );
           }
-        } on ApiException {
-          // Claimed as 'syncing' but the push itself failed — put them back
-          // so the per-item fallback path (which also claims before
-          // sending) picks them up instead of leaving them stuck.
+        } catch (_) {
+          // Claimed as 'syncing' but the push failed — ApiException or a raw
+          // transport error (SocketException, http.ClientException, a
+          // FormatException from an unparseable body). Release whatever is
+          // still claimed back to 'pending' so the per-item fallback path
+          // (which also claims before sending) picks it up instead of
+          // leaving rows stuck as 'syncing' — invisible to retries and
+          // silently destroyed by a later user switch. Rows of this batch
+          // already marked 'done' are left alone.
           for (final item in batch) {
-            await db.updateQueueStatus(item.id, status: 'pending');
+            await db.releaseUnfinishedClaim(item.id);
           }
           rethrow;
         }
       }
       return true;
-    } on ApiException {
+    } catch (_) {
+      // Any failure — not just ApiException — falls back to per-item sync.
       return false;
     }
   }
@@ -277,6 +290,13 @@ class SyncService {
           );
           await db.removeCachedEntity('manual_order', item.localId!);
         }
+      case 'visit':
+        // Must mirror _syncVisit's cleanup: without it a bulk-synced visit
+        // create leaves the negative-id cached row behind as a duplicate
+        // 'pending sync' ghost next to the real server row.
+        if (item.operation == 'create' && item.localId != null && serverId != null) {
+          await db.removeCachedEntity('visit', item.localId!);
+        }
     }
   }
 
@@ -370,6 +390,8 @@ class SyncService {
         amount: (payload['amount'] as num).toDouble(),
         paymentMethod: payload['payment_method'] as String?,
         notes: payload['notes'] as String?,
+        // Stable id stored at enqueue time — the server dedupes retries on it.
+        clientRequestId: payload['client_request_id'] as String?,
       );
       await db.cacheEntity(
         entityType: 'order',
@@ -566,6 +588,7 @@ class SyncService {
 
   Map<String, dynamic> _orderToJson(OrderModel order) => {
         'id': order.id,
+        'invoice_number': order.invoiceNumber,
         'sales_person_id': order.salesPersonId,
         'customer_type_id': order.customerTypeId,
         'customer_van_id': order.customerVanId,
@@ -577,16 +600,20 @@ class SyncService {
         'amount_due': order.amountDue,
         'payment_status': order.paymentStatus,
         'status': order.status,
+        'due_date': order.dueDate,
         'include_vat': order.includeVat,
         'vat_inclusive': order.vatInclusive,
         'vat_rate': order.vatRate,
         'vat_total': order.vatTotal,
         'items': order.items.map((i) => {
+              if (i.id > 0) 'id': i.id,
               'product_id': i.productId,
               'quantity': i.quantity,
+              'unit_id': i.unitId,
               'product_price': i.productPrice,
               'product_vat': i.productVat,
               'vat_rate': i.vatRate,
+              'bill': i.bill,
             }).toList(),
         'created_at': order.createdAt,
         '_pending_sync': false,

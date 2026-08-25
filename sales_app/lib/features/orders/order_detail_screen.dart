@@ -2,9 +2,9 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:l10n/l10n.dart';
 
+import '../../providers/format_providers.dart';
 import '../../providers/repositories.dart';
 import '../../widgets/customer_diary_sheet.dart';
 import '../customers/customer_diary_section.dart';
@@ -39,15 +39,25 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     try {
       final repo = ref.read(offlineOrderRepositoryProvider);
       final order = await repo.get(widget.id);
-      final mods = isPendingSyncOrder(widget.id)
-          ? <OrderModificationModel>[]
-          : await ref.read(orderRepositoryProvider).modifications(widget.id);
+      // Modifications live on the online-only repository — a failure there
+      // (offline, server error) must not turn a perfectly cached order into
+      // a dead ErrorView. Default to an empty history instead.
+      var mods = <OrderModificationModel>[];
+      if (!isPendingSyncOrder(widget.id)) {
+        try {
+          mods = await ref.read(orderRepositoryProvider).modifications(widget.id);
+        } catch (_) {
+          mods = [];
+        }
+      }
+      if (!mounted) return;
       setState(() {
         _order = order;
         _mods = mods;
         _loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString();
         _loading = false;
@@ -71,13 +81,25 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       confirmLabel: l10n.commonConfirm,
       keepDraftLabel: l10n.orderKeepAsDraft,
     );
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
 
     try {
-      await ref.read(orderRepositoryProvider).confirmOrder(widget.id);
+      if (isPendingSyncOrder(widget.id)) {
+        // Unsynced offline draft — rewrite the queued create so the eventual
+        // sync creates a confirmed order.
+        await ref.read(offlineOrderRepositoryProvider).confirmLocalDraft(widget.id);
+        ref.invalidate(pendingSyncCountProvider);
+      } else {
+        await ref.read(orderRepositoryProvider).confirmOrder(widget.id);
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.statusConfirmed)));
         await _load();
+      }
+    } on StateError {
+      // Draft already synced under a server id — confirm needs the server.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.orderConnectToConfirm)));
       }
     } catch (e) {
       if (mounted) showAppErrorSnackBar(context, e);
@@ -93,6 +115,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         builder: (_) => CollectPaymentScreen(orderId: order.id, amountDue: due),
       ),
     );
+    if (!mounted) return;
     if (ok == true) await _load();
   }
 
@@ -124,7 +147,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         ],
       ),
     );
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
 
     final amount = double.tryParse(amountController.text.trim());
     if (amount == null) return;
@@ -149,20 +172,34 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     final reasonController = TextEditingController();
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.paymentVoidPayment),
-        content: TextField(
-          controller: reasonController,
-          decoration: InputDecoration(labelText: l10n.paymentVoidReason),
-          maxLines: 2,
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.paymentVoidPayment)),
-        ],
-      ),
+      builder: (ctx) {
+        String? errorText;
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) => AlertDialog(
+            title: Text(l10n.paymentVoidPayment),
+            content: TextField(
+              controller: reasonController,
+              decoration: InputDecoration(labelText: l10n.paymentVoidReason, errorText: errorText),
+              maxLines: 2,
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
+              FilledButton(
+                onPressed: () {
+                  if (reasonController.text.trim().isEmpty) {
+                    setDialogState(() => errorText = l10n.commonReasonRequired);
+                    return;
+                  }
+                  Navigator.pop(ctx, true);
+                },
+                child: Text(l10n.paymentVoidPayment),
+              ),
+            ],
+          ),
+        );
+      },
     );
-    if (confirmed != true || reasonController.text.trim().isEmpty) return;
+    if (confirmed != true || !mounted) return;
 
     try {
       await ref.read(orderRepositoryProvider).voidPayment(payment.id, reason: reasonController.text.trim());
@@ -180,19 +217,33 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     final reasonController = TextEditingController();
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.salesOrderCancelOrder),
-        content: TextField(
-          controller: reasonController,
-          decoration: InputDecoration(labelText: l10n.commonReason),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonBack)),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.salesOrderCancelOrder)),
-        ],
-      ),
+      builder: (ctx) {
+        String? errorText;
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) => AlertDialog(
+            title: Text(l10n.salesOrderCancelOrder),
+            content: TextField(
+              controller: reasonController,
+              decoration: InputDecoration(labelText: l10n.commonReason, errorText: errorText),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonBack)),
+              FilledButton(
+                onPressed: () {
+                  if (reasonController.text.trim().isEmpty) {
+                    setDialogState(() => errorText = l10n.commonReasonRequired);
+                    return;
+                  }
+                  Navigator.pop(ctx, true);
+                },
+                child: Text(l10n.salesOrderCancelOrder),
+              ),
+            ],
+          ),
+        );
+      },
     );
-    if (confirmed != true || reasonController.text.trim().isEmpty) return;
+    if (confirmed != true || !mounted) return;
 
     try {
       final updated = await ref.read(offlineOrderRepositoryProvider).cancel(widget.id, reasonController.text.trim());
@@ -209,6 +260,57 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     }
   }
 
+  /// Discards a draft: unsynced local drafts are dropped from the offline
+  /// queue and cache; synced drafts are deleted via DELETE /orders/{id}
+  /// (the server deletes drafts, 204).
+  Future<void> _deleteDraft() async {
+    final l10n = AppLocalizations.of(context);
+    final order = _order;
+    if (order == null) return;
+    if (!isPendingSyncOrder(order.id) && !ref.read(isOnlineProvider)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.orderDraftDeleteOnline)),
+      );
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.orderDeleteDraft),
+        content: Text(l10n.orderDeleteDraftBody),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.commonDelete)),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      final db = ref.read(localDatabaseProvider);
+      if (isPendingSyncOrder(order.id)) {
+        // Local negative-id draft: drop the queued create and the cached row.
+        await db.cancelPendingByLocalId(order.id);
+        await db.removeCachedEntity('order', order.id);
+      } else {
+        await ref.read(apiClientProvider).delete('/orders/${order.id}');
+        await db.removeCachedEntity('order', order.id);
+      }
+      ref.invalidate(pendingSyncCountProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.orderDraftDeleted)),
+      );
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/orders');
+      }
+    } catch (e) {
+      if (mounted) showAppErrorSnackBar(context, e);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -217,15 +319,17 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     if (_error != null) return ErrorView(message: _error!, onRetry: _load);
 
     final order = _order!;
-    final currency = NumberFormat.currency(symbol: 'SAR ');
+    final currency = ref.watch(currencyFormatProvider);
     final pending = isPendingSyncOrder(order.id);
     final awaitingApproval = order.isDraft;
     // Drafts are editable now — edits move no stock until confirmation.
     final canEdit = order.isEditable && !pending;
     // Salesperson cancel: server rejects ZATCA-invoiced orders and orders not
     // created today — hide the button for both instead of failing late.
+    // Drafts get "Delete draft" instead: the server rejects cancel on drafts.
     final canCancel = order.isEditable &&
         !pending &&
+        !awaitingApproval &&
         order.zatca?.invoiceGenerated != true &&
         _isCreatedToday(order);
     final due = order.outstandingDue;
@@ -291,7 +395,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                 _row(l10n.commonPaid, currency.format(order.amountPaid)),
                 _row(l10n.commonDue, currency.format(due), bold: true),
                 if (order.grandDiscount > 0) _row(l10n.commonGrandDiscount, currency.format(order.grandDiscount)),
-                if (order.createdAt != null) _row('Created', formatAppDateTime(order.createdAt)),
+                if (order.createdAt != null) _row(l10n.commonCreated, formatAppDateTime(order.createdAt)),
                 if (order.dueDate != null) _row(l10n.commonDueDate, formatAppDateTime(order.dueDate)),
                 if (order.isOverdue) _row(l10n.commonOverdue, l10n.commonOverdueDays(order.daysOverdue)),
               ],
@@ -355,7 +459,13 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           FilledButton.icon(
             onPressed: _confirmOrder,
             icon: const Icon(Icons.check_circle_outline),
-            label: const Text('Confirm order'),
+            label: Text(l10n.orderConfirmOrder),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: _deleteDraft,
+            icon: const Icon(Icons.delete_outline),
+            label: Text(l10n.orderDeleteDraft),
           ),
           const SizedBox(height: 16),
         ],
@@ -364,7 +474,9 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(l10n.salesPaymentSyncFirst, style: Theme.of(context).textTheme.bodySmall),
           ),
-        if (canEdit && due > 0 && !pending) ...[
+        // Drafts never accept payments or discount requests server-side —
+        // hide both until the order is confirmed.
+        if (canEdit && due > 0 && !pending && !awaitingApproval) ...[
           FilledButton.icon(
             onPressed: _collectPayment,
             icon: const Icon(Icons.payments),
@@ -390,7 +502,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           Text(l10n.commonPayments, style: Theme.of(context).textTheme.titleMedium),
           for (final p in order.payments)
             ListTile(
-              title: Text(p.paymentReference ?? 'Payment #${p.id}'),
+              title: Text(p.paymentReference ?? l10n.commonPaymentNumber(p.id)),
               subtitle: Text(
                 [
                   if (p.isVoided) l10n.paymentVoidedLabel,

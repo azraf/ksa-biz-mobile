@@ -257,10 +257,10 @@ class _RecordingDialogState extends State<_RecordingDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final elapsed = DateTime.now().difference(widget.startedAt).inSeconds;
-    final remaining = (widget.maxSeconds - elapsed).clamp(0, widget.maxSeconds);
+    final remaining = (widget.maxSeconds - elapsed).clamp(0, widget.maxSeconds).toInt();
     return AlertDialog(
       title: Text(l10n.commonRecordingTitle),
-      content: Text('${remaining}s remaining (max ${widget.maxSeconds ~/ 60} min)'),
+      content: Text(l10n.commonRecordingRemaining(remaining, widget.maxSeconds ~/ 60)),
       actions: [
         FilledButton(onPressed: widget.onStop, child: Text(l10n.commonStopAndSave)),
       ],

@@ -78,11 +78,10 @@ class _AdminCollectPaymentScreenState extends ConsumerState<AdminCollectPaymentS
           DropdownButtonFormField<String>(
             initialValue: _method,
             decoration: const InputDecoration(labelText: 'Payment method'),
+            // Server accepts only 'cash' and 'bank_transfer'.
             items: const [
               DropdownMenuItem(value: 'cash', child: Text('Cash')),
-              DropdownMenuItem(value: 'transfer', child: Text('Bank transfer')),
-              DropdownMenuItem(value: 'cheque', child: Text('Cheque')),
-              DropdownMenuItem(value: 'other', child: Text('Other')),
+              DropdownMenuItem(value: 'bank_transfer', child: Text('Bank transfer')),
             ],
             onChanged: _saving ? null : (v) => setState(() => _method = v ?? 'cash'),
           ),

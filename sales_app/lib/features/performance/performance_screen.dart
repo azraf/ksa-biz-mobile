@@ -1,8 +1,9 @@
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:l10n/l10n.dart';
 
+import '../../providers/format_providers.dart';
 import '../../providers/repositories.dart';
 
 /// The logged-in salesperson's own performance. The server locks the
@@ -20,6 +21,7 @@ class _PerformanceReviewScreenState
   PerformancePeriod _period = PerformancePeriod.thisMonth;
   ReportResult<SalesPerformanceReport>? _result;
   bool _loading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -28,9 +30,12 @@ class _PerformanceReviewScreenState
   }
 
   Future<void> _load({bool force = false}) async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
-      _result = await ref
+      final result = await ref
           .read(reportRepositoryProvider)
           .performance(
             range: _period.range,
@@ -38,6 +43,12 @@ class _PerformanceReviewScreenState
             toDate: _period.toDate,
             forceRefresh: force,
           );
+      if (!mounted) return;
+      setState(() => _result = result);
+    } catch (e) {
+      // Offline with no cache must read as an error, not "no activity".
+      if (!mounted) return;
+      setState(() => _error = AppErrorMapper.localize(context, e));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -45,13 +56,14 @@ class _PerformanceReviewScreenState
 
   @override
   Widget build(BuildContext context) {
-    final currency = NumberFormat.currency(symbol: 'SAR ', decimalDigits: 0);
+    final l10n = AppLocalizations.of(context);
+    final currency = ref.watch(wholeCurrencyFormatProvider);
     final report = _result?.data;
     final row = (report?.rows.isEmpty ?? true) ? null : report!.rows.first;
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Performance Review')),
+      appBar: AppBar(title: Text(l10n.perfTitle)),
       body: RefreshIndicator(
         onRefresh: () => _load(force: true),
         child: ListView(
@@ -82,24 +94,37 @@ class _PerformanceReviewScreenState
                 padding: EdgeInsets.symmetric(vertical: 32),
                 child: Center(child: CircularProgressIndicator()),
               )
+            else if (row == null && _error != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: ErrorView(message: _error!, onRetry: _load),
+              )
             else if (row == null)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 32),
-                child: Center(child: Text('No activity in this period yet.')),
+              // Only a successful fetch may claim "no activity".
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: Center(child: Text(l10n.perfNoActivity)),
               )
             else ...[
+              if (_error != null)
+                NoticeCard(
+                  kind: NoticeKind.warning,
+                  icon: Icons.sync_problem_outlined,
+                  title: _error!,
+                  subtitle: l10n.perfShowingPreviousData,
+                ),
               if (_result?.isCached == true)
-                const NoticeCard(
+                NoticeCard(
                   kind: NoticeKind.info,
                   icon: Icons.offline_pin,
-                  title: 'Showing cached data',
-                  subtitle: 'Connect to refresh from server',
+                  title: l10n.perfCachedTitle,
+                  subtitle: l10n.perfCachedSubtitle,
                 ),
               PerformanceDetail(row: row, trend: report?.trend),
-              const SectionHeader(title: 'By item'),
+              SectionHeader(title: l10n.perfByItem),
               if (report?.items?.isEmpty ?? true)
                 Text(
-                  'No items sold in this period.',
+                  l10n.perfNoItemsSold,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),

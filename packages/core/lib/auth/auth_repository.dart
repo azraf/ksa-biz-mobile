@@ -161,6 +161,18 @@ class AuthRepository {
     try {
       await _api.post('/logout');
     } catch (_) {}
+    // Explicit sign-out: drop the cached business data so it isn't left
+    // readable on a shared device — but only when nothing is waiting to
+    // sync ('syncing' rows count as pending too). With unsynced data the
+    // cache stays intact; the logout guard has already warned the user.
+    try {
+      final db = LocalDatabase.instance;
+      if (await db.pendingCount() == 0 && await db.pendingMediaCount() == 0) {
+        await db.clearBusinessCaches();
+      }
+    } catch (_) {
+      // Cache hygiene must never block signing out.
+    }
     await clearSession();
     await _prefs.remove(AppConfig.biometricEnabledKey);
     await _prefs.remove(AppConfig.lastUserEmailKey);
@@ -359,16 +371,40 @@ class AuthRepository {
     _api.setToken(session.token);
   }
 
+  /// Unsynced queue + media rows that a login by [targetUserId] would
+  /// destroy because they belong to a different user (`last_user_id`).
+  /// Returns 0 when the device user is unchanged, unknown (first run), or
+  /// nothing is pending. A login flow can call this before [login] commits
+  /// to show a confirmation instead of wiping silently.
+  Future<int> pendingDataOwnerMismatchCount(int targetUserId) async {
+    final db = LocalDatabase.instance;
+    final lastUserId = await db.getLastUserId();
+    if (lastUserId == null || lastUserId == targetUserId) return 0;
+    return await db.pendingCount() + await db.pendingMediaCount();
+  }
+
   /// Wipes the offline database when the user on this device changes, so
   /// one salesperson's cached customers/orders/queue are never shown to, or
   /// synced under, the next person who logs in. Same user re-logging in
   /// keeps the cache. A null `last_user_id` (first run, or an existing
   /// install updating into this check) stamps without wiping — preserving
   /// whichever user is already on the device rather than guessing.
+  ///
+  /// When the outgoing user still has unsynced data, a recovery snapshot
+  /// (JSON, timestamped, last few kept) is written to app-private storage
+  /// first, so the wipe never silently destroys work.
   Future<void> _ensureOfflineDataOwner(int userId) async {
     final db = LocalDatabase.instance;
     final lastUserId = await db.getLastUserId();
     if (lastUserId != null && lastUserId != userId) {
+      try {
+        final pending = await db.pendingCount() + await db.pendingMediaCount();
+        if (pending > 0) {
+          await db.writeRecoverySnapshot(previousUserId: lastUserId);
+        }
+      } catch (_) {
+        // Best-effort — a snapshot failure must not block login.
+      }
       await db.wipeUserData();
     }
     await db.setLastUserId(userId);

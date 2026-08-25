@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import '../models/watchlist_item.dart';
 import '../support/search_match.dart';
 import '../offline/local_database.dart';
 import '../offline/sync_queue_item.dart';
+import '../utils/client_request_id.dart';
 import 'watchlist_repository.dart';
 
 class OfflineWatchlistRepository {
@@ -62,7 +65,12 @@ class OfflineWatchlistRepository {
         .where((e) =>
             e['sales_person_id'] == salesPersonId &&
             (status == 'all' || (e['status'] as String? ?? 'active') == status))
-        .map((e) => WatchlistItemModel.fromJson(e))
+        .map((e) {
+          final item = WatchlistItemModel.fromJson(e);
+          // Cache rows don't round-trip isLocalOnly; the negative id is the
+          // reliable local-only marker.
+          return item.id < 0 ? item.copyWith(isLocalOnly: true) : item;
+        })
         .toList();
     if (search == null || search.trim().isEmpty) return (items: items, isFuzzy: false);
     // Active first so the screen can section, same as the server.
@@ -77,6 +85,10 @@ class OfflineWatchlistRepository {
     String? noteText,
     String? phone,
   }) async {
+    // Generated once and sent on both paths so server-side dedupe catches
+    // replays (mirrors OfflineOrderRepository).
+    final clientRequestId = generateClientRequestId();
+
     if (_isOnline()) {
       final item = await _remote.create(
         gps: gps,
@@ -84,6 +96,7 @@ class OfflineWatchlistRepository {
         placeName: placeName,
         noteText: noteText,
         phone: phone,
+        clientRequestId: clientRequestId,
       );
       await _db.cacheEntity(entityType: 'watchlist', entityId: item.id, data: _toCache(item));
       return item;
@@ -107,7 +120,10 @@ class OfflineWatchlistRepository {
       entityType: 'watchlist',
       operation: 'create',
       localId: localId,
-      payload: item.toCreateJson(),
+      payload: {
+        ...item.toCreateJson(),
+        'client_request_id': clientRequestId,
+      },
       status: 'pending',
       retryCount: 0,
       createdAt: DateTime.now().toIso8601String(),
@@ -116,40 +132,81 @@ class OfflineWatchlistRepository {
   }
 
   Future<WatchlistItemModel> update(int id, Map<String, dynamic> body) async {
-    if (id < 0 || !_isOnline()) {
-      if (id < 0) {
-        final cached = await _db.getCachedEntity('watchlist', id);
-        if (cached != null) {
-          cached.addAll(body);
-          await _db.cacheEntity(entityType: 'watchlist', entityId: id, data: cached);
-          return WatchlistItemModel.fromJson(cached);
-        }
-      }
-      if (_isOnline()) return _remote.update(id, body);
+    if (id < 0) {
+      // Local-only row: merge into the cache AND replace the queued create —
+      // otherwise the stale original payload is what syncs (the house
+      // cancel-and-requeue pattern, see OfflineVisitRepository.update).
+      final cached = await _db.getCachedEntity('watchlist', id);
+      if (cached == null) throw Exception('Watch-list item not found offline');
+      cached.addAll(body);
+      await _db.cacheEntity(entityType: 'watchlist', entityId: id, data: cached);
+      final merged = WatchlistItemModel.fromJson(cached);
+
+      // Reuse the original client_request_id: if the old create slipped into
+      // 'syncing' before the cancel, the server dedupes the re-enqueued one
+      // instead of creating a duplicate prospect.
+      final pending = await _db.pendingQueueByLocalId(id);
+      final priorCreates =
+          pending.where((q) => q.entityType == 'watchlist' && q.operation == 'create');
+      final clientRequestId = (priorCreates.isEmpty
+              ? null
+              : priorCreates.first.payload['client_request_id'] as String?) ??
+          generateClientRequestId();
+      await _db.cancelPendingByLocalId(id);
       await _db.enqueue(SyncQueueItem(
         id: 0,
         entityType: 'watchlist',
-        operation: 'update',
-        serverId: id,
-        payload: body,
+        operation: 'create',
+        localId: id,
+        payload: {
+          ...merged.toCreateJson(),
+          // The server's sync create currently forces status active; carried
+          // anyway so the intent isn't lost if that ever changes.
+          if (!merged.isActive) 'status': merged.status,
+          if (merged.archivedReason != null) 'archived_reason': merged.archivedReason,
+          'client_request_id': clientRequestId,
+        },
         status: 'pending',
         retryCount: 0,
         createdAt: DateTime.now().toIso8601String(),
       ));
-      final cached = await _db.getCachedEntity('watchlist', id);
-      if (cached != null) {
-        cached.addAll(body);
-        return WatchlistItemModel.fromJson(cached);
-      }
-      throw Exception('Watch-list item not found offline');
+      return merged;
     }
-    final item = await _remote.update(id, body);
-    await _db.cacheEntity(entityType: 'watchlist', entityId: item.id, data: _toCache(item));
-    return item;
+
+    if (_isOnline()) {
+      final item = await _remote.update(id, body);
+      await _db.cacheEntity(entityType: 'watchlist', entityId: item.id, data: _toCache(item));
+      return item;
+    }
+
+    // Offline edit to a synced row: queue an update op (both the bulk sync
+    // endpoint and the per-item fallback support watchlist 'update') and
+    // persist the merge so the change survives a reload.
+    await _db.enqueue(SyncQueueItem(
+      id: 0,
+      entityType: 'watchlist',
+      operation: 'update',
+      serverId: id,
+      payload: body,
+      status: 'pending',
+      retryCount: 0,
+      createdAt: DateTime.now().toIso8601String(),
+    ));
+    final cached = await _db.getCachedEntity('watchlist', id);
+    if (cached != null) {
+      cached.addAll(body);
+      await _db.cacheEntity(entityType: 'watchlist', entityId: id, data: cached);
+      return WatchlistItemModel.fromJson(cached);
+    }
+    throw Exception('Watch-list item not found offline');
   }
 
   Future<void> delete(int id) async {
     if (id < 0) {
+      // Unsynced row: cancel the queued create (or the deleted prospect
+      // resurrects on the server) and drop its queued media blobs too.
+      await _db.cancelPendingByLocalId(id);
+      await _dropQueuedMediaFor(id);
       await _db.removeCachedEntity('watchlist', id);
       return;
     }
@@ -168,6 +225,29 @@ class OfflineWatchlistRepository {
       retryCount: 0,
       createdAt: DateTime.now().toIso8601String(),
     ));
+    // Optimistic: hide it locally now; the queued op deletes it server-side.
+    await _db.removeCachedEntity('watchlist', id);
+  }
+
+  /// Not-yet-uploaded media queued against a local-only watchlist row.
+  /// LocalDatabase has no fetch-blobs-by-parent helper, so the pending set is
+  /// filtered here; the blob row is removed and its staged file best-effort
+  /// deleted (mirrors wipeUserData).
+  Future<void> _dropQueuedMediaFor(int localId) async {
+    final blobs = await _db.pendingMediaBlobs();
+    for (final blob in blobs) {
+      if (blob.parentEntityType != 'watchlist' ||
+          blob.parentLocalId != localId ||
+          blob.parentServerId != null) {
+        continue;
+      }
+      try {
+        await File(blob.localPath).delete();
+      } catch (_) {
+        // Best-effort — a missing file must not block the delete.
+      }
+      await _db.deleteMediaBlob(blob.id);
+    }
   }
 
   Map<String, dynamic> _toCache(WatchlistItemModel item, {bool pending = false}) => {

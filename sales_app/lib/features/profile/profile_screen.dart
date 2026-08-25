@@ -53,7 +53,7 @@ class ProfileScreen extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.print_outlined),
-            title: const Text('Printer settings'),
+            title: Text(l10n.salesPrinterSettings),
             onTap: () => context.push('/printer-settings'),
           ),
           ListTile(

@@ -102,6 +102,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonQuantity => 'Quantity';
 
   @override
+  String get commonQuantityCartons => 'Quantity (cartons)';
+
+  @override
   String get commonNotes => 'Notes';
 
   @override
@@ -1216,7 +1219,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get salesVanExchangeSelectReturn => 'Select return product';
 
   @override
-  String get salesVanExchangeReturnQty => 'Return quantity';
+  String get salesVanExchangeReturnQty => 'Return quantity (cartons)';
 
   @override
   String get salesVanExchangeSettlement => 'Settlement';
@@ -1234,7 +1237,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get salesVanExchangeSelectOut => 'Select out product';
 
   @override
-  String get salesVanExchangeOutQty => 'Out quantity';
+  String get salesVanExchangeOutQty => 'Out quantity (cartons)';
 
   @override
   String get salesVanExchangeCashAmount => 'Cash amount (SAR)';
@@ -2102,4 +2105,215 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get salesProductDetailTitle => 'Product';
+
+  @override
+  String get commonContinue => 'Continue';
+
+  @override
+  String get commonCreated => 'Created';
+
+  @override
+  String get commonName => 'Name';
+
+  @override
+  String get commonAny => 'Any';
+
+  @override
+  String get commonNotFound => 'Not found';
+
+  @override
+  String get commonReasonRequired => 'A reason is required';
+
+  @override
+  String get commonEnterQuantityMin => 'Enter a quantity of 1 or more';
+
+  @override
+  String get commonEnterOneOrMore => 'Enter 1 or more';
+
+  @override
+  String get commonEnterPriceMin => 'Enter a price of 0 or more';
+
+  @override
+  String get commonEnterDiscountMin => 'Enter a discount of 0 or more';
+
+  @override
+  String get commonDiscountExceedsTotal =>
+      'Discount cannot exceed the line total';
+
+  @override
+  String commonPaymentNumber(int id) {
+    return 'Payment #$id';
+  }
+
+  @override
+  String commonRecordingRemaining(int seconds, int maxMinutes) {
+    return '${seconds}s remaining (max $maxMinutes min)';
+  }
+
+  @override
+  String get authEmailOrPhone => 'Email or phone';
+
+  @override
+  String get authSwitchUserTitle => 'Switch user?';
+
+  @override
+  String get authSwitchUserBody =>
+      'Unsynced data from another user will be deleted (a recovery file will be saved). Continue?';
+
+  @override
+  String get authErrorInvalidCredentials =>
+      'Incorrect email or password. Please try again.';
+
+  @override
+  String get authErrorTimeout =>
+      'The request timed out. Check your connection and try again.';
+
+  @override
+  String get authErrorServer =>
+      'The server had a problem. Please try again in a moment.';
+
+  @override
+  String get authErrorNetwork =>
+      'Could not reach the server. Check your internet connection and try again.';
+
+  @override
+  String get customerTypeShop => 'Shop';
+
+  @override
+  String get customerTypeVan => 'Van';
+
+  @override
+  String get customerTypeImporter => 'Importer';
+
+  @override
+  String get salesDuesIncludesUnsynced => 'Includes unsynced payment';
+
+  @override
+  String get salesDashboardPartialLoadTitle => 'Some data could not be loaded';
+
+  @override
+  String get salesDashboardPartialLoadSubtitle =>
+      'Check your connection and retry.';
+
+  @override
+  String get salesPrinterSettings => 'Printer settings';
+
+  @override
+  String get salesPaymentExceedsDueTitle => 'Amount exceeds due';
+
+  @override
+  String salesPaymentExceedsDueBody(String amount, String due) {
+    return 'Collecting $amount is more than the $due due. Record it anyway?';
+  }
+
+  @override
+  String get salesOrderChooseCustomerInstead => 'Choose a customer instead';
+
+  @override
+  String salesVanLoadAllConfirm(int count) {
+    return 'This loads all available warehouse stock ($count products) onto your van:';
+  }
+
+  @override
+  String get salesWatchlistAtLocationConvert =>
+      'You\'re at this location — convert to shop?';
+
+  @override
+  String salesWatchlistStars(int count) {
+    return '$count stars';
+  }
+
+  @override
+  String get orderConfirmOrder => 'Confirm order';
+
+  @override
+  String get orderDeleteDraft => 'Delete draft';
+
+  @override
+  String get orderDeleteDraftBody => 'This draft will be removed permanently.';
+
+  @override
+  String get orderDraftDeleted => 'Draft deleted';
+
+  @override
+  String get orderDraftDeleteOnline =>
+      'Connect to the internet to delete this draft';
+
+  @override
+  String get perfTitle => 'Performance Review';
+
+  @override
+  String get perfNoActivity => 'No activity in this period yet.';
+
+  @override
+  String get perfShowingPreviousData => 'Showing previously loaded data.';
+
+  @override
+  String get perfCachedTitle => 'Showing cached data';
+
+  @override
+  String get perfCachedSubtitle => 'Connect to refresh from server';
+
+  @override
+  String get perfByItem => 'By item';
+
+  @override
+  String get perfNoItemsSold => 'No items sold in this period.';
+
+  @override
+  String get planCalendarMonth => 'Month';
+
+  @override
+  String get fieldMapTitle => 'Field map';
+
+  @override
+  String fieldMapTitleFiltered(int count) {
+    return 'Field map ($count)';
+  }
+
+  @override
+  String get fieldMapFiltersSort => 'Filters & sort';
+
+  @override
+  String get fieldMapSearchHint => 'Search by name or phone';
+
+  @override
+  String get fieldMapFrequency => 'Frequency';
+
+  @override
+  String get fieldMapAnyFrequency => 'Any frequency';
+
+  @override
+  String get fieldMapPayment => 'Payment';
+
+  @override
+  String get fieldMapAnyReliability => 'Any reliability';
+
+  @override
+  String get fieldMapMinRating => 'Min rating';
+
+  @override
+  String get fieldMapAnyRating => 'Any rating';
+
+  @override
+  String fieldMapStarsPlus(int count) {
+    return '$count+ stars';
+  }
+
+  @override
+  String get fieldMapInactiveFor => 'Inactive for';
+
+  @override
+  String fieldMapDaysPlus(int days) {
+    return '$days+ days';
+  }
+
+  @override
+  String get fieldMapHasDue => 'Has due';
+
+  @override
+  String get fieldMapNoDue => 'No due';
+
+  @override
+  String get fieldMapNearestFirst => 'Nearest first';
 }

@@ -102,6 +102,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commonQuantity => 'الكمية';
 
   @override
+  String get commonQuantityCartons => 'الكمية (كراتين)';
+
+  @override
   String get commonNotes => 'ملاحظات';
 
   @override
@@ -1211,7 +1214,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get salesVanExchangeSelectReturn => 'اختر منتج الإرجاع';
 
   @override
-  String get salesVanExchangeReturnQty => 'كمية الإرجاع';
+  String get salesVanExchangeReturnQty => 'كمية الإرجاع (كراتين)';
 
   @override
   String get salesVanExchangeSettlement => 'التسوية';
@@ -1229,7 +1232,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get salesVanExchangeSelectOut => 'اختر منتج الإخراج';
 
   @override
-  String get salesVanExchangeOutQty => 'كمية الإخراج';
+  String get salesVanExchangeOutQty => 'كمية الإخراج (كراتين)';
 
   @override
   String get salesVanExchangeCashAmount => 'المبلغ النقدي (ر.س)';
@@ -2095,4 +2098,213 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get salesProductDetailTitle => 'المنتج';
+
+  @override
+  String get commonContinue => 'متابعة';
+
+  @override
+  String get commonCreated => 'تاريخ الإنشاء';
+
+  @override
+  String get commonName => 'الاسم';
+
+  @override
+  String get commonAny => 'أي';
+
+  @override
+  String get commonNotFound => 'غير موجود';
+
+  @override
+  String get commonReasonRequired => 'السبب مطلوب';
+
+  @override
+  String get commonEnterQuantityMin => 'أدخل كمية 1 أو أكثر';
+
+  @override
+  String get commonEnterOneOrMore => 'أدخل 1 أو أكثر';
+
+  @override
+  String get commonEnterPriceMin => 'أدخل سعراً 0 أو أكثر';
+
+  @override
+  String get commonEnterDiscountMin => 'أدخل خصماً 0 أو أكثر';
+
+  @override
+  String get commonDiscountExceedsTotal =>
+      'لا يمكن أن يتجاوز الخصم إجمالي السطر';
+
+  @override
+  String commonPaymentNumber(int id) {
+    return 'دفعة #$id';
+  }
+
+  @override
+  String commonRecordingRemaining(int seconds, int maxMinutes) {
+    return 'متبقٍ $seconds ث (بحد أقصى $maxMinutes د)';
+  }
+
+  @override
+  String get authEmailOrPhone => 'البريد الإلكتروني أو الهاتف';
+
+  @override
+  String get authSwitchUserTitle => 'تبديل المستخدم؟';
+
+  @override
+  String get authSwitchUserBody =>
+      'سيتم حذف البيانات غير المتزامنة لمستخدم آخر (سيُحفظ ملف استرداد). هل تريد المتابعة؟';
+
+  @override
+  String get authErrorInvalidCredentials =>
+      'البريد الإلكتروني أو كلمة المرور غير صحيحة. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get authErrorTimeout =>
+      'انتهت مهلة الطلب. تحقق من اتصالك وحاول مرة أخرى.';
+
+  @override
+  String get authErrorServer => 'حدثت مشكلة في الخادم. يرجى المحاولة بعد قليل.';
+
+  @override
+  String get authErrorNetwork =>
+      'تعذر الوصول إلى الخادم. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.';
+
+  @override
+  String get customerTypeShop => 'متجر';
+
+  @override
+  String get customerTypeVan => 'شاحنة';
+
+  @override
+  String get customerTypeImporter => 'مستورد';
+
+  @override
+  String get salesDuesIncludesUnsynced => 'يشمل دفعة غير متزامنة';
+
+  @override
+  String get salesDashboardPartialLoadTitle => 'تعذّر تحميل بعض البيانات';
+
+  @override
+  String get salesDashboardPartialLoadSubtitle =>
+      'تحقق من اتصالك وأعد المحاولة.';
+
+  @override
+  String get salesPrinterSettings => 'إعدادات الطابعة';
+
+  @override
+  String get salesPaymentExceedsDueTitle => 'المبلغ يتجاوز المستحق';
+
+  @override
+  String salesPaymentExceedsDueBody(String amount, String due) {
+    return 'تحصيل $amount أكثر من المستحق $due. هل تريد تسجيله على أي حال؟';
+  }
+
+  @override
+  String get salesOrderChooseCustomerInstead => 'اختر عميلاً بدلاً من ذلك';
+
+  @override
+  String salesVanLoadAllConfirm(int count) {
+    return 'سيؤدي هذا إلى تحميل كل مخزون المستودع المتاح ($count منتجات) إلى شاحنتك:';
+  }
+
+  @override
+  String get salesWatchlistAtLocationConvert =>
+      'أنت في هذا الموقع — تحويل إلى متجر؟';
+
+  @override
+  String salesWatchlistStars(int count) {
+    return '$count نجوم';
+  }
+
+  @override
+  String get orderConfirmOrder => 'تأكيد الطلب';
+
+  @override
+  String get orderDeleteDraft => 'حذف المسودة';
+
+  @override
+  String get orderDeleteDraftBody => 'سيتم حذف هذه المسودة نهائياً.';
+
+  @override
+  String get orderDraftDeleted => 'تم حذف المسودة';
+
+  @override
+  String get orderDraftDeleteOnline => 'اتصل بالإنترنت لحذف هذه المسودة';
+
+  @override
+  String get perfTitle => 'مراجعة الأداء';
+
+  @override
+  String get perfNoActivity => 'لا يوجد نشاط في هذه الفترة بعد.';
+
+  @override
+  String get perfShowingPreviousData => 'عرض بيانات محمّلة سابقاً.';
+
+  @override
+  String get perfCachedTitle => 'عرض بيانات مخزنة';
+
+  @override
+  String get perfCachedSubtitle => 'اتصل بالإنترنت للتحديث من الخادم';
+
+  @override
+  String get perfByItem => 'حسب العنصر';
+
+  @override
+  String get perfNoItemsSold => 'لم تُبع عناصر في هذه الفترة.';
+
+  @override
+  String get planCalendarMonth => 'شهر';
+
+  @override
+  String get fieldMapTitle => 'خريطة الميدان';
+
+  @override
+  String fieldMapTitleFiltered(int count) {
+    return 'خريطة الميدان ($count)';
+  }
+
+  @override
+  String get fieldMapFiltersSort => 'التصفية والترتيب';
+
+  @override
+  String get fieldMapSearchHint => 'البحث بالاسم أو الهاتف';
+
+  @override
+  String get fieldMapFrequency => 'التكرار';
+
+  @override
+  String get fieldMapAnyFrequency => 'أي تكرار';
+
+  @override
+  String get fieldMapPayment => 'الدفع';
+
+  @override
+  String get fieldMapAnyReliability => 'أي موثوقية';
+
+  @override
+  String get fieldMapMinRating => 'الحد الأدنى للتقييم';
+
+  @override
+  String get fieldMapAnyRating => 'أي تقييم';
+
+  @override
+  String fieldMapStarsPlus(int count) {
+    return '$count+ نجوم';
+  }
+
+  @override
+  String get fieldMapInactiveFor => 'غير نشط منذ';
+
+  @override
+  String fieldMapDaysPlus(int days) {
+    return '$days+ يوم';
+  }
+
+  @override
+  String get fieldMapHasDue => 'عليه مستحقات';
+
+  @override
+  String get fieldMapNoDue => 'لا مستحقات';
+
+  @override
+  String get fieldMapNearestFirst => 'الأقرب أولاً';
 }

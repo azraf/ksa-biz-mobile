@@ -68,12 +68,23 @@ class OfflineOrderRepository {
         rethrow;
       }
     }
-    return _cachedList();
+    return _cachedList(salesPersonId: salesPersonId, salesPersonIds: salesPersonIds);
   }
 
-  Future<PaginatedResponse<OrderModel>> _cachedList() async {
+  Future<PaginatedResponse<OrderModel>> _cachedList({
+    int? salesPersonId,
+    Set<int>? salesPersonIds,
+  }) async {
     final cached = await _db.getCachedEntities('order');
-    final orders = cached.map((e) => OrderModel.fromJson(e)).toList();
+    var orders = cached.map(_tryParseOrder).whereType<OrderModel>().toList();
+    // Mirror the server-side salesperson scoping: a multi-salesperson login
+    // with an active-salesperson filter must not see everyone's cached
+    // orders merged together when offline.
+    if (salesPersonId != null) {
+      orders = orders.where((o) => o.salesPersonId == salesPersonId).toList();
+    } else if (salesPersonIds != null && salesPersonIds.isNotEmpty) {
+      orders = orders.where((o) => salesPersonIds.contains(o.salesPersonId)).toList();
+    }
     return PaginatedResponse(
       items: orders,
       currentPage: 1,
@@ -86,14 +97,27 @@ class OfflineOrderRepository {
     final cached = await _db.getCachedEntities('order');
     return cached
         .where((e) => e['_pending_sync'] == true)
-        .map((e) => OrderModel.fromJson(e))
+        .map(_tryParseOrder)
+        .whereType<OrderModel>()
         .toList();
+  }
+
+  /// Display cache only — a row written by an older build may not parse.
+  /// Skip it (return null) so one poisoned row cannot turn the whole list
+  /// into an error view.
+  OrderModel? _tryParseOrder(Map<String, dynamic> json) {
+    try {
+      return OrderModel.fromJson(json);
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<OrderModel> get(int id) async {
     if (id < 0) {
       final cached = await _db.getCachedEntity('order', id);
-      if (cached != null) return OrderModel.fromJson(cached);
+      final parsed = cached != null ? _tryParseOrder(cached) : null;
+      if (parsed != null) return parsed;
     }
     if (_isOnline()) {
       try {
@@ -103,7 +127,8 @@ class OfflineOrderRepository {
       } catch (_) {}
     }
     final cached = await _db.getCachedEntity('order', id);
-    if (cached != null) return OrderModel.fromJson(cached);
+    final parsed = cached != null ? _tryParseOrder(cached) : null;
+    if (parsed != null) return parsed;
     throw Exception('Order not available offline');
   }
 
@@ -163,10 +188,14 @@ class OfflineOrderRepository {
     if (orderId < 0) {
       final cached = await _db.getCachedEntity('order', orderId);
       if (cached != null) {
-        final updated = {...cached, 'status': 'cancelled', 'cancellation_reason': reason};
-        await _db.cacheEntity(entityType: 'order', entityId: orderId, data: updated);
+        // Never reached the server: dropping the queued create plus the
+        // cached row erases the order entirely. Re-caching it would leave a
+        // phantom '_pending_sync' cancelled order on the list for 30 days.
         await _db.cancelPendingByLocalId(orderId);
-        return OrderModel.fromJson(updated);
+        await _db.removeCachedEntity('order', orderId);
+        return OrderModel.fromJson(
+          {...cached, 'status': 'cancelled', 'cancellation_reason': reason},
+        );
       }
     }
 
@@ -223,12 +252,17 @@ class OfflineOrderRepository {
     String? paymentMethod,
     String? notes,
   }) async {
+    // Generated once at initiation and reused for both the online POST and
+    // the queued offline payload, so server-side dedupe catches replays.
+    final clientRequestId = generateClientRequestId();
+
     if (_isOnline()) {
       final order = await _remote.recordPayment(
         orderId,
         amount: amount,
         paymentMethod: paymentMethod,
         notes: notes,
+        clientRequestId: clientRequestId,
       );
       await _db.cacheEntity(entityType: 'order', entityId: order.id, data: _toCache(order));
       return order;
@@ -247,6 +281,7 @@ class OfflineOrderRepository {
         'amount': amount,
         if (paymentMethod != null) 'payment_method': paymentMethod,
         if (notes != null) 'notes': notes,
+        'client_request_id': clientRequestId,
       },
     ));
     notifyOfflineEnqueue();
@@ -269,6 +304,7 @@ class OfflineOrderRepository {
 
   Map<String, dynamic> _toCache(OrderModel order) => {
         'id': order.id,
+        'invoice_number': order.invoiceNumber,
         'sales_person_id': order.salesPersonId,
         'customer_type_id': order.customerTypeId,
         'customer_van_id': order.customerVanId,
@@ -280,17 +316,21 @@ class OfflineOrderRepository {
         'amount_due': order.amountDue,
         'payment_status': order.paymentStatus,
         'status': order.status,
+        'due_date': order.dueDate,
         'include_vat': order.includeVat,
         'vat_inclusive': order.vatInclusive,
         'vat_rate': order.vatRate,
         'vat_total': order.vatTotal,
         'items': order.items
             .map((i) => {
+                  if (i.id > 0) 'id': i.id,
                   'product_id': i.productId,
                   'quantity': i.quantity,
+                  'unit_id': i.unitId,
                   'product_price': i.productPrice,
                   'product_vat': i.productVat,
                   'vat_rate': i.vatRate,
+                  'bill': i.bill,
                 })
             .toList(),
         'created_at': order.createdAt,

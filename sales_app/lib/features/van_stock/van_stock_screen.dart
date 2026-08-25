@@ -24,6 +24,16 @@ class VanHubScreen extends StatefulWidget {
 class _VanHubScreenState extends State<VanHubScreen> {
   late bool _showProducts = widget.initialTab == 'products';
 
+  /// A products deep link re-uses the mounted hub once the tab was opened;
+  /// re-apply the requested segment when the link changes.
+  @override
+  void didUpdateWidget(VanHubScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialTab != oldWidget.initialTab) {
+      setState(() => _showProducts = widget.initialTab == 'products');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -66,10 +76,34 @@ class VanStockScreen extends ConsumerStatefulWidget {
   ConsumerState<VanStockScreen> createState() => _VanStockScreenState();
 }
 
+/// Serialises a van-stock row for the offline report cache — writes exactly
+/// the fields [InventoryStockModel.fromJson] (and its nested
+/// [ProductModel.fromJson]) read back.
+Map<String, dynamic> vanStockItemToJson(InventoryStockModel item) => {
+      'product_id': item.productId,
+      'balance': item.balance,
+      'balance_pieces': item.balancePieces,
+      if (item.balanceDisplay != null) 'balance_display': item.balanceDisplay,
+      'pieces_per_carton': item.piecesPerCarton,
+      if (item.product != null)
+        'product': {
+          'id': item.product!.id,
+          'name': item.product!.name,
+          'alert_quantity': item.product!.alertQuantity,
+          'allow_break_pack': item.product!.allowBreakPack,
+          'pieces_per_carton': item.product!.piecesPerCarton,
+        },
+    };
+
 class _VanStockScreenState extends ConsumerState<VanStockScreen> {
+  static const _cacheReportType = 'van_stock';
+
   List<InventoryStockModel> _stock = [];
   bool _loading = true;
   String? _error;
+
+  /// Set only when [_stock] came from the offline cache, for the "as of" stamp.
+  DateTime? _cachedAt;
 
   @override
   void initState() {
@@ -77,23 +111,79 @@ class _VanStockScreenState extends ConsumerState<VanStockScreen> {
     _load();
   }
 
+  static String _cacheKey(int salesPersonId) => 'van_stock_$salesPersonId';
+
+  /// Best-effort: a failed cache write must never break the online screen.
+  Future<void> _cacheStock(int salesPersonId, List<InventoryStockModel> stock) async {
+    try {
+      await ref.read(localDatabaseProvider).cacheReport(
+            cacheKey: _cacheKey(salesPersonId),
+            reportType: _cacheReportType,
+            data: {'items': stock.map(vanStockItemToJson).toList()},
+          );
+    } catch (_) {
+      // Cache is a convenience; the live fetch already succeeded.
+    }
+  }
+
+  Future<({List<InventoryStockModel> items, DateTime? fetchedAt})?> _readCachedStock(
+      int salesPersonId) async {
+    try {
+      final cached =
+          await ref.read(localDatabaseProvider).getCachedReport(_cacheKey(salesPersonId));
+      if (cached == null) return null;
+      final items = (cached.data['items'] as List<dynamic>? ?? [])
+          .whereType<Map<String, dynamic>>()
+          .map(InventoryStockModel.fromJson)
+          .toList();
+      return (items: items, fetchedAt: DateTime.tryParse(cached.fetchedAt));
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _load() async {
+    final l10n = AppLocalizations.of(context);
     final salesPersonId = requireSalesPersonId(ref.read(authProvider));
+    if (salesPersonId == null) {
+      // No salesperson selected/attached — show a recoverable error instead
+      // of crashing on a null-assert.
+      setState(() {
+        _loading = false;
+        _error = l10n.salesSelectSalespersonFirst;
+      });
+      return;
+    }
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
-      final stock = await ref.read(inventoryRepositoryProvider).vanStock(salesPersonId!);
+      final stock = await ref.read(inventoryRepositoryProvider).vanStock(salesPersonId);
+      await _cacheStock(salesPersonId, stock);
+      if (!mounted) return;
       setState(() {
         _stock = stock;
+        _cachedAt = null;
         _loading = false;
       });
     } catch (e) {
-      setState(() {
-        _error = AppErrorMapper.localize(context, e);
-        _loading = false;
-      });
+      // Offline (or server unreachable): fall back to the last cached list so
+      // the salesperson can still see roughly what is on the van.
+      final cached = await _readCachedStock(salesPersonId);
+      if (!mounted) return;
+      if (cached != null && cached.items.isNotEmpty) {
+        setState(() {
+          _stock = cached.items;
+          _cachedAt = cached.fetchedAt;
+          _loading = false;
+        });
+      } else {
+        setState(() {
+          _error = AppErrorMapper.localize(context, e);
+          _loading = false;
+        });
+      }
     }
   }
 
@@ -102,34 +192,53 @@ class _VanStockScreenState extends ConsumerState<VanStockScreen> {
     final salesPersonId = requireSalesPersonId(ref.read(authProvider));
     if (salesPersonId == null) return;
     final qtyController = TextEditingController(text: '1');
-    final ok = await showDialog<bool>(
+    String? qtyError;
+    // Returns the parsed quantity, so a typo can never silently become "1".
+    final quantity = await showDialog<int>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('${l10n.salesVanUnloadBtn} ${item.product?.name ?? ''}'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.salesVanUnloadMessage),
-            const SizedBox(height: 12),
-            TextField(
-              controller: qtyController,
-              decoration: InputDecoration(labelText: l10n.salesVanUnloadQty),
-              keyboardType: TextInputType.number,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: Text('${l10n.salesVanUnloadBtn} ${item.product?.name ?? ''}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.salesVanUnloadMessage),
+              const SizedBox(height: 12),
+              TextField(
+                controller: qtyController,
+                decoration: InputDecoration(
+                  labelText: l10n.salesVanUnloadQty,
+                  errorText: qtyError,
+                ),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.commonCancel)),
+            FilledButton(
+              onPressed: () {
+                final qty = int.tryParse(qtyController.text.trim());
+                if (qty == null || qty < 1) {
+                  setDialogState(
+                    () => qtyError = l10n.commonEnterQuantityMin,
+                  );
+                  return;
+                }
+                Navigator.pop(ctx, qty);
+              },
+              child: Text(l10n.salesVanUnloadBtn),
             ),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.salesVanUnloadBtn)),
-        ],
       ),
     );
-    if (ok != true) return;
+    if (quantity == null) return;
     try {
       await ref.read(inventoryRepositoryProvider).unloadVan(
             productId: item.productId,
-            quantity: int.tryParse(qtyController.text) ?? 1,
+            quantity: quantity,
             salesPersonId: salesPersonId,
           );
       AppHaptics.light();
@@ -146,7 +255,9 @@ class _VanStockScreenState extends ConsumerState<VanStockScreen> {
       context: context,
       backgroundColor:
           Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
-      barrierColor: Colors.transparent,
+      // Fully transparent scrim, but from the theme token — Colors.* is
+      // banned in feature code.
+      barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0),
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -208,6 +319,22 @@ class _VanStockScreenState extends ConsumerState<VanStockScreen> {
                     const SizedBox(width: 8),
                     Expanded(child: Text(l10n.salesVanOfflineBanner, style: const TextStyle(fontSize: 13))),
                   ],
+                ),
+              ),
+            ),
+          if (_cachedAt != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.xs,
+              ),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  l10n.commonProductStockAsOf(
+                    TimeOfDay.fromDateTime(_cachedAt!).format(context),
+                  ),
+                  style: Theme.of(context).textTheme.labelSmall,
                 ),
               ),
             ),

@@ -16,7 +16,13 @@ Future<bool> confirmLogoutWithPendingData(
 ) async {
   if (await syncService.isFullySynced()) return true;
 
-  await syncService.syncIfOnline();
+  try {
+    await syncService.syncIfOnline();
+  } catch (_) {
+    // A transport error mid-flush must not skip the pending-data check
+    // below — an exception here would abort the guard and let logout
+    // proceed as if everything were synced.
+  }
   if (await syncService.isFullySynced()) return true;
 
   final pending = await syncService.db.pendingCount() + await syncService.db.pendingMediaCount();

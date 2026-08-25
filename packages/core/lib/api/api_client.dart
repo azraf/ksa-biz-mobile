@@ -185,9 +185,21 @@ class ApiClient {
       onUnauthorized?.call();
     }
 
-    final body = response.body.isEmpty
-        ? <String, dynamic>{}
-        : jsonDecode(response.body) as Map<String, dynamic>;
+    // A proxy/captive-portal/error page can return HTML or plain text; a
+    // bare jsonDecode would throw FormatException, which escapes the
+    // `on ApiException` handlers callers rely on. Always surface transport
+    // shape problems as ApiException.
+    Map<String, dynamic> body;
+    try {
+      body = response.body.isEmpty
+          ? <String, dynamic>{}
+          : jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      throw ApiException(
+        'Request failed (${response.statusCode})',
+        statusCode: response.statusCode,
+      );
+    }
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return body;

@@ -112,12 +112,14 @@ class InventoryRepository {
     required int quantity,
     required int fromSalesPersonId,
     required int toSalesPersonId,
+    int? unitId,
   }) async {
     await _api.post('/inventory/transfer', body: {
       'product_id': productId,
       'quantity': quantity,
       'from_sales_person_id': fromSalesPersonId,
       'to_sales_person_id': toSalesPersonId,
+      if (unitId != null) 'unit_id': unitId,
     });
   }
 
@@ -142,11 +144,13 @@ class InventoryRepository {
     int? salesPersonId,
     String? reason,
     int? referenceOrderId,
+    int? unitId,
   }) async {
     final response = await _api.post('/inventory/damage-replacements', body: {
       'replacement_type': replacementType,
       'product_id': productId,
       'quantity': quantity,
+      if (unitId != null) 'unit_id': unitId,
       if (salesPersonId != null) 'sales_person_id': salesPersonId,
       if (reason != null) 'reason': reason,
       if (referenceOrderId != null) 'reference_order_id': referenceOrderId,
@@ -164,14 +168,18 @@ class InventoryRepository {
     double? cashAmount,
     String? reason,
     int? originalOrderId,
+    int? returnUnitId,
+    int? outUnitId,
   }) async {
     final response = await _api.post('/inventory/product-exchanges', body: {
       'sales_person_id': salesPersonId,
       'settlement_type': settlementType,
       'return_product_id': returnProductId,
       'return_quantity': returnQuantity,
+      if (returnUnitId != null) 'return_unit_id': returnUnitId,
       if (outProductId != null) 'out_product_id': outProductId,
       if (outQuantity != null) 'out_quantity': outQuantity,
+      if (outUnitId != null) 'out_unit_id': outUnitId,
       if (cashAmount != null) 'cash_amount': cashAmount,
       if (reason != null) 'reason': reason,
       if (originalOrderId != null) 'original_order_id': originalOrderId,

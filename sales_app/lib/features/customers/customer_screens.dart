@@ -163,6 +163,10 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
   double? _lng;
   late ListSortMode _sortMode;
 
+  /// Monotonic request id: typing fires a load per keystroke and responses
+  /// can return out of order — only the newest request may update the list.
+  int _requestSeq = 0;
+
   String _listKey() => 'sales_${widget.customerType}';
 
   @override
@@ -205,6 +209,7 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
 
   Future<void> _load({int? page, bool append = false}) async {
     if (page != null) _page = page;
+    final seq = ++_requestSeq;
     final search = _search;
     final repo = ref.read(offlineCustomerRepositoryProvider);
 
@@ -214,7 +219,7 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
     if (!append && _page == 1 && _items.isEmpty) {
       try {
         final cached = await _cachedPage(repo, search);
-        if (cached.items.isNotEmpty && mounted) {
+        if (cached.items.isNotEmpty && mounted && seq == _requestSeq) {
           setState(() {
             _items = _clientSort(cached.items);
             _isFuzzy = cached.isFuzzy;
@@ -276,7 +281,7 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
       var items = result.items;
       items = _clientSort(items);
 
-      if (!mounted) return;
+      if (!mounted || seq != _requestSeq) return; // stale response — drop it
       setState(() {
         if (append) {
           _items = [..._items, ...items];
@@ -289,7 +294,7 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
         _loadingMore = false;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || seq != _requestSeq) return; // stale response — drop it
       setState(() {
         // A cached page is already on screen (from the fast path above or a
         // prior load) — leave it up rather than replacing it with a full
@@ -305,11 +310,11 @@ class _CustomerTypeListState extends ConsumerState<_CustomerTypeList> {
     final s = search.isEmpty ? null : search;
     switch (widget.customerType) {
       case 'customer_van':
-        return repo.cachedVans(search: s, perPage: _perPage);
+        return repo.cachedVans(search: s, salesPersonId: widget.salesPersonId, perPage: _perPage);
       case 'customer_importer':
-        return repo.cachedImporters(search: s, perPage: _perPage);
+        return repo.cachedImporters(search: s, salesPersonId: widget.salesPersonId, perPage: _perPage);
       default:
-        return repo.cachedShops(search: s, perPage: _perPage);
+        return repo.cachedShops(search: s, salesPersonId: widget.salesPersonId, perPage: _perPage);
     }
   }
 
@@ -586,6 +591,7 @@ class _CustomerListTile extends StatelessWidget {
               ),
             ),
             ContactActionButtons(phoneNumber: phoneNumber, compact: true),
+            // Auto-mirrors in RTL: Icons.chevron_right sets matchTextDirection.
             const Icon(Icons.chevron_right),
           ],
         ),
@@ -615,12 +621,43 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
   CustomerFinancialSummary? _summary;
   List<OrderModel> _recentOrders = const [];
   bool _ordersLoaded = false;
+  bool _customerLoading = false;
+  String? _customerError;
 
   @override
   void initState() {
     super.initState();
     _customer = widget.initialCustomer;
+    // Map pins and extra-less deep links navigate here with only an id —
+    // fetch the customer (cache fallback included) instead of a blank page.
+    if (_customer == null) _fetchCustomer();
     _loadMoney();
+  }
+
+  Future<void> _fetchCustomer() async {
+    setState(() {
+      _customerLoading = true;
+      _customerError = null;
+    });
+    try {
+      final repo = ref.read(offlineCustomerRepositoryProvider);
+      final fetched = switch (widget.customerType) {
+        'customer_van' => await repo.getVan(widget.customerId),
+        'customer_importer' => await repo.getImporter(widget.customerId),
+        _ => await repo.getShop(widget.customerId),
+      };
+      if (!mounted) return;
+      setState(() {
+        _customer = fetched;
+        _customerLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _customerError = e.toString();
+        _customerLoading = false;
+      });
+    }
   }
 
   /// Money summary (shops only — the API defines no van/importer summary) and
@@ -669,6 +706,14 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (_customer == null && (_customerLoading || _customerError != null)) {
+      return Scaffold(
+        appBar: AppBar(title: Text('#${widget.customerId}')),
+        body: _customerLoading
+            ? LoadingView(message: l10n.commonLoading)
+            : ErrorView(message: _customerError!, onRetry: _fetchCustomer),
+      );
+    }
     final customer = _customer;
     final name = _name(customer);
     final phone = _phone(customer);
@@ -708,7 +753,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.event),
-              title: const Text('Created'),
+              title: Text(l10n.commonCreated),
               subtitle: Text(createdAt),
             ),
           ],

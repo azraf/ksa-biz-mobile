@@ -119,6 +119,7 @@ class _CustomerOrdersScreenState extends ConsumerState<CustomerOrdersScreen> {
       lastDate: DateTime.now(),
       initialDateRange: _range,
     );
+    if (picked == null || !mounted) return; // cancelled — keep the active range
     setState(() => _range = picked);
     await _load(page: 1);
   }

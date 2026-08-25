@@ -38,7 +38,9 @@ class OrderItemModel extends Equatable {
 
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
     return OrderItemModel(
-      id: json['id'] as int,
+      // Cached rows written offline may have no id — tolerate absence so one
+      // legacy row cannot sink the whole cached order list.
+      id: (json['id'] as int?) ?? 0,
       productId: json['product_id'] as int,
       quantity: json['quantity'] as int? ?? 0,
       unitId: json['unit_id'] as int?,

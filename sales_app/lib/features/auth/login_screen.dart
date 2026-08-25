@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../providers/repositories.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -22,6 +23,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    // Prefill the remembered email (it survives session expiry on purpose)
+    // so the user only has to re-enter their password.
+    final storedEmail = ref.read(authRepositoryProvider).storedUserEmail;
+    if (storedEmail != null && storedEmail.isNotEmpty) {
+      _emailController.text = storedEmail;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) => _maybeAutoBiometric());
   }
 
@@ -39,10 +46,58 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
   }
 
+  /// True when it is safe to proceed with the login. Logging in as a
+  /// different user than the device's last one wipes that user's offline
+  /// data (the repository saves a recovery snapshot first), so when unsynced
+  /// records are still queued the user must confirm before the login runs.
+  Future<bool> _confirmUserSwitchIfNeeded(String email) async {
+    if (email.isEmpty) return true;
+    final repo = ref.read(authRepositoryProvider);
+    final db = ref.read(localDatabaseProvider);
+    if (await db.getLastUserId() == null) return true;
+
+    // The entered identifier matching the last user's is the only way to know
+    // pre-login that no switch is happening; otherwise stay cautious.
+    final lastEmail = repo.storedUserEmail;
+    if (lastEmail != null && email.toLowerCase() == lastEmail.toLowerCase()) {
+      return true;
+    }
+
+    final pending = await db.pendingCount() + await db.pendingMediaCount();
+    if (pending <= 0) return true;
+    if (!mounted) return false;
+
+    final l10n = AppLocalizations.of(context);
+    final proceed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.authSwitchUserTitle),
+        content: Text(l10n.authSwitchUserBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.commonContinue),
+          ),
+        ],
+      ),
+    );
+    return proceed == true;
+  }
+
   Future<void> _signIn() async {
     final notifier = ref.read(authProvider.notifier);
+    final email = _emailController.text.trim();
+
+    if (!await _confirmUserSwitchIfNeeded(email)) return;
+    if (!mounted) return;
+
     await notifier.login(
-      email: _emailController.text.trim(),
+      email: email,
       password: _passwordController.text,
       apiBaseUrl: AppConfig.showApiBaseUrlField ? _apiUrlController.text.trim() : null,
     );
@@ -52,6 +107,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!auth.isAuthenticated || auth.error != null) return;
 
     final biometricAvailable = await ref.read(biometricAuthServiceProvider).canCheckBiometrics();
+    if (!mounted) return;
     if (!biometricAvailable || auth.biometricEnabled) return;
 
     final enable = await showBiometricOptInDialog(context);
@@ -113,7 +169,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ],
                     TextField(
                       controller: _emailController,
-                      decoration: const InputDecoration(labelText: 'Email or phone'),
+                      decoration: InputDecoration(labelText: l10n.authEmailOrPhone),
                     ),
                     const SizedBox(height: 12),
                     PasswordTextField(

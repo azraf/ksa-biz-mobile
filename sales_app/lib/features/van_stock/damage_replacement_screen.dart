@@ -8,6 +8,10 @@ import '../../providers/auth_provider.dart';
 import '../../providers/repositories.dart';
 import '../../widgets/line_items_editor.dart';
 
+/// Sentinel for "whole cartons" — the server treats a missing `unit_id` as
+/// cartons.
+const _kCartonChoice = 0;
+
 class DamageReplacementScreen extends ConsumerStatefulWidget {
   const DamageReplacementScreen({super.key});
 
@@ -18,7 +22,11 @@ class DamageReplacementScreen extends ConsumerStatefulWidget {
 class _DamageReplacementScreenState extends ConsumerState<DamageReplacementScreen> {
   ProductModel? _product;
   final _quantity = TextEditingController(text: '1');
+  String? _qtyError;
   final _reason = TextEditingController();
+
+  /// [_kCartonChoice] or the product's pcs unit id.
+  int _unitChoice = _kCartonChoice;
   bool _saving = false;
 
   @override
@@ -28,15 +36,33 @@ class _DamageReplacementScreenState extends ConsumerState<DamageReplacementScree
     super.dispose();
   }
 
+  bool get _canBreakPack =>
+      _product != null && _product!.allowBreakPack && _product!.pcsUnitId != null;
+
   Future<void> _submit() async {
     final salesPersonId = requireSalesPersonId(ref.read(authProvider));
     if (salesPersonId == null || _product == null) return;
-    setState(() => _saving = true);
+    final quantity = int.tryParse(_quantity.text.trim());
+    if (quantity == null || quantity < 1) {
+      // Reject instead of silently substituting 1 — this writes off stock.
+      setState(
+        () => _qtyError = AppLocalizations.of(context).commonEnterQuantityMin,
+      );
+      return;
+    }
+    final sendPieces = _canBreakPack && _unitChoice == _product!.pcsUnitId;
+    setState(() {
+      _qtyError = null;
+      _saving = true;
+    });
     try {
       await ref.read(inventoryRepositoryProvider).createDamageReplacement(
             replacementType: 'van_customer',
             productId: _product!.id,
-            quantity: int.tryParse(_quantity.text) ?? 1,
+            quantity: quantity,
+            // Omitted for cartons — the server treats a missing unit_id as
+            // whole cartons.
+            unitId: sendPieces ? _product!.pcsUnitId : null,
             salesPersonId: salesPersonId,
             reason: _reason.text.isEmpty ? null : _reason.text,
           );
@@ -60,15 +86,52 @@ class _DamageReplacementScreenState extends ConsumerState<DamageReplacementScree
           OutlinedButton(
             onPressed: () async {
               final product = await pickProduct(context, ref);
-              if (product != null) setState(() => _product = product);
+              if (product != null) {
+                setState(() {
+                  _product = product;
+                  // Units are per-product; never carry a pieces choice over.
+                  _unitChoice = _kCartonChoice;
+                });
+              }
             },
             child: Text(_product?.name ?? l10n.salesVanDamageSelect),
           ),
+          if (_canBreakPack) ...[
+            const SizedBox(height: 12),
+            DropdownButtonFormField<int>(
+              key: ValueKey('unit_${_product?.id}'),
+              initialValue: _unitChoice,
+              decoration: InputDecoration(
+                labelText: l10n.commonUnit,
+                border: const OutlineInputBorder(),
+              ),
+              items: [
+                DropdownMenuItem(
+                  value: _kCartonChoice,
+                  child: Text(l10n.commonUnitCarton),
+                ),
+                DropdownMenuItem(
+                  value: _product!.pcsUnitId,
+                  child: Text(l10n.commonUnitPiece(_product!.piecesPerCarton)),
+                ),
+              ],
+              onChanged: (v) => setState(() => _unitChoice = v ?? _kCartonChoice),
+            ),
+          ],
           const SizedBox(height: 12),
           TextField(
             controller: _quantity,
-            decoration: InputDecoration(labelText: l10n.commonQuantity, border: const OutlineInputBorder()),
+            // Without a unit selector, quantities are booked as whole
+            // cartons — the label must say so.
+            decoration: InputDecoration(
+              labelText: _canBreakPack ? l10n.commonQuantity : l10n.commonQuantityCartons,
+              border: const OutlineInputBorder(),
+              errorText: _qtyError,
+            ),
             keyboardType: TextInputType.number,
+            onChanged: (_) {
+              if (_qtyError != null) setState(() => _qtyError = null);
+            },
           ),
           const SizedBox(height: 12),
           TextField(

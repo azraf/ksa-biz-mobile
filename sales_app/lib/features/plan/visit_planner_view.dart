@@ -133,7 +133,7 @@ class VisitPlannerViewState extends ConsumerState<VisitPlannerView> {
               selectedDayPredicate: (day) => isSameDay(day, _selectedDay),
               eventLoader: _visitsOn,
               startingDayOfWeek: StartingDayOfWeek.monday,
-              availableCalendarFormats: const {CalendarFormat.month: 'Month'},
+              availableCalendarFormats: {CalendarFormat.month: l10n.planCalendarMonth},
               onDaySelected: (selected, focused) => setState(() {
                 _selectedDay = selected;
                 _focusedDay = focused;

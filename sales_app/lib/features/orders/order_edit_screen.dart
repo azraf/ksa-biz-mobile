@@ -105,8 +105,10 @@ class _OrderEditScreenState extends ConsumerState<OrderEditScreen> {
     if (confirmed != true) return;
     final qty = int.tryParse(qtyController.text) ?? 1;
     try {
+      // order_item_id targets the exact line (server prefers it); product_id
+      // kept for backward compatibility with servers that predate it.
       await ref.read(orderRepositoryProvider).recordReturn(widget.id, [
-        {'product_id': item.productId, 'quantity': qty},
+        {'order_item_id': item.id, 'product_id': item.productId, 'quantity': qty},
       ]);
       final order = await ref.read(orderRepositoryProvider).get(widget.id);
       setState(() => _order = order);

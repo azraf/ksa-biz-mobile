@@ -92,7 +92,7 @@ class _VisitDetailSheetState extends ConsumerState<_VisitDetailSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      showAppErrorSnackBar(context, e);
     }
   }
 

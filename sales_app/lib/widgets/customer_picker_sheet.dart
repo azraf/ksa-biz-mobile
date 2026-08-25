@@ -64,6 +64,11 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
   double? _lng;
   Timer? _debounce;
 
+  /// Monotonic request id: the debounce narrows but does not close the race
+  /// between overlapping fetches (submit button, page taps, filter changes) —
+  /// only the newest request may update the list.
+  int _fetchSeq = 0;
+
   @override
   void initState() {
     super.initState();
@@ -105,6 +110,7 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
   }
 
   Future<void> _fetch({int? page}) async {
+    final seq = ++_fetchSeq;
     setState(() {
       _loading = true;
       _error = null;
@@ -124,7 +130,7 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
           page: _page,
           customerType: widget.customerType,
         );
-        if (!mounted) return;
+        if (!mounted || seq != _fetchSeq) return; // stale response — drop it
         setState(() {
           _items = result.items;
           _lastPage = result.lastPage;
@@ -157,7 +163,7 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
           page: _page,
           perPage: _perPage,
         );
-        if (!mounted) return;
+        if (!mounted || seq != _fetchSeq) return; // stale response — drop it
         setState(() {
           _items = result.items;
           _lastPage = result.lastPage;
@@ -173,7 +179,7 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
           page: _page,
           perPage: _perPage,
         );
-        if (!mounted) return;
+        if (!mounted || seq != _fetchSeq) return; // stale response — drop it
         setState(() {
           _items = result.items;
           _lastPage = result.lastPage;
@@ -189,7 +195,7 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
           page: _page,
           perPage: _perPage,
         );
-        if (!mounted) return;
+        if (!mounted || seq != _fetchSeq) return; // stale response — drop it
         setState(() {
           _items = result.items;
           _lastPage = result.lastPage;
@@ -197,7 +203,7 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
         });
       }
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || seq != _fetchSeq) return; // stale response — drop it
       setState(() {
         _error = e.toString();
         _loading = false;
@@ -481,6 +487,10 @@ class _CustomerPickerSheetState extends ConsumerState<CustomerPickerSheet> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    // Icons.chevron_left/right carry matchTextDirection, so
+                    // the framework mirrors them in RTL — "previous" points
+                    // along the reading direction without a manual swap
+                    // (which would double-flip and cancel the mirroring).
                     IconButton(
                       onPressed: _page > 1 ? () => _fetch(page: _page - 1) : null,
                       icon: const Icon(Icons.chevron_left),

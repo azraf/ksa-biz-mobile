@@ -2,11 +2,12 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../providers/format_providers.dart';
 import '../../providers/repositories.dart';
+import '../../services/visit_reminder_service.dart';
 import '../../widgets/first_run_tips.dart';
 import '../watchlist/watchlist_screens.dart';
 
@@ -19,7 +20,6 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   bool _loading = true;
-  String? _error;
   bool? _needsSalesPersonSelection;
   double _totalDue = 0;
   int _unpaidOrders = 0;
@@ -31,6 +31,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   bool _duesFromCache = false;
   bool _duesIsStale = false;
   String? _duesCachedAt;
+  // Per-section failure flags: each section fails independently so an
+  // offline fetch never blanks out sections that did load (or have cache).
+  bool _duesFailed = false;
+  bool _manualFailed = false;
+  bool _vanFailed = false;
+  bool _duesEverLoaded = false;
+  bool _manualEverLoaded = false;
+  bool _vanEverLoaded = false;
+  DateTime? _lastLoadedAt;
+  GoRouter? _router;
 
   @override
   void initState() {
@@ -38,46 +48,104 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     _load();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // KPIs go stale after actions on other tabs; listen to navigation so
+    // returning to the dashboard branch refetches (throttled in _onRouteChanged).
+    final router = GoRouter.of(context);
+    if (!identical(router, _router)) {
+      _router?.routerDelegate.removeListener(_onRouteChanged);
+      _router = router;
+      router.routerDelegate.addListener(_onRouteChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    _router?.routerDelegate.removeListener(_onRouteChanged);
+    super.dispose();
+  }
+
+  void _onRouteChanged() {
+    if (!mounted || _loading) return;
+    final uri = _router?.routerDelegate.currentConfiguration.uri;
+    if (uri?.path != '/') return;
+    final last = _lastLoadedAt;
+    if (last == null ||
+        DateTime.now().difference(last) < const Duration(seconds: 30)) {
+      return;
+    }
+    _load();
+  }
+
   Future<void> _load() async {
     final auth = ref.read(authProvider);
     final salesPersonId = requireSalesPersonId(auth);
     if (salesPersonId == null) {
+      if (!mounted) return;
       setState(() {
         _loading = false;
         _needsSalesPersonSelection = auth.canPickSalesPerson;
-        _error = '';
       });
       return;
     }
 
     setState(() {
       _loading = true;
-      _error = null;
       _needsSalesPersonSelection = null;
     });
 
-    // Cached and offline-safe; hidden as 0 on any failure.
+    final force = _forceRefresh;
+    await Future.wait([
+      _loadVisits(),
+      _loadDues(salesPersonId, force),
+      _loadManualOrders(salesPersonId),
+      _loadVanStock(salesPersonId),
+    ]);
+
+    if (!mounted) return;
+    setState(() {
+      _forceRefresh = false;
+      _loading = false;
+    });
+    _lastLoadedAt = DateTime.now();
+  }
+
+  // Cached and offline-safe; hidden as 0 on any failure.
+  Future<void> _loadVisits() async {
     try {
       final now = DateTime.now();
       final visits = await ref
           .read(offlineVisitRepositoryProvider)
           .list(from: now, to: now);
-      if (mounted) {
-        setState(() => _todayVisits = visits.where((v) => v.isPlanned).length);
-      }
+      // Pending-sync rows can carry any date; count only today's schedule.
+      _todayVisits = visits.plannedOn(DateTime(now.year, now.month, now.day));
     } catch (_) {}
+  }
 
+  Future<void> _loadDues(int salesPersonId, bool force) async {
     try {
-      final reportRepo = ref.read(reportRepositoryProvider);
-      final manualRepo = ref.read(manualOrderRepositoryProvider);
-      final inventoryRepo = ref.read(inventoryRepositoryProvider);
-      final force = _forceRefresh;
+      final due = await ref.read(reportRepositoryProvider).salesPersonDue(
+            salesPersonId,
+            forceRefresh: force,
+            onRevalidate: _applyDuesRevalidate,
+          );
+      _totalDue = due.data.totalDue;
+      _unpaidOrders = due.data.orders.length;
+      _duesFromCache = due.isCached;
+      _duesIsStale = due.isStale;
+      _duesCachedAt = due.fetchedAt;
+      _duesFailed = false;
+      _duesEverLoaded = true;
+    } catch (_) {
+      _duesFailed = true;
+    }
+  }
 
-      final due = await reportRepo.salesPersonDue(
-        salesPersonId,
-        forceRefresh: force,
-        onRevalidate: _applyDuesRevalidate,
-      );
+  Future<void> _loadManualOrders(int salesPersonId) async {
+    try {
+      final manualRepo = ref.read(manualOrderRepositoryProvider);
       final results = await Future.wait([
         manualRepo.list(openPool: true),
         manualRepo.list(
@@ -88,33 +156,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           assignedSalesPersonId: salesPersonId,
           status: 'in_review',
         ),
-        inventoryRepo.vanStock(salesPersonId),
       ]);
-      final openPool = results[0] as PaginatedResponse<ManualOrderRequestModel>;
-      final assigned = results[1] as PaginatedResponse<ManualOrderRequestModel>;
-      final inReview = results[2] as PaginatedResponse<ManualOrderRequestModel>;
-      final vanStock = results[3] as List<InventoryStockModel>;
+      _openManualOrders = results[0].total + results[1].total + results[2].total;
+      _manualFailed = false;
+      _manualEverLoaded = true;
+    } catch (_) {
+      _manualFailed = true;
+    }
+  }
 
-      setState(() {
-        _totalDue = due.data.totalDue;
-        _unpaidOrders = due.data.orders.length;
-        _duesFromCache = due.isCached;
-        _duesIsStale = due.isStale;
-        _duesCachedAt = due.fetchedAt;
-        _openManualOrders = openPool.total + assigned.total + inReview.total;
-        _vanProducts = vanStock.length;
-        _lowStock = vanStock.where((s) {
-          final alert = s.product?.alertQuantity ?? 0;
-          return alert > 0 && s.balance <= alert;
-        }).length;
-        _forceRefresh = false;
-        _loading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _loading = false;
-      });
+  Future<void> _loadVanStock(int salesPersonId) async {
+    try {
+      final vanStock =
+          await ref.read(inventoryRepositoryProvider).vanStock(salesPersonId);
+      _vanProducts = vanStock.length;
+      _lowStock = vanStock.where((s) {
+        final alert = s.product?.alertQuantity ?? 0;
+        return alert > 0 && s.balance <= alert;
+      }).length;
+      _vanFailed = false;
+      _vanEverLoaded = true;
+    } catch (_) {
+      _vanFailed = true;
     }
   }
 
@@ -138,7 +201,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final auth = ref.watch(authProvider);
-    final currency = NumberFormat.currency(symbol: 'SAR ');
+    final currency = ref.watch(currencyFormatProvider);
+
+    // Cold start restores the session after this screen mounts: re-run the
+    // load once auth finishes restoring (or the acting salesperson changes).
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      final finishedLoading = (previous?.isLoading ?? false) && !next.isLoading;
+      final salesPersonChanged =
+          previous?.effectiveSalesPersonId != next.effectiveSalesPersonId;
+      if (finishedLoading || salesPersonChanged) _load();
+    });
 
     if (_loading) return const SkeletonDashboard();
     if (_needsSalesPersonSelection != null) {
@@ -152,14 +224,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             : _load,
       );
     }
-    if (_error != null && _error!.isNotEmpty) {
-      return ErrorView(
-        message: _error!,
-        onRetry: auth.canPickSalesPerson
-            ? () => context.go('/select-salesperson')
-            : _load,
-      );
-    }
+    final sectionsFailed = _duesFailed || _manualFailed || _vanFailed;
 
     return Stack(
       children: [
@@ -169,6 +234,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             padding: const EdgeInsets.all(16),
             children: [
               AppUpdateNotice(api: ref.read(apiClientProvider)),
+              if (sectionsFailed)
+                NoticeCard(
+                  kind: NoticeKind.info,
+                  icon: Icons.cloud_off_outlined,
+                  title: l10n.salesDashboardPartialLoadTitle,
+                  subtitle: l10n.salesDashboardPartialLoadSubtitle,
+                  actionLabel: l10n.commonRetry,
+                  onAction: _refresh,
+                ),
               if (_duesFromCache && _duesIsStale && _duesCachedAt != null)
                 NoticeCard(
                   kind: NoticeKind.info,
@@ -216,15 +290,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               const SizedBox(height: AppSpacing.md),
               KpiCard(
                 title: l10n.salesCardOutstandingDues,
-                value: currency.format(_totalDue),
-                subtitle: l10n.salesCardUnpaidOrders(_unpaidOrders),
+                value: _duesFailed && !_duesEverLoaded
+                    ? '—'
+                    : currency.format(_totalDue),
+                subtitle: _duesFailed && !_duesEverLoaded
+                    ? '—'
+                    : l10n.salesCardUnpaidOrders(_unpaidOrders),
                 icon: Icons.payments,
                 onTap: () => context.go('/plan?tab=dues'),
               ),
               const SizedBox(height: AppSpacing.md),
               KpiCard(
                 title: l10n.salesCardManualOrders,
-                value: '$_openManualOrders',
+                value: _manualFailed && !_manualEverLoaded
+                    ? '—'
+                    : '$_openManualOrders',
                 subtitle: l10n.salesCardManualSubtitle,
                 icon: Icons.phone_in_talk,
                 onTap: () => context.go('/manual-orders'),
@@ -232,8 +312,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               const SizedBox(height: AppSpacing.md),
               KpiCard(
                 title: l10n.salesCardVanStock,
-                value: l10n.salesCardVanProducts(_vanProducts),
-                subtitle: _lowStock > 0
+                value: _vanFailed && !_vanEverLoaded
+                    ? '—'
+                    : l10n.salesCardVanProducts(_vanProducts),
+                subtitle: _lowStock > 0 && !(_vanFailed && !_vanEverLoaded)
                     ? l10n.salesCardLowStockAlerts(_lowStock)
                     : l10n.salesCardTapManageStock,
                 icon: Icons.local_shipping,

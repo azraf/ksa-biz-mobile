@@ -51,6 +51,10 @@ class LocalDatabase {
   /// PRAGMA returns result rows — use rawQuery (Android rejects execute() for these).
   Future<void> _configureDatabase(Database db) async {
     try {
+      // Wait out short write locks instead of failing with "database is
+      // locked" — matters when several isolates share the file (tests, sync
+      // in background).
+      await db.rawQuery('PRAGMA busy_timeout = 5000');
       await db.rawQuery('PRAGMA journal_mode=WAL');
       await db.rawQuery('PRAGMA synchronous=NORMAL');
     } catch (_) {
@@ -487,6 +491,52 @@ class LocalDatabase {
     };
   }
 
+  /// Writes [exportRecoveryData] to a timestamped JSON file in the app's
+  /// private storage (next to the database file — the only app-owned
+  /// directory core can reach without a path_provider dependency), so a
+  /// user-switch wipe never silently destroys unsynced work. Keeps the
+  /// newest [keep] snapshots and prunes the rest. Returns the file written.
+  Future<File> writeRecoverySnapshot({int? previousUserId, int keep = 5}) async {
+    final dir = Directory(join(await getDatabasesPath(), 'sync_recovery'));
+    await dir.create(recursive: true);
+
+    final data = await exportRecoveryData();
+    if (previousUserId != null) data['previous_user_id'] = previousUserId;
+
+    // ':' is not filename-safe on all platforms; the replaced form still
+    // sorts chronologically, which the pruning below relies on.
+    final stamp = DateTime.now().toIso8601String().replaceAll(':', '-');
+    final file = File(join(dir.path, 'recovery_$stamp.json'));
+    await file.writeAsString(jsonEncode(data), flush: true);
+
+    final snapshots = dir
+        .listSync()
+        .whereType<File>()
+        .where((f) => basename(f.path).startsWith('recovery_'))
+        .toList()
+      ..sort((a, b) => b.path.compareTo(a.path));
+    for (final old in snapshots.skip(keep)) {
+      try {
+        old.deleteSync();
+      } catch (_) {
+        // Best-effort pruning — never let it block the caller.
+      }
+    }
+    return file;
+  }
+
+  /// Clears cached business data (entity_cache + report_cache) while keeping
+  /// the sync outbox, media blobs, and app_config. For explicit logout when
+  /// the queue is fully synced — the cache must not survive for the next
+  /// person to read, but nothing unsynced is at stake.
+  Future<void> clearBusinessCaches() async {
+    final db = await database;
+    final batch = db.batch();
+    batch.delete('entity_cache');
+    batch.delete('report_cache');
+    await batch.commit(noResult: true);
+  }
+
   Future<List<SyncQueueItem>> pendingQueue() async {
     final db = await database;
     final now = DateTime.now().toIso8601String();
@@ -510,10 +560,14 @@ class LocalDatabase {
     return rows.map(_rowToQueueItem).toList();
   }
 
+  /// Counts rows not yet confirmed synced. Includes 'syncing': a row stuck
+  /// mid-claim (e.g. after a transport error) is still unsynced data — it
+  /// must keep the badge alive and block isFullySynced()/logout from
+  /// reading as clean.
   Future<int> pendingCount() async {
     final db = await database;
     final result = await db.rawQuery(
-      "SELECT COUNT(*) as c FROM sync_queue WHERE status IN ('pending', 'failed')",
+      "SELECT COUNT(*) as c FROM sync_queue WHERE status IN ('pending', 'failed', 'syncing')",
     );
     return Sqflite.firstIntValue(result) ?? 0;
   }
@@ -521,6 +575,11 @@ class LocalDatabase {
   /// Returns the number of rows updated (0 or 1) — a sync in flight when a
   /// different user logs in and wipes the queue can use this to notice its
   /// row is gone and stop, rather than pushing it under the new user's token.
+  ///
+  /// Claiming to 'syncing' is conditional on the row currently being
+  /// 'pending' or 'failed', so a row already 'done' (or claimed by a
+  /// concurrent pass) can never be re-claimed and re-sent — a 0 return then
+  /// means "not yours to process", whatever the reason.
   Future<int> updateQueueStatus(
     int id, {
     required String status,
@@ -545,7 +604,9 @@ class LocalDatabase {
     return db.update(
       'sync_queue',
       updates,
-      where: 'id = ?',
+      where: status == 'syncing'
+          ? "id = ? AND status IN ('pending', 'failed')"
+          : 'id = ?',
       whereArgs: [id],
     );
   }

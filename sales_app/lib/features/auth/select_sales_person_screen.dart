@@ -39,13 +39,15 @@ class _SelectSalesPersonScreenState extends ConsumerState<SelectSalesPersonScree
     });
     try {
       final result = await ref.read(customerRepositoryProvider).salesPersons();
+      if (!mounted) return;
       setState(() {
         _salesPersons = result.items;
         _loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _error = friendlyErrorMessage(AppLocalizations.of(context), e);
         _loading = false;
       });
     }

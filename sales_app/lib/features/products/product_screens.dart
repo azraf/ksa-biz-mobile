@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -84,6 +86,12 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
   }
 }
 
+/// Whole cartons in [totalPieces] — mirrors the server's
+/// `UnitConversionService::legacyCartonBalance` (`intdiv(pieces, ppc)`), which
+/// is what low-stock alerts compare against `alert_quantity`.
+int totalCartons(int totalPieces, int piecesPerCarton) =>
+    totalPieces ~/ math.max(1, piecesPerCarton);
+
 /// Read-only product page: full-size images, price, and where the stock is.
 class ProductDetailScreen extends ConsumerStatefulWidget {
   const ProductDetailScreen({super.key, required this.productId});
@@ -158,7 +166,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: p.galleryImages.length,
-              separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+              separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
               itemBuilder: (_, i) => SizedBox(
                 width: 72,
                 child: MediaImageTile(
@@ -181,7 +189,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     final stock = _stock;
     if (stock == null) return const SizedBox.shrink();
 
-    final low = p.alertQuantity > 0 && stock.totalPieces <= p.alertQuantity;
+    // `alert_quantity` is a carton threshold (the dashboard and the server's
+    // low-stock alert both compare whole cartons) — comparing raw pieces
+    // against it would flag almost every break-pack product as low.
+    final low = p.alertQuantity > 0 &&
+        totalCartons(stock.totalPieces, p.piecesPerCarton) <= p.alertQuantity;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

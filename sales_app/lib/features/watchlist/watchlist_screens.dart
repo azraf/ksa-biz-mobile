@@ -477,6 +477,7 @@ class WatchlistDetailScreen extends ConsumerStatefulWidget {
 class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
   WatchlistItemModel? _item;
   bool _loading = true;
+  bool _fromCache = false;
   String? _error;
   bool _working = false;
   bool _isRecording = false;
@@ -502,27 +503,44 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
   }
 
   Future<void> _load() async {
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
       WatchlistItemModel item;
+      var fromCache = false;
       if (widget.id < 0) {
         final cached = await ref.read(localDatabaseProvider).getCachedEntity('watchlist', widget.id);
-        if (cached == null) throw Exception('Not found');
-        item = WatchlistItemModel.fromJson(cached);
+        if (cached == null) throw Exception(l10n.commonNotFound);
+        // Cache rows don't round-trip isLocalOnly; the negative id is the
+        // local-only marker.
+        item = WatchlistItemModel.fromJson(cached).copyWith(isLocalOnly: true);
       } else {
-        item = await ref.read(watchlistRepositoryProvider).get(widget.id);
+        try {
+          item = await ref.read(watchlistRepositoryProvider).get(widget.id);
+        } catch (_) {
+          // Offline or server error: fall back to the cached copy instead of
+          // an error screen for an item we already hold locally.
+          final cached =
+              await ref.read(localDatabaseProvider).getCachedEntity('watchlist', widget.id);
+          if (cached == null) rethrow;
+          item = WatchlistItemModel.fromJson(cached);
+          fromCache = true;
+        }
       }
+      if (!mounted) return;
       _nameController.text = item.placeName ?? '';
       _phoneController.text = item.phone ?? '';
       setState(() {
         _item = item;
+        _fromCache = fromCache;
         _loading = false;
       });
       _checkProximity(item);
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString();
         _loading = false;
@@ -541,7 +559,7 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
         final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text("You're at this location — convert to shop?"),
+            content: Text(l10n.salesWatchlistAtLocationConvert),
             action: SnackBarAction(label: l10n.commonConvert, onPressed: _convert),
           ),
         );
@@ -591,15 +609,17 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
     final l10n = AppLocalizations.of(context);
     final ok = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      // Pop with the dialog's own ctx — the screen context pops the screen
+      // out from under the still-open dialog.
+      builder: (ctx) => AlertDialog(
         title: Text(l10n.salesWatchlistDeleteTitle),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.commonCancel)),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.commonDelete)),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.commonDelete)),
         ],
       ),
     );
-    if (ok != true) return;
+    if (ok != true || !mounted) return;
     await ref.read(offlineWatchlistRepositoryProvider).delete(_item!.id);
     if (mounted) context.pop();
   }
@@ -614,7 +634,9 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
     final l10n = AppLocalizations.of(context);
     final name = await showDialog<String>(
       context: context,
-      builder: (_) => AlertDialog(
+      // Pop with the dialog's own ctx — the screen context pops the screen
+      // out from under the still-open dialog.
+      builder: (ctx) => AlertDialog(
         title: Text(l10n.salesWatchlistConvertTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -625,21 +647,21 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
             DropdownButtonFormField<int>(
               initialValue: _priorityRating,
               decoration: InputDecoration(labelText: l10n.salesWatchlistPriorityRating),
-              items: List.generate(5, (i) => DropdownMenuItem(value: i + 1, child: Text('${i + 1} stars'))),
+              items: List.generate(5, (i) => DropdownMenuItem(value: i + 1, child: Text(l10n.salesWatchlistStars(i + 1)))),
               onChanged: (v) => setState(() => _priorityRating = v),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.commonCancel)),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.commonCancel)),
           FilledButton(
-            onPressed: () => Navigator.pop(context, _nameController.text.trim()),
+            onPressed: () => Navigator.pop(ctx, _nameController.text.trim()),
             child: Text(l10n.commonConvert),
           ),
         ],
       ),
     );
-    if (name == null || name.isEmpty) return;
+    if (name == null || name.isEmpty || !mounted) return;
     setState(() => _working = true);
     try {
       // Drain queued photos/recordings first: conversion copies what is on the
@@ -669,15 +691,13 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
   }
 
   Future<void> _uploadVoice() async {
-    if (_item == null || _item!.id < 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).salesWatchlistSyncBeforeUpload)),
-      );
-      return;
-    }
+    // Local-only items are fine: the offline media queue holds the blob
+    // against the negative localId and re-parents it when the item syncs.
+    if (_item == null) return;
     if (_isRecording) {
       final started = _recordStartedAt;
       final path = await _recorder.stop();
+      if (!mounted) return;
       setState(() {
         _isRecording = false;
         _recordStartedAt = null;
@@ -687,9 +707,10 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
       await ref.read(mediaCaptureFacadeProvider).attachWatchlistAudio(
             File(path),
             _item!.id,
-            localId: _item!.isLocalOnly ? _item!.id : null,
+            localId: _item!.id < 0 ? _item!.id : null,
             durationSeconds: duration,
           );
+      if (!mounted) return;
       await _load();
       return;
     }
@@ -705,20 +726,18 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
   }
 
   Future<void> _uploadPhoto() async {
-    if (_item == null || _item!.id < 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).salesWatchlistSyncBeforeUpload)),
-      );
-      return;
-    }
+    // Local-only items are fine: the offline media queue holds the blob
+    // against the negative localId and re-parents it when the item syncs.
+    if (_item == null) return;
     if (!await AppPermissions.requestCamera()) return;
     final photo = await _picker.pickImage(source: ImageSource.camera);
-    if (photo == null) return;
+    if (photo == null || !mounted) return;
     await ref.read(mediaCaptureFacadeProvider).attachWatchlistGallery(
           File(photo.path),
           _item!.id,
-          localId: _item!.isLocalOnly ? _item!.id : null,
+          localId: _item!.id < 0 ? _item!.id : null,
         );
+    if (!mounted) return;
     await _load();
   }
 
@@ -764,6 +783,8 @@ class _WatchlistDetailScreenState extends ConsumerState<WatchlistDetailScreen> {
         children: [
           if (item.isLocalOnly)
             Card(child: ListTile(leading: const Icon(Icons.cloud_off), title: Text(l10n.salesWatchlistPendingSync))),
+          if (_fromCache)
+            Card(child: ListTile(leading: const Icon(Icons.cloud_off), title: Text(l10n.salesErrorOffline))),
           if (!item.isActive)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -907,18 +928,24 @@ Future<void> quickSaveWatchlistLocation(BuildContext context, WidgetRef ref) asy
   if (ref.read(onlineStatusProvider)) {
     placeName = await reverseGeocode(pos.latitude, pos.longitude);
     if (context.mounted && placeName != null) {
-      final nearby = await ref.read(watchlistRepositoryProvider).nearby(
-            lat: pos.latitude,
-            lng: pos.longitude,
-            salesPersonId: spId,
-          );
-      final shops = (nearby['shops'] as List?) ?? [];
-      final wl = (nearby['watchlist'] as List?) ?? [];
-      if (shops.isNotEmpty || wl.isNotEmpty) {
-        final msg = shops.isNotEmpty
-            ? l10n.salesNearbyShop(shops.first['name'] as String, '${shops.first['distance_m']}')
-            : l10n.salesDuplicateWatchlist('${wl.first['distance_m']}');
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      // The duplicate check is advisory only — a failure must never abort
+      // the save itself.
+      try {
+        final nearby = await ref.read(watchlistRepositoryProvider).nearby(
+              lat: pos.latitude,
+              lng: pos.longitude,
+              salesPersonId: spId,
+            );
+        final shops = (nearby['shops'] as List?) ?? [];
+        final wl = (nearby['watchlist'] as List?) ?? [];
+        if ((shops.isNotEmpty || wl.isNotEmpty) && context.mounted) {
+          final msg = shops.isNotEmpty
+              ? l10n.salesNearbyShop(shops.first['name'] as String, '${shops.first['distance_m']}')
+              : l10n.salesDuplicateWatchlist('${wl.first['distance_m']}');
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+        }
+      } catch (_) {
+        // Proceed with the save regardless.
       }
     }
   }

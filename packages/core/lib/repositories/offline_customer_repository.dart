@@ -21,6 +21,12 @@ class OfflineCustomerRepository {
   final LocalDatabase _db;
   final bool Function() _isOnline;
 
+  /// Key inside each cached row holding the salesperson ids whose fetches
+  /// returned it. Cached list reads are filtered by this so one salesperson's
+  /// offline cache never leaks another salesperson's customers on a shared
+  /// device; an admin read (null salesPersonId) sees every row.
+  static const salesPersonIdsKey = '_sp_ids';
+
   Future<List<CustomerTypeModel>> customerTypes() async {
     if (_isOnline()) {
       try {
@@ -78,12 +84,13 @@ class OfflineCustomerRepository {
     if (_isOnline()) {
       return _liveOrCachedPage(
         live: () => _remote.shops(query: query),
-        cacheBatch: _cacheShopsBatch,
-        cachedFallback: () => _cachedShopsPage(search: search, page: page, perPage: perPage),
+        cacheBatch: (items) => _cacheShopsBatch(items, fetchedBy: salesPersonId),
+        cachedFallback: () =>
+            _cachedShopsPage(search: search, salesPersonId: salesPersonId, page: page, perPage: perPage),
         label: 'shops',
       );
     }
-    return _cachedShopsPage(search: search, page: page, perPage: perPage);
+    return _cachedShopsPage(search: search, salesPersonId: salesPersonId, page: page, perPage: perPage);
   }
 
   /// Tries the live endpoint first; falls back to cache only if the cache
@@ -136,12 +143,13 @@ class OfflineCustomerRepository {
     if (_isOnline()) {
       return _liveOrCachedPage(
         live: () => _remote.vans(query: query),
-        cacheBatch: _cacheVansBatch,
-        cachedFallback: () => _cachedVansPage(search: search, page: page, perPage: perPage),
+        cacheBatch: (items) => _cacheVansBatch(items, fetchedBy: salesPersonId),
+        cachedFallback: () =>
+            _cachedVansPage(search: search, salesPersonId: salesPersonId, page: page, perPage: perPage),
         label: 'vans',
       );
     }
-    return _cachedVansPage(search: search, page: page, perPage: perPage);
+    return _cachedVansPage(search: search, salesPersonId: salesPersonId, page: page, perPage: perPage);
   }
 
   Future<PaginatedResponse<CustomerImporterModel>> importers({
@@ -169,12 +177,13 @@ class OfflineCustomerRepository {
     if (_isOnline()) {
       return _liveOrCachedPage(
         live: () => _remote.importers(query: query),
-        cacheBatch: _cacheImportersBatch,
-        cachedFallback: () => _cachedImportersPage(search: search, page: page, perPage: perPage),
+        cacheBatch: (items) => _cacheImportersBatch(items, fetchedBy: salesPersonId),
+        cachedFallback: () =>
+            _cachedImportersPage(search: search, salesPersonId: salesPersonId, page: page, perPage: perPage),
         label: 'importers',
       );
     }
-    return _cachedImportersPage(search: search, page: page, perPage: perPage);
+    return _cachedImportersPage(search: search, salesPersonId: salesPersonId, page: page, perPage: perPage);
   }
 
   Future<PaginatedResponse<SalesCustomerRow>> salesCustomersPhoneSearch({
@@ -206,34 +215,48 @@ class OfflineCustomerRepository {
 
   /// Reads straight from the local cache, no network call — for an instant
   /// first paint while the caller separately kicks off a live refresh.
+  /// [salesPersonId] scopes the read to rows that salesperson's own fetches
+  /// cached; null (admin) sees all rows.
   Future<PaginatedResponse<CustomerShopModel>> cachedShops({
     String? search,
+    int? salesPersonId,
     int page = 1,
     int perPage = 25,
   }) =>
-      _cachedShopsPage(search: search, page: page, perPage: perPage);
+      _cachedShopsPage(search: search, salesPersonId: salesPersonId, page: page, perPage: perPage);
 
   Future<PaginatedResponse<CustomerVanModel>> cachedVans({
     String? search,
+    int? salesPersonId,
     int page = 1,
     int perPage = 25,
   }) =>
-      _cachedVansPage(search: search, page: page, perPage: perPage);
+      _cachedVansPage(search: search, salesPersonId: salesPersonId, page: page, perPage: perPage);
 
   Future<PaginatedResponse<CustomerImporterModel>> cachedImporters({
     String? search,
+    int? salesPersonId,
     int page = 1,
     int perPage = 25,
   }) =>
-      _cachedImportersPage(search: search, page: page, perPage: perPage);
+      _cachedImportersPage(search: search, salesPersonId: salesPersonId, page: page, perPage: perPage);
+
+  /// Best-effort local name lookup for one customer — cache only, no network.
+  Future<String?> cachedCustomerName(String customerType, int id) async {
+    final cached = await _db.getCachedEntity(customerType, id);
+    final name = cached?['name'];
+    return name is String && name.isNotEmpty ? name : null;
+  }
 
   Future<PaginatedResponse<CustomerShopModel>> _cachedShopsPage({
     String? search,
+    int? salesPersonId,
     required int page,
     required int perPage,
   }) async {
     final cached = await _db.getCachedEntities('customer_shop');
     final all = cached
+        .where((e) => _visibleTo(e, salesPersonId))
         .map((e) => CustomerShopModel.fromJson(e))
         .where((e) => !e.isSystem)
         .toList()
@@ -243,11 +266,13 @@ class OfflineCustomerRepository {
 
   Future<PaginatedResponse<CustomerVanModel>> _cachedVansPage({
     String? search,
+    int? salesPersonId,
     required int page,
     required int perPage,
   }) async {
     final cached = await _db.getCachedEntities('customer_van');
     final all = cached
+        .where((e) => _visibleTo(e, salesPersonId))
         .map((e) => CustomerVanModel.fromJson(e))
         .toList()
       ..sort((a, b) => a.name.compareTo(b.name));
@@ -256,15 +281,26 @@ class OfflineCustomerRepository {
 
   Future<PaginatedResponse<CustomerImporterModel>> _cachedImportersPage({
     String? search,
+    int? salesPersonId,
     required int page,
     required int perPage,
   }) async {
     final cached = await _db.getCachedEntities('customer_importer');
     final all = cached
+        .where((e) => _visibleTo(e, salesPersonId))
         .map((e) => CustomerImporterModel.fromJson(e))
         .toList()
       ..sort((a, b) => a.name.compareTo(b.name));
     return _searchSlice(all, search, (e) => [e.name, e.mobile], page, perPage);
+  }
+
+  /// A cached row is visible to a salesperson only when one of their own
+  /// fetches cached it (rows written before tagging existed, or by an admin
+  /// session only, stay admin-only until the salesperson's next live fetch).
+  bool _visibleTo(Map<String, dynamic> row, int? salesPersonId) {
+    if (salesPersonId == null) return true;
+    final tags = row[salesPersonIdsKey];
+    return tags is List && tags.contains(salesPersonId);
   }
 
   PaginatedResponse<T> _pageSlice<T>(List<T> items, int page, int perPage) {
@@ -310,11 +346,46 @@ class OfflineCustomerRepository {
         _ => false,
       };
 
-  Future<void> _cacheShopsBatch(List<CustomerShopModel> shops) async {
-    await _db.cacheEntitiesBatch(
+  Future<void> _cacheShopsBatch(List<CustomerShopModel> shops, {int? fetchedBy}) async {
+    await _cacheBatchTagged(
       entityType: 'customer_shop',
       entities: shops.map((shop) => (entityId: shop.id, data: _shopData(shop))).toList(),
+      fetchedBy: fetchedBy,
     );
+  }
+
+  /// Writes a batch, tagging each row with the salesperson whose fetch
+  /// returned it and carrying forward tags from earlier fetches (a customer
+  /// can be legitimately visible to several salespeople on a shared device).
+  /// An admin fetch (null) adds no tag but must not strip existing ones.
+  Future<void> _cacheBatchTagged({
+    required String entityType,
+    required List<({int entityId, Map<String, dynamic> data})> entities,
+    required int? fetchedBy,
+  }) async {
+    final tagged = <({int entityId, Map<String, dynamic> data})>[];
+    for (final entity in entities) {
+      tagged.add((
+        entityId: entity.entityId,
+        data: await _withMergedTags(entityType, entity.entityId, entity.data, fetchedBy),
+      ));
+    }
+    await _db.cacheEntitiesBatch(entityType: entityType, entities: tagged);
+  }
+
+  Future<Map<String, dynamic>> _withMergedTags(
+    String entityType,
+    int entityId,
+    Map<String, dynamic> data,
+    int? fetchedBy,
+  ) async {
+    final existing = await _db.getCachedEntity(entityType, entityId);
+    final ids = <int>{
+      ...?(existing?[salesPersonIdsKey] as List?)?.whereType<int>(),
+      if (fetchedBy != null) fetchedBy,
+    };
+    if (ids.isEmpty) return data;
+    return {...data, salesPersonIdsKey: ids.toList()};
   }
 
   Map<String, dynamic> _shopData(CustomerShopModel shop) => {
@@ -334,10 +405,11 @@ class OfflineCustomerRepository {
         'is_inactive': shop.isInactive,
       };
 
-  Future<void> _cacheVansBatch(List<CustomerVanModel> vans) async {
-    await _db.cacheEntitiesBatch(
+  Future<void> _cacheVansBatch(List<CustomerVanModel> vans, {int? fetchedBy}) async {
+    await _cacheBatchTagged(
       entityType: 'customer_van',
       entities: vans.map((van) => (entityId: van.id, data: _vanData(van))).toList(),
+      fetchedBy: fetchedBy,
     );
   }
 
@@ -349,10 +421,11 @@ class OfflineCustomerRepository {
         if (van.isInactive) 'is_inactive': true,
       };
 
-  Future<void> _cacheImportersBatch(List<CustomerImporterModel> importers) async {
-    await _db.cacheEntitiesBatch(
+  Future<void> _cacheImportersBatch(List<CustomerImporterModel> importers, {int? fetchedBy}) async {
+    await _cacheBatchTagged(
       entityType: 'customer_importer',
       entities: importers.map((importer) => (entityId: importer.id, data: _importerData(importer))).toList(),
+      fetchedBy: fetchedBy,
     );
   }
 
@@ -379,7 +452,7 @@ class OfflineCustomerRepository {
       await _db.cacheEntity(
         entityType: 'customer_shop',
         entityId: shop.id,
-        data: _shopData(shop),
+        data: await _withMergedTags('customer_shop', shop.id, _shopData(shop), null),
       );
       await _db.cacheEntity(
         entityType: 'mobile_config',
@@ -394,7 +467,12 @@ class OfflineCustomerRepository {
     if (_isOnline()) {
       try {
         final shop = await _remote.getShop(id);
-        await _db.cacheEntity(entityType: 'customer_shop', entityId: shop.id, data: _shopData(shop));
+        // Merge tags so a detail refresh can't strip list visibility.
+        await _db.cacheEntity(
+          entityType: 'customer_shop',
+          entityId: shop.id,
+          data: await _withMergedTags('customer_shop', shop.id, _shopData(shop), null),
+        );
         return shop;
       } catch (e) {
         liveError = e;
@@ -411,7 +489,11 @@ class OfflineCustomerRepository {
     if (_isOnline()) {
       try {
         final van = await _remote.getVan(id);
-        await _db.cacheEntity(entityType: 'customer_van', entityId: van.id, data: _vanData(van));
+        await _db.cacheEntity(
+          entityType: 'customer_van',
+          entityId: van.id,
+          data: await _withMergedTags('customer_van', van.id, _vanData(van), null),
+        );
         return van;
       } catch (e) {
         liveError = e;
@@ -431,7 +513,7 @@ class OfflineCustomerRepository {
         await _db.cacheEntity(
           entityType: 'customer_importer',
           entityId: importer.id,
-          data: _importerData(importer),
+          data: await _withMergedTags('customer_importer', importer.id, _importerData(importer), null),
         );
         return importer;
       } catch (e) {

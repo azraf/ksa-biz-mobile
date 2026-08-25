@@ -1,7 +1,45 @@
-import 'package:equatable/equatable.dart';
+import 'dart:async' show TimeoutException;
+import 'dart:io' show SocketException;
 
+import 'package:equatable/equatable.dart';
+import 'package:http/http.dart' show ClientException;
+import 'package:l10n/l10n.dart';
+
+import '../api/api_exception.dart';
 import '../models/sales_person.dart';
 import '../models/user.dart';
+
+/// Maps a raw error to a short message safe to show to the user, instead of
+/// surfacing exception `toString()` noise on the login and selection screens.
+///
+/// Takes [AppLocalizations] rather than a BuildContext so notifiers without
+/// a context can resolve one via `lookupAppLocalizations(locale)`.
+String friendlyErrorMessage(AppLocalizations l10n, Object error) {
+  if (error is ApiException) {
+    if (error.statusCode == 401) {
+      return l10n.authErrorInvalidCredentials;
+    }
+    if (error.statusCode == 408) {
+      return l10n.authErrorTimeout;
+    }
+    if (error.statusCode != null && error.statusCode! >= 500) {
+      return l10n.authErrorServer;
+    }
+    // Other server-provided messages (validation etc.) are already
+    // human-readable; fall back to a generic line when there is none.
+    final message = error.message.trim();
+    if (message.isNotEmpty && !message.startsWith('Request failed')) {
+      return message;
+    }
+    return l10n.salesErrorGeneric;
+  }
+  if (error is SocketException ||
+      error is TimeoutException ||
+      error is ClientException) {
+    return l10n.authErrorNetwork;
+  }
+  return l10n.salesErrorGeneric;
+}
 
 class AuthState extends Equatable {
   const AuthState({

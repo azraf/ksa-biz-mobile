@@ -12,14 +12,29 @@ class _LoadLine {
     required this.productId,
     required this.name,
     required this.available,
+    required this.quantityDisplay,
     required this.controller,
+    this.unitId,
   }) : selected = false;
 
   final int productId;
   final String name;
   final String available;
+
+  /// The server's own "load all" quantity for this product ("3 CTN"/"5 PCS"),
+  /// shown in the load-all confirmation.
+  final String quantityDisplay;
   final TextEditingController controller;
+
+  /// Null = whole cartons (the server default); the pieces unit id when the
+  /// warehouse balance is pieces-only and must be loaded by the piece.
+  final int? unitId;
   bool selected;
+
+  /// Inline parse error for the quantity field.
+  String? error;
+
+  String get unitLabel => unitId == null ? 'CTN' : 'PCS';
 }
 
 class LoadVanScreen extends ConsumerStatefulWidget {
@@ -57,19 +72,28 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final stock = await ref.read(inventoryRepositoryProvider).warehouseStock();
+      // The server's bulk-load preview already resolves each product to a
+      // loadable quantity and unit: the carton part of the balance, or the
+      // pieces count (with the pieces unit id) when the warehouse balance is
+      // pieces-only. A blanket "1" default would mean 1 carton and 422 for
+      // pieces-only products.
+      final preview =
+          await ref.read(inventoryRepositoryProvider).bulkLoadVanPreview();
+      if (!mounted) return;
       final l10n = AppLocalizations.of(context);
       for (final line in _lines) {
         line.controller.dispose();
       }
       setState(() {
-        _lines = stock
+        _lines = preview
             .map(
-              (s) => _LoadLine(
-                productId: s.productId,
-                name: s.product?.name ?? l10n.commonProductFallback(s.productId),
-                available: s.displayBalance,
-                controller: TextEditingController(text: '${s.balance > 0 ? s.balance : 1}'),
+              (p) => _LoadLine(
+                productId: p.productId,
+                name: p.productName ?? l10n.commonProductFallback(p.productId),
+                available: p.balanceDisplay ?? '',
+                quantityDisplay: p.quantityDisplay ?? '${p.quantity}',
+                controller: TextEditingController(text: '${p.quantity}'),
+                unitId: p.unitId,
               ),
             )
             .toList();
@@ -77,8 +101,9 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
       });
       _applyPreselection();
     } catch (e) {
+      if (!mounted) return;
       setState(() => _loading = false);
-      if (mounted) showAppErrorSnackBar(context, e);
+      showAppErrorSnackBar(context, e);
     }
   }
 
@@ -90,30 +115,115 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
     });
   }
 
-  List<BulkLoadLineDraft> _selectedLines() {
-    return _lines
-        .where((line) => line.selected)
-        .map(
-          (line) => BulkLoadLineDraft(
-            productId: line.productId,
-            quantity: int.tryParse(line.controller.text) ?? 0,
+  /// Null when a ticked line has an invalid quantity — the lines carry inline
+  /// errors instead of silently substituting a number.
+  List<BulkLoadLineDraft>? _selectedLines() {
+    final l10n = AppLocalizations.of(context);
+    var hasError = false;
+    final drafts = <BulkLoadLineDraft>[];
+    for (final line in _lines) {
+      line.error = null;
+      if (!line.selected) continue;
+      final qty = int.tryParse(line.controller.text.trim());
+      if (qty == null || qty < 1) {
+        line.error = l10n.commonEnterOneOrMore;
+        hasError = true;
+        continue;
+      }
+      drafts.add(BulkLoadLineDraft(
+        productId: line.productId,
+        quantity: qty,
+        unitId: line.unitId,
+      ));
+    }
+    if (hasError) {
+      setState(() {});
+      return null;
+    }
+    return drafts;
+  }
+
+  /// "Load all" moves the entire warehouse onto the van — worth a look first.
+  Future<bool> _confirmLoadAll() async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.salesVanLoadAll),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.salesVanLoadAllConfirm(_lines.length)),
+              const SizedBox(height: 12),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _lines.length,
+                  itemBuilder: (_, i) {
+                    final line = _lines[i];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              line.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(line.quantityDisplay),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-        )
-        .where((line) => line.quantity > 0)
-        .toList();
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.salesVanLoadAll),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
   }
 
   Future<void> _submit({bool loadAll = false}) async {
     final l10n = AppLocalizations.of(context);
     final salesPersonId = requireSalesPersonId(ref.read(authProvider));
-    if (salesPersonId == null) return;
-
-    final lines = loadAll ? null : _selectedLines();
-    if (!loadAll && (lines == null || lines.isEmpty)) {
+    if (salesPersonId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.salesVanLoadSelectOne)),
+        SnackBar(content: Text(l10n.salesSelectSalespersonFirst)),
       );
       return;
+    }
+
+    List<BulkLoadLineDraft>? lines;
+    if (loadAll) {
+      if (!await _confirmLoadAll()) return;
+      if (!mounted) return;
+    } else {
+      lines = _selectedLines();
+      if (lines == null) return; // invalid quantities — inline errors shown
+      if (lines.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.salesVanLoadSelectOne)),
+        );
+        return;
+      }
     }
 
     setState(() => _submitting = true);
@@ -130,8 +240,9 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
         context.pop();
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() => _submitting = false);
-      if (mounted) showAppErrorSnackBar(context, e);
+      showAppErrorSnackBar(context, e);
     }
   }
 
@@ -181,9 +292,10 @@ class _LoadVanScreenState extends ConsumerState<LoadVanScreen> {
                     width: 72,
                     child: TextField(
                       controller: line.controller,
-                      decoration: const InputDecoration(
-                        labelText: 'CTN',
+                      decoration: InputDecoration(
+                        labelText: line.unitLabel,
                         isDense: true,
+                        errorText: line.error,
                       ),
                       keyboardType: TextInputType.number,
                       enabled: line.selected,

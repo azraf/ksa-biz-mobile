@@ -157,11 +157,18 @@ class _VisitFormSheetState extends ConsumerState<_VisitFormSheet> {
   }
 
   Future<void> _pickWhen() async {
+    final firstDate = DateTime.now().subtract(const Duration(days: 1));
+    final lastDate = DateTime.now().add(const Duration(days: 365));
+    // Rescheduling an overdue visit: _when can precede firstDate, and
+    // showDatePicker rejects an initialDate outside [firstDate, lastDate].
+    var initialDate = _when;
+    if (initialDate.isBefore(firstDate)) initialDate = firstDate;
+    if (initialDate.isAfter(lastDate)) initialDate = lastDate;
     final date = await showDatePicker(
       context: context,
-      initialDate: _when,
-      firstDate: DateTime.now().subtract(const Duration(days: 1)),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
     );
     if (date == null || !mounted) return;
     final time = await showTimePicker(
@@ -209,7 +216,7 @@ class _VisitFormSheetState extends ConsumerState<_VisitFormSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      showAppErrorSnackBar(context, e);
     }
   }
 

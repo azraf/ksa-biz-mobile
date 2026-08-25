@@ -1,6 +1,7 @@
 import '../models/customer_diary_note.dart';
 import '../offline/local_database.dart';
 import '../offline/sync_queue_item.dart';
+import '../utils/client_request_id.dart';
 import 'customer_diary_repository.dart';
 
 class OfflineDiaryRepository {
@@ -71,6 +72,11 @@ class OfflineDiaryRepository {
     int? orderId,
     int? salesPersonId,
   }) async {
+    // Generated once per note and persisted with the queued payload, so a
+    // retried sync (or an online request replayed after a dropped response)
+    // dedupes server-side instead of creating a duplicate note.
+    final clientRequestId = generateClientRequestId();
+
     if (_isOnline()) {
       final note = await _remote.create(
         customerType: customerType,
@@ -79,6 +85,7 @@ class OfflineDiaryRepository {
         body: body,
         orderId: orderId,
         salesPersonId: salesPersonId,
+        clientRequestId: clientRequestId,
       );
       await _cacheNote(customerType, customerId, note, orderId: orderId);
       return note;
@@ -106,6 +113,7 @@ class OfflineDiaryRepository {
       payload: {
         ...note.toCreateJson(),
         'customer_id': customerId,
+        'client_request_id': clientRequestId,
       },
       status: 'pending',
       retryCount: 0,

@@ -8,6 +8,10 @@ import '../../providers/auth_provider.dart';
 import '../../providers/repositories.dart';
 import '../../widgets/line_items_editor.dart';
 
+/// Sentinel for "whole cartons" — the server treats a missing unit id as
+/// cartons.
+const _kCartonChoice = 0;
+
 class ProductExchangeScreen extends ConsumerStatefulWidget {
   const ProductExchangeScreen({super.key});
 
@@ -20,6 +24,12 @@ class _ProductExchangeScreenState extends ConsumerState<ProductExchangeScreen> {
   ProductModel? _outProduct;
   final _returnQty = TextEditingController(text: '1');
   final _outQty = TextEditingController(text: '1');
+  String? _returnQtyError;
+  String? _outQtyError;
+
+  /// [_kCartonChoice] or the respective product's pcs unit id.
+  int _returnUnitChoice = _kCartonChoice;
+  int _outUnitChoice = _kCartonChoice;
   final _cashAmount = TextEditingController();
   final _reason = TextEditingController();
   String _settlement = 'product';
@@ -34,19 +44,54 @@ class _ProductExchangeScreenState extends ConsumerState<ProductExchangeScreen> {
     super.dispose();
   }
 
+  static bool _canBreakPack(ProductModel? product) =>
+      product != null && product.allowBreakPack && product.pcsUnitId != null;
+
   Future<void> _submit() async {
     final salesPersonId = requireSalesPersonId(ref.read(authProvider));
     if (salesPersonId == null || _returnProduct == null) return;
     if (_settlement == 'product' && _outProduct == null) return;
-    setState(() => _saving = true);
+
+    // Reject bad quantities instead of silently substituting 1 — this moves
+    // real stock both ways.
+    final returnQuantity = int.tryParse(_returnQty.text.trim());
+    final outQuantity =
+        _settlement == 'product' ? int.tryParse(_outQty.text.trim()) : null;
+    final returnInvalid = returnQuantity == null || returnQuantity < 1;
+    final outInvalid =
+        _settlement == 'product' && (outQuantity == null || outQuantity < 1);
+    if (returnInvalid || outInvalid) {
+      final message = AppLocalizations.of(context).commonEnterQuantityMin;
+      setState(() {
+        _returnQtyError = returnInvalid ? message : null;
+        _outQtyError = outInvalid ? message : null;
+      });
+      return;
+    }
+
+    final returnPieces =
+        _canBreakPack(_returnProduct) && _returnUnitChoice == _returnProduct!.pcsUnitId;
+    final outPieces = _settlement == 'product' &&
+        _canBreakPack(_outProduct) &&
+        _outUnitChoice == _outProduct!.pcsUnitId;
+
+    setState(() {
+      _returnQtyError = null;
+      _outQtyError = null;
+      _saving = true;
+    });
     try {
       await ref.read(inventoryRepositoryProvider).createProductExchange(
             salesPersonId: salesPersonId,
             settlementType: _settlement,
             returnProductId: _returnProduct!.id,
-            returnQuantity: int.tryParse(_returnQty.text) ?? 1,
+            returnQuantity: returnQuantity,
+            // Unit ids omitted for cartons — the server treats missing unit
+            // ids as whole cartons.
+            returnUnitId: returnPieces ? _returnProduct!.pcsUnitId : null,
             outProductId: _settlement == 'product' ? _outProduct!.id : null,
-            outQuantity: _settlement == 'product' ? int.tryParse(_outQty.text) ?? 1 : null,
+            outQuantity: outQuantity,
+            outUnitId: outPieces ? _outProduct!.pcsUnitId : null,
             cashAmount: _settlement == 'cash' ? double.tryParse(_cashAmount.text) : null,
             reason: _reason.text.isEmpty ? null : _reason.text,
           );
@@ -56,6 +101,33 @@ class _ProductExchangeScreenState extends ConsumerState<ProductExchangeScreen> {
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  Widget _unitDropdown({
+    required ProductModel product,
+    required int value,
+    required ValueChanged<int> onChanged,
+  }) {
+    final l10n = AppLocalizations.of(context);
+    return DropdownButtonFormField<int>(
+      key: ValueKey('unit_${product.id}'),
+      initialValue: value,
+      decoration: InputDecoration(
+        labelText: l10n.commonUnit,
+        border: const OutlineInputBorder(),
+      ),
+      items: [
+        DropdownMenuItem(
+          value: _kCartonChoice,
+          child: Text(l10n.commonUnitCarton),
+        ),
+        DropdownMenuItem(
+          value: product.pcsUnitId,
+          child: Text(l10n.commonUnitPiece(product.piecesPerCarton)),
+        ),
+      ],
+      onChanged: (v) => onChanged(v ?? _kCartonChoice),
+    );
   }
 
   @override
@@ -70,15 +142,39 @@ class _ProductExchangeScreenState extends ConsumerState<ProductExchangeScreen> {
         OutlinedButton(
           onPressed: () async {
             final product = await pickProduct(context, ref);
-            if (product != null) setState(() => _returnProduct = product);
+            if (product != null) {
+              setState(() {
+                _returnProduct = product;
+                // Units are per-product; never carry a pieces choice over.
+                _returnUnitChoice = _kCartonChoice;
+              });
+            }
           },
           child: Text(_returnProduct?.name ?? l10n.salesVanExchangeSelectReturn),
         ),
+        if (_canBreakPack(_returnProduct)) ...[
+          const SizedBox(height: 12),
+          _unitDropdown(
+            product: _returnProduct!,
+            value: _returnUnitChoice,
+            onChanged: (v) => setState(() => _returnUnitChoice = v),
+          ),
+        ],
         const SizedBox(height: 12),
         TextField(
           controller: _returnQty,
-          decoration: InputDecoration(labelText: l10n.salesVanExchangeReturnQty, border: const OutlineInputBorder()),
+          decoration: InputDecoration(
+            // "(cartons)" only applies while no unit can be chosen.
+            labelText: _canBreakPack(_returnProduct)
+                ? l10n.commonQuantity
+                : l10n.salesVanExchangeReturnQty,
+            border: const OutlineInputBorder(),
+            errorText: _returnQtyError,
+          ),
           keyboardType: TextInputType.number,
+          onChanged: (_) {
+            if (_returnQtyError != null) setState(() => _returnQtyError = null);
+          },
         ),
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
@@ -97,15 +193,39 @@ class _ProductExchangeScreenState extends ConsumerState<ProductExchangeScreen> {
           OutlinedButton(
             onPressed: () async {
               final product = await pickProduct(context, ref);
-              if (product != null) setState(() => _outProduct = product);
+              if (product != null) {
+                setState(() {
+                  _outProduct = product;
+                  // Units are per-product; never carry a pieces choice over.
+                  _outUnitChoice = _kCartonChoice;
+                });
+              }
             },
             child: Text(_outProduct?.name ?? l10n.salesVanExchangeSelectOut),
           ),
+          if (_canBreakPack(_outProduct)) ...[
+            const SizedBox(height: 12),
+            _unitDropdown(
+              product: _outProduct!,
+              value: _outUnitChoice,
+              onChanged: (v) => setState(() => _outUnitChoice = v),
+            ),
+          ],
           const SizedBox(height: 12),
           TextField(
             controller: _outQty,
-            decoration: InputDecoration(labelText: l10n.salesVanExchangeOutQty, border: const OutlineInputBorder()),
+            decoration: InputDecoration(
+              // "(cartons)" only applies while no unit can be chosen.
+              labelText: _canBreakPack(_outProduct)
+                  ? l10n.commonQuantity
+                  : l10n.salesVanExchangeOutQty,
+              border: const OutlineInputBorder(),
+              errorText: _outQtyError,
+            ),
             keyboardType: TextInputType.number,
+            onChanged: (_) {
+              if (_outQtyError != null) setState(() => _outQtyError = null);
+            },
           ),
         ],
         if (_settlement == 'cash') ...[

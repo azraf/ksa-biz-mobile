@@ -25,6 +25,30 @@ void main() {
     expect(legacyRow.outstandingDue, closeTo(60.0, 0.001));
   });
 
+  test('order with id-less cached items parses instead of throwing', () {
+    // Cached rows written offline (and by older builds) store items without
+    // an id — the parse must tolerate that or one row sinks the whole list.
+    final order = OrderModel.fromJson(const {
+      'id': -3,
+      'customer_type_id': 1,
+      'items': [
+        {
+          'product_id': 9,
+          'quantity': 2,
+          'unit_id': 4,
+          'product_price': '25.00',
+          'bill': '50.00',
+        },
+      ],
+    });
+
+    expect(order.items, hasLength(1));
+    expect(order.items.first.id, 0);
+    expect(order.items.first.productId, 9);
+    expect(order.items.first.unitId, 4);
+    expect(order.items.first.bill, 50.0);
+  });
+
   test('isDraft matches the renamed server value and legacy cached rows', () {
     OrderModel order(String status) => OrderModel.fromJson({
           'id': 1,

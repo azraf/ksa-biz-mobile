@@ -1,0 +1,6 @@
+# Test files run in parallel isolates but all share the single on-disk
+# sqflite DB (ksa_biz_offline.db via LocalDatabase.instance), and
+# local_database_test's wipeUserData test clears every table while other
+# files' tests are mid-flight. Serialize the files so DB tests are
+# deterministic (the whole suite runs in ~2s anyway).
+concurrency: 1

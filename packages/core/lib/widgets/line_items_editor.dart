@@ -212,6 +212,11 @@ class _LineItemDialogState extends State<_LineItemDialog> {
   /// Guards the qty/price/discount ↔ total listeners against re-entrancy.
   bool _syncing = false;
 
+  // Inline validation errors, set on a rejected save and cleared on edit.
+  String? _qtyError;
+  String? _priceError;
+  String? _discountError;
+
   OrderVatSettings get _vat => widget.vat;
 
   int get _qtyValue => int.tryParse(_qty.text) ?? 0;
@@ -263,7 +268,11 @@ class _LineItemDialogState extends State<_LineItemDialog> {
     _syncing = true;
     _total.text = _grossValue.toStringAsFixed(2);
     _syncing = false;
-    setState(() {});
+    setState(() {
+      _qtyError = null;
+      _priceError = null;
+      _discountError = null;
+    });
   }
 
   /// Total edited → back-compute a 2dp price, then snap the total back to the
@@ -344,17 +353,17 @@ class _LineItemDialogState extends State<_LineItemDialog> {
               ),
             TextField(
               controller: _qty,
-              decoration: InputDecoration(labelText: l10n.commonQuantity),
+              decoration: InputDecoration(labelText: l10n.commonQuantity, errorText: _qtyError),
               keyboardType: TextInputType.number,
             ),
             TextField(
               controller: _price,
-              decoration: InputDecoration(labelText: l10n.commonPrice),
+              decoration: InputDecoration(labelText: l10n.commonPrice, errorText: _priceError),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
             TextField(
               controller: _discount,
-              decoration: InputDecoration(labelText: l10n.commonDiscount),
+              decoration: InputDecoration(labelText: l10n.commonDiscount, errorText: _discountError),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
             TextField(
@@ -373,10 +382,36 @@ class _LineItemDialogState extends State<_LineItemDialog> {
         TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.commonCancel)),
         FilledButton(
           onPressed: () {
-            widget.item.quantity = int.tryParse(_qty.text) ?? widget.item.quantity;
+            final qty = int.tryParse(_qty.text.trim());
+            final price = double.tryParse(_price.text.trim());
+            final discountText = _discount.text.trim();
+            final discount = discountText.isEmpty ? 0.0 : double.tryParse(discountText);
+
+            // Reject impossible lines instead of silently keeping stale
+            // values: qty >= 1, price >= 0, 0 <= discount <= price * qty.
+            String? qtyError;
+            String? priceError;
+            String? discountError;
+            if (qty == null || qty < 1) qtyError = l10n.commonEnterQuantityMin;
+            if (price == null || price < 0) priceError = l10n.commonEnterPriceMin;
+            if (discount == null || discount < 0) {
+              discountError = l10n.commonEnterDiscountMin;
+            } else if (qty != null && price != null && discount > price * qty) {
+              discountError = l10n.commonDiscountExceedsTotal;
+            }
+            if (qtyError != null || priceError != null || discountError != null) {
+              setState(() {
+                _qtyError = qtyError;
+                _priceError = priceError;
+                _discountError = discountError;
+              });
+              return;
+            }
+
+            widget.item.quantity = qty!;
             widget.item.unitId = _unitId;
-            widget.item.price = double.tryParse(_price.text) ?? widget.item.price;
-            widget.item.discount = double.tryParse(_discount.text) ?? widget.item.discount;
+            widget.item.price = price!;
+            widget.item.discount = discount!;
             widget.item.applyVat(widget.vat);
             Navigator.pop(context, widget.item);
           },

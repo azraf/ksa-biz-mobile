@@ -188,7 +188,9 @@ class CustomerContextNotifier extends Notifier<CustomerContextState> {
       if (linkedJson is Map<String, dynamic>) {
         final parsed = LinkedCustomerModel.fromJson(linkedJson);
         if (parsed.type == role) {
-          return _profileFromLinked(customerRepo, parsed);
+          // Awaited so the surrounding catch actually covers profile-load
+          // failures (unawaited futures escape the try block).
+          return await _profileFromLinked(customerRepo, parsed);
         }
       }
     } catch (_) {}

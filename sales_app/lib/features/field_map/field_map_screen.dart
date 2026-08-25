@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
+import 'package:l10n/l10n.dart';
 import 'package:maps_ui/maps_ui.dart';
 
 import '../../providers/auth_provider.dart';
@@ -125,14 +126,15 @@ class _FieldMapScreenState extends ConsumerState<FieldMapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final spId = requireSalesPersonId(ref.watch(authProvider));
     if (spId == null) {
-      return const Scaffold(body: ErrorView(message: 'Select a salesperson first.'));
+      return Scaffold(body: ErrorView(message: l10n.salesSelectSalespersonFirst));
     }
 
     if (_error != null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Field map')),
+        appBar: AppBar(title: Text(l10n.fieldMapTitle)),
         body: ErrorView(message: _error!, onRetry: _load),
       );
     }
@@ -148,7 +150,9 @@ class _FieldMapScreenState extends ConsumerState<FieldMapScreen> {
     ].where((v) => v != null).length;
 
     return LocationMapScreen(
-      title: activeFilterCount == 0 ? 'Field map' : 'Field map ($activeFilterCount)',
+      title: activeFilterCount == 0
+          ? l10n.fieldMapTitle
+          : l10n.fieldMapTitleFiltered(activeFilterCount),
       pins: [...shopPins, ..._watchlistPins],
       initialFilter: MapLayerFilter.both,
       loading: _loading,
@@ -160,6 +164,7 @@ class _FieldMapScreenState extends ConsumerState<FieldMapScreen> {
   }
 
   Widget _buildFiltersDrawer() {
+    final l10n = AppLocalizations.of(context);
     return Drawer(
       child: SafeArea(
         child: ListView(
@@ -168,7 +173,7 @@ class _FieldMapScreenState extends ConsumerState<FieldMapScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Filters & sort', style: Theme.of(context).textTheme.titleLarge),
+                Text(l10n.fieldMapFiltersSort, style: Theme.of(context).textTheme.titleLarge),
                 IconButton(
                   icon: const Icon(Icons.close),
                   onPressed: () => Navigator.of(context).pop(),
@@ -178,9 +183,9 @@ class _FieldMapScreenState extends ConsumerState<FieldMapScreen> {
             const SizedBox(height: 8),
             TextField(
               controller: _searchController,
-              decoration: const InputDecoration(
-                labelText: 'Search by name or phone',
-                prefixIcon: Icon(Icons.search),
+              decoration: InputDecoration(
+                labelText: l10n.fieldMapSearchHint,
+                prefixIcon: const Icon(Icons.search),
               ),
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => _load(),
@@ -188,10 +193,10 @@ class _FieldMapScreenState extends ConsumerState<FieldMapScreen> {
             const SizedBox(height: 16),
             if (_areas.isNotEmpty) ...[
               _fullWidthDropdown<int?>(
-                label: 'Area',
+                label: l10n.commonArea,
                 value: _areaFilter,
                 items: [
-                  const DropdownMenuItem(value: null, child: Text('All areas')),
+                  DropdownMenuItem(value: null, child: Text(l10n.commonAllAreas)),
                   ..._areas.map(
                     (a) => DropdownMenuItem(value: a.areaId, child: Text(a.areaName ?? '#${a.areaId}')),
                   ),
@@ -204,10 +209,10 @@ class _FieldMapScreenState extends ConsumerState<FieldMapScreen> {
               const SizedBox(height: 12),
             ],
             _fullWidthDropdown<String?>(
-              label: 'Frequency',
+              label: l10n.fieldMapFrequency,
               value: _frequencyBand,
               items: [
-                const DropdownMenuItem(value: null, child: Text('Any frequency')),
+                DropdownMenuItem(value: null, child: Text(l10n.fieldMapAnyFrequency)),
                 ..._frequencyBands.map(
                   (b) => DropdownMenuItem(
                     value: b,
@@ -222,10 +227,10 @@ class _FieldMapScreenState extends ConsumerState<FieldMapScreen> {
             ),
             const SizedBox(height: 12),
             _fullWidthDropdown<String?>(
-              label: 'Payment',
+              label: l10n.fieldMapPayment,
               value: _paymentReliability,
               items: [
-                const DropdownMenuItem(value: null, child: Text('Any reliability')),
+                DropdownMenuItem(value: null, child: Text(l10n.fieldMapAnyReliability)),
                 ..._paymentReliabilities.map(
                   (p) => DropdownMenuItem(
                     value: p,
@@ -240,12 +245,12 @@ class _FieldMapScreenState extends ConsumerState<FieldMapScreen> {
             ),
             const SizedBox(height: 12),
             _fullWidthDropdown<int?>(
-              label: 'Min rating',
+              label: l10n.fieldMapMinRating,
               value: _priorityMin,
               items: [
-                const DropdownMenuItem(value: null, child: Text('Any rating')),
+                DropdownMenuItem(value: null, child: Text(l10n.fieldMapAnyRating)),
                 ...List.generate(5, (i) => i + 1)
-                    .map((r) => DropdownMenuItem(value: r, child: Text('$r+ stars'))),
+                    .map((r) => DropdownMenuItem(value: r, child: Text(l10n.fieldMapStarsPlus(r)))),
               ],
               onChanged: (v) {
                 setState(() => _priorityMin = v);
@@ -254,13 +259,13 @@ class _FieldMapScreenState extends ConsumerState<FieldMapScreen> {
             ),
             const SizedBox(height: 12),
             _fullWidthDropdown<int?>(
-              label: 'Inactive for',
+              label: l10n.fieldMapInactiveFor,
               value: _inactiveDays,
-              items: const [
-                DropdownMenuItem(value: null, child: Text('Any')),
-                DropdownMenuItem(value: 30, child: Text('30+ days')),
-                DropdownMenuItem(value: 60, child: Text('60+ days')),
-                DropdownMenuItem(value: 90, child: Text('90+ days')),
+              items: [
+                DropdownMenuItem(value: null, child: Text(l10n.commonAny)),
+                DropdownMenuItem(value: 30, child: Text(l10n.fieldMapDaysPlus(30))),
+                DropdownMenuItem(value: 60, child: Text(l10n.fieldMapDaysPlus(60))),
+                DropdownMenuItem(value: 90, child: Text(l10n.fieldMapDaysPlus(90))),
               ],
               onChanged: (v) {
                 setState(() => _inactiveDays = v);
@@ -269,12 +274,12 @@ class _FieldMapScreenState extends ConsumerState<FieldMapScreen> {
             ),
             const SizedBox(height: 12),
             _fullWidthDropdown<bool?>(
-              label: 'Due',
+              label: l10n.commonDue,
               value: _hasDue,
-              items: const [
-                DropdownMenuItem(value: null, child: Text('Any')),
-                DropdownMenuItem(value: true, child: Text('Has due')),
-                DropdownMenuItem(value: false, child: Text('No due')),
+              items: [
+                DropdownMenuItem(value: null, child: Text(l10n.commonAny)),
+                DropdownMenuItem(value: true, child: Text(l10n.fieldMapHasDue)),
+                DropdownMenuItem(value: false, child: Text(l10n.fieldMapNoDue)),
               ],
               onChanged: (v) {
                 setState(() => _hasDue = v);
@@ -283,12 +288,12 @@ class _FieldMapScreenState extends ConsumerState<FieldMapScreen> {
             ),
             const Divider(height: 32),
             _fullWidthDropdown<_MapSort>(
-              label: 'Sort',
+              label: l10n.commonSort,
               value: _sort,
-              items: const [
-                DropdownMenuItem(value: _MapSort.name, child: Text('Name')),
-                DropdownMenuItem(value: _MapSort.priority, child: Text('Priority rating')),
-                DropdownMenuItem(value: _MapSort.distance, child: Text('Nearest first')),
+              items: [
+                DropdownMenuItem(value: _MapSort.name, child: Text(l10n.commonName)),
+                DropdownMenuItem(value: _MapSort.priority, child: Text(l10n.salesWatchlistPriorityRating)),
+                DropdownMenuItem(value: _MapSort.distance, child: Text(l10n.fieldMapNearestFirst)),
               ],
               onChanged: (v) {
                 if (v == null) return;
@@ -314,7 +319,7 @@ class _FieldMapScreenState extends ConsumerState<FieldMapScreen> {
                 _load();
               },
               icon: const Icon(Icons.clear),
-              label: const Text('Clear filters'),
+              label: Text(l10n.commonClearFilters),
             ),
           ],
         ),

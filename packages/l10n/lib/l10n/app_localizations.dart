@@ -280,6 +280,12 @@ abstract class AppLocalizations {
   /// **'Quantity'**
   String get commonQuantity;
 
+  /// No description provided for @commonQuantityCartons.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity (cartons)'**
+  String get commonQuantityCartons;
+
   /// No description provided for @commonNotes.
   ///
   /// In en, this message translates to:
@@ -2268,7 +2274,7 @@ abstract class AppLocalizations {
   /// No description provided for @salesVanExchangeReturnQty.
   ///
   /// In en, this message translates to:
-  /// **'Return quantity'**
+  /// **'Return quantity (cartons)'**
   String get salesVanExchangeReturnQty;
 
   /// No description provided for @salesVanExchangeSettlement.
@@ -2304,7 +2310,7 @@ abstract class AppLocalizations {
   /// No description provided for @salesVanExchangeOutQty.
   ///
   /// In en, this message translates to:
-  /// **'Out quantity'**
+  /// **'Out quantity (cartons)'**
   String get salesVanExchangeOutQty;
 
   /// No description provided for @salesVanExchangeCashAmount.
@@ -3932,6 +3938,378 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Product'**
   String get salesProductDetailTitle;
+
+  /// No description provided for @commonContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get commonContinue;
+
+  /// No description provided for @commonCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Created'**
+  String get commonCreated;
+
+  /// No description provided for @commonName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get commonName;
+
+  /// No description provided for @commonAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Any'**
+  String get commonAny;
+
+  /// No description provided for @commonNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Not found'**
+  String get commonNotFound;
+
+  /// No description provided for @commonReasonRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'A reason is required'**
+  String get commonReasonRequired;
+
+  /// No description provided for @commonEnterQuantityMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a quantity of 1 or more'**
+  String get commonEnterQuantityMin;
+
+  /// No description provided for @commonEnterOneOrMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter 1 or more'**
+  String get commonEnterOneOrMore;
+
+  /// No description provided for @commonEnterPriceMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a price of 0 or more'**
+  String get commonEnterPriceMin;
+
+  /// No description provided for @commonEnterDiscountMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a discount of 0 or more'**
+  String get commonEnterDiscountMin;
+
+  /// No description provided for @commonDiscountExceedsTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount cannot exceed the line total'**
+  String get commonDiscountExceedsTotal;
+
+  /// No description provided for @commonPaymentNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment #{id}'**
+  String commonPaymentNumber(int id);
+
+  /// No description provided for @commonRecordingRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds}s remaining (max {maxMinutes} min)'**
+  String commonRecordingRemaining(int seconds, int maxMinutes);
+
+  /// No description provided for @authEmailOrPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Email or phone'**
+  String get authEmailOrPhone;
+
+  /// No description provided for @authSwitchUserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch user?'**
+  String get authSwitchUserTitle;
+
+  /// No description provided for @authSwitchUserBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsynced data from another user will be deleted (a recovery file will be saved). Continue?'**
+  String get authSwitchUserBody;
+
+  /// No description provided for @authErrorInvalidCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect email or password. Please try again.'**
+  String get authErrorInvalidCredentials;
+
+  /// No description provided for @authErrorTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'The request timed out. Check your connection and try again.'**
+  String get authErrorTimeout;
+
+  /// No description provided for @authErrorServer.
+  ///
+  /// In en, this message translates to:
+  /// **'The server had a problem. Please try again in a moment.'**
+  String get authErrorServer;
+
+  /// No description provided for @authErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the server. Check your internet connection and try again.'**
+  String get authErrorNetwork;
+
+  /// No description provided for @customerTypeShop.
+  ///
+  /// In en, this message translates to:
+  /// **'Shop'**
+  String get customerTypeShop;
+
+  /// No description provided for @customerTypeVan.
+  ///
+  /// In en, this message translates to:
+  /// **'Van'**
+  String get customerTypeVan;
+
+  /// No description provided for @customerTypeImporter.
+  ///
+  /// In en, this message translates to:
+  /// **'Importer'**
+  String get customerTypeImporter;
+
+  /// No description provided for @salesDuesIncludesUnsynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Includes unsynced payment'**
+  String get salesDuesIncludesUnsynced;
+
+  /// No description provided for @salesDashboardPartialLoadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Some data could not be loaded'**
+  String get salesDashboardPartialLoadTitle;
+
+  /// No description provided for @salesDashboardPartialLoadSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and retry.'**
+  String get salesDashboardPartialLoadSubtitle;
+
+  /// No description provided for @salesPrinterSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Printer settings'**
+  String get salesPrinterSettings;
+
+  /// No description provided for @salesPaymentExceedsDueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount exceeds due'**
+  String get salesPaymentExceedsDueTitle;
+
+  /// No description provided for @salesPaymentExceedsDueBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Collecting {amount} is more than the {due} due. Record it anyway?'**
+  String salesPaymentExceedsDueBody(String amount, String due);
+
+  /// No description provided for @salesOrderChooseCustomerInstead.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a customer instead'**
+  String get salesOrderChooseCustomerInstead;
+
+  /// No description provided for @salesVanLoadAllConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This loads all available warehouse stock ({count} products) onto your van:'**
+  String salesVanLoadAllConfirm(int count);
+
+  /// No description provided for @salesWatchlistAtLocationConvert.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re at this location — convert to shop?'**
+  String get salesWatchlistAtLocationConvert;
+
+  /// No description provided for @salesWatchlistStars.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} stars'**
+  String salesWatchlistStars(int count);
+
+  /// No description provided for @orderConfirmOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm order'**
+  String get orderConfirmOrder;
+
+  /// No description provided for @orderDeleteDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete draft'**
+  String get orderDeleteDraft;
+
+  /// No description provided for @orderDeleteDraftBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This draft will be removed permanently.'**
+  String get orderDeleteDraftBody;
+
+  /// No description provided for @orderDraftDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft deleted'**
+  String get orderDraftDeleted;
+
+  /// No description provided for @orderDraftDeleteOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the internet to delete this draft'**
+  String get orderDraftDeleteOnline;
+
+  /// No description provided for @perfTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance Review'**
+  String get perfTitle;
+
+  /// No description provided for @perfNoActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity in this period yet.'**
+  String get perfNoActivity;
+
+  /// No description provided for @perfShowingPreviousData.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing previously loaded data.'**
+  String get perfShowingPreviousData;
+
+  /// No description provided for @perfCachedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing cached data'**
+  String get perfCachedTitle;
+
+  /// No description provided for @perfCachedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to refresh from server'**
+  String get perfCachedSubtitle;
+
+  /// No description provided for @perfByItem.
+  ///
+  /// In en, this message translates to:
+  /// **'By item'**
+  String get perfByItem;
+
+  /// No description provided for @perfNoItemsSold.
+  ///
+  /// In en, this message translates to:
+  /// **'No items sold in this period.'**
+  String get perfNoItemsSold;
+
+  /// No description provided for @planCalendarMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get planCalendarMonth;
+
+  /// No description provided for @fieldMapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Field map'**
+  String get fieldMapTitle;
+
+  /// No description provided for @fieldMapTitleFiltered.
+  ///
+  /// In en, this message translates to:
+  /// **'Field map ({count})'**
+  String fieldMapTitleFiltered(int count);
+
+  /// No description provided for @fieldMapFiltersSort.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters & sort'**
+  String get fieldMapFiltersSort;
+
+  /// No description provided for @fieldMapSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or phone'**
+  String get fieldMapSearchHint;
+
+  /// No description provided for @fieldMapFrequency.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency'**
+  String get fieldMapFrequency;
+
+  /// No description provided for @fieldMapAnyFrequency.
+  ///
+  /// In en, this message translates to:
+  /// **'Any frequency'**
+  String get fieldMapAnyFrequency;
+
+  /// No description provided for @fieldMapPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get fieldMapPayment;
+
+  /// No description provided for @fieldMapAnyReliability.
+  ///
+  /// In en, this message translates to:
+  /// **'Any reliability'**
+  String get fieldMapAnyReliability;
+
+  /// No description provided for @fieldMapMinRating.
+  ///
+  /// In en, this message translates to:
+  /// **'Min rating'**
+  String get fieldMapMinRating;
+
+  /// No description provided for @fieldMapAnyRating.
+  ///
+  /// In en, this message translates to:
+  /// **'Any rating'**
+  String get fieldMapAnyRating;
+
+  /// No description provided for @fieldMapStarsPlus.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}+ stars'**
+  String fieldMapStarsPlus(int count);
+
+  /// No description provided for @fieldMapInactiveFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive for'**
+  String get fieldMapInactiveFor;
+
+  /// No description provided for @fieldMapDaysPlus.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}+ days'**
+  String fieldMapDaysPlus(int days);
+
+  /// No description provided for @fieldMapHasDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Has due'**
+  String get fieldMapHasDue;
+
+  /// No description provided for @fieldMapNoDue.
+  ///
+  /// In en, this message translates to:
+  /// **'No due'**
+  String get fieldMapNoDue;
+
+  /// No description provided for @fieldMapNearestFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearest first'**
+  String get fieldMapNearestFirst;
 }
 
 class _AppLocalizationsDelegate

@@ -1,9 +1,9 @@
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:l10n/l10n.dart';
 
+import '../../providers/format_providers.dart';
 import '../../providers/repositories.dart';
 
 class CollectPaymentScreen extends ConsumerStatefulWidget {
@@ -43,6 +43,30 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
       return;
     }
 
+    // Over-collection is almost always a typo — require an explicit confirm.
+    // Walk-in / no-due flows (amountDue <= 0) are exempt: there is no due to
+    // compare against.
+    if (widget.amountDue > 0 && amount > widget.amountDue + 0.005) {
+      final currency = ref.read(currencyFormatProvider);
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.salesPaymentExceedsDueTitle),
+          content: Text(
+            l10n.salesPaymentExceedsDueBody(
+              currency.format(amount),
+              currency.format(widget.amountDue),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.commonConfirm)),
+          ],
+        ),
+      );
+      if (proceed != true || !mounted) return;
+    }
+
     setState(() => _saving = true);
     try {
       await ref.read(offlineOrderRepositoryProvider).recordPayment(
@@ -63,7 +87,7 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final currency = NumberFormat.currency(symbol: 'SAR ');
+    final currency = ref.watch(currencyFormatProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.salesOrderCollectPaymentTitle(widget.orderId))),
@@ -77,17 +101,19 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
           TextField(
             controller: _amountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(labelText: l10n.salesOrderAmountCollected, prefixText: 'SAR '),
+            decoration: InputDecoration(
+              labelText: l10n.salesOrderAmountCollected,
+              prefixText: currency.currencySymbol,
+            ),
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             initialValue: _method,
             decoration: InputDecoration(labelText: l10n.salesOrderPaymentMethod),
+            // Server accepts only 'cash' and 'bank_transfer'.
             items: [
               DropdownMenuItem(value: 'cash', child: Text(l10n.commonCash)),
-              DropdownMenuItem(value: 'transfer', child: Text(l10n.commonBankTransfer)),
-              DropdownMenuItem(value: 'cheque', child: Text(l10n.commonCheque)),
-              DropdownMenuItem(value: 'other', child: Text(l10n.commonOther)),
+              DropdownMenuItem(value: 'bank_transfer', child: Text(l10n.commonBankTransfer)),
             ],
             onChanged: _saving ? null : (v) => setState(() => _method = v ?? 'cash'),
           ),

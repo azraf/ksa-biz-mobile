@@ -36,7 +36,7 @@ class _BiometricAppShellState extends ConsumerState<BiometricAppShell> {
   void initState() {
     super.initState();
     _lifecycleObserver = BiometricLifecycleObserver(
-      onPaused: () {},
+      onPaused: () => widget.authRepository.appLock.onAppPaused(),
       onResumed: _handleResumed,
     );
     WidgetsBinding.instance.addObserver(_lifecycleObserver);

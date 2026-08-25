@@ -83,7 +83,10 @@ class VisitReminderService {
   }
 }
 
-extension _DayCount on List<VisitScheduleModel> {
+/// Shared "how many planned visits fall on this calendar day" filter —
+/// pending-sync rows can carry any date, so callers must never count a raw
+/// list length as "today".
+extension VisitDayCount on List<VisitScheduleModel> {
   int plannedOn(DateTime day) => where((v) {
         if (!v.isPlanned) return false;
         final when = v.scheduledDate;

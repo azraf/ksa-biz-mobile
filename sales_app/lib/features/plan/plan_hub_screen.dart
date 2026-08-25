@@ -20,6 +20,16 @@ class PlanHubScreen extends StatefulWidget {
 class _PlanHubScreenState extends State<PlanHubScreen> {
   late bool _showDues = widget.initialTab == 'dues';
 
+  /// The dues deep link re-uses the mounted hub once the tab was opened;
+  /// re-apply the requested segment when the link changes.
+  @override
+  void didUpdateWidget(PlanHubScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialTab != oldWidget.initialTab) {
+      setState(() => _showDues = widget.initialTab == 'dues');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);

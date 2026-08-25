@@ -31,6 +31,11 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
   int _lastPage = 1;
   _OrderFilter _filter = _OrderFilter.all;
   ListSortMode _sortMode = ListSortMode.date;
+  Timer? _searchDebounce;
+
+  /// Server-side query signature of the last reset load; a change means the
+  /// loaded pages no longer match the filters and page 1 must be refetched.
+  String? _activeQuerySig;
 
   static const _listKey = 'sales_orders';
 
@@ -45,6 +50,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
@@ -55,6 +61,49 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
       _load(page: _currentPage + 1);
     }
+  }
+
+  static String _dateParam(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  /// Filters expressed as server-side list() params, so matches beyond the
+  /// already-loaded pages are found too. The client-side [_filteredOrders]
+  /// stays as instant feedback while a reload is in flight.
+  ({String? status, bool? archived, String? fromDate, String? toDate, String? search}) _serverQuery() {
+    final now = DateTime.now();
+    final q = _searchController.text.trim();
+    // The server's search param is an exact order-id match — sending a shop
+    // name would match nothing, so text queries stay client-side only.
+    final numericSearch = int.tryParse(q);
+    return (
+      status: _filter == _OrderFilter.pendingApproval ? 'draft' : null,
+      // "Unpaid" == payment_status != paid, which the API exposes as the
+      // archived=false scope (fully paid orders auto-archive).
+      archived: _filter == _OrderFilter.unpaid ? false : null,
+      fromDate: switch (_filter) {
+        _OrderFilter.today => _dateParam(now),
+        _OrderFilter.week => _dateParam(now.subtract(const Duration(days: 6))),
+        _ => null,
+      },
+      toDate: _filter == _OrderFilter.today ? _dateParam(now) : null,
+      search: numericSearch != null && numericSearch > 0 ? '$numericSearch' : null,
+    );
+  }
+
+  /// Reloads from page 1 whenever the effective server-side query changed
+  /// (filter chips on/off, draft <-> non-draft dataset, search text).
+  void _reloadIfQueryChanged() {
+    if (_serverQuery().toString() != _activeQuerySig) {
+      _load(page: 1, reset: true);
+    }
+  }
+
+  void _onSearchChanged() {
+    setState(() {}); // Instant client-side filtering of loaded pages.
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) _reloadIfQueryChanged();
+    });
   }
 
   List<OrderModel> _filteredOrders() {
@@ -87,8 +136,11 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
   }
 
   Future<void> _load({int page = 1, bool reset = false}) async {
+    if (!mounted) return;
     final salesPersonId = requireSalesPersonId(ref.read(authProvider));
+    final query = _serverQuery();
     if (reset) {
+      _activeQuerySig = query.toString();
       setState(() {
         _loading = true;
         _error = null;
@@ -107,7 +159,11 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
       }
       final result = await ref.read(offlineOrderRepositoryProvider).list(
             salesPersonId: salesPersonId,
-            status: _filter == _OrderFilter.pendingApproval ? 'draft' : null,
+            status: query.status,
+            archived: query.archived,
+            search: query.search,
+            fromDate: query.fromDate,
+            toDate: query.toDate,
             sort: _sortMode.orderApiSortParam(),
             page: page,
           );
@@ -120,6 +176,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
         area: (o) => o.customerShopAreaName,
         salesPerson: (o) => o.salesPerson?.name,
       );
+      if (!mounted) return;
       setState(() {
         if (reset) {
           _orders = items;
@@ -136,6 +193,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
         _loadingMore = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = AppErrorMapper.localize(context, e);
         _loading = false;
@@ -168,7 +226,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
-              onChanged: (_) => setState(() {}),
+              onChanged: (_) => _onSearchChanged(),
             ),
           ),
           SingleChildScrollView(
@@ -251,16 +309,16 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
   Widget _filterChip(String label, _OrderFilter value) {
     final selected = _filter == value;
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsetsDirectional.only(end: 8),
       child: FilterChip(
         label: Text(label),
         selected: selected,
         onSelected: (_) {
           final next = selected ? _OrderFilter.all : value;
           setState(() => _filter = next);
-          if (value == _OrderFilter.pendingApproval || selected) {
-            _load(page: 1, reset: true);
-          }
+          // Reload whenever the server-side query changed — e.g. leaving the
+          // draft-only dataset, or a date/payment filter toggling.
+          _reloadIfQueryChanged();
         },
       ),
     );
