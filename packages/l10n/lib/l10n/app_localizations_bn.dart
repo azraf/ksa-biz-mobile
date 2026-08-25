@@ -139,6 +139,19 @@ class AppLocalizationsBn extends AppLocalizations {
   String get commonVat => 'ভ্যাট';
 
   @override
+  String get commonExclVat => 'ভ্যাট ব্যতীত';
+
+  @override
+  String lineItemVatSubtitle(
+    String qtyLabel,
+    String excl,
+    String vat,
+    String total,
+  ) {
+    return '$qtyLabel · ভ্যাট ছাড়া $excl · ভ্যাট $vat · $total';
+  }
+
+  @override
   String get commonSearchProducts => 'পণ্য খুঁজুন';
 
   @override
@@ -1922,6 +1935,28 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get orderSaveAsDraft => 'খসড়া হিসেবে সংরক্ষণ';
+
+  @override
+  String get orderApplyVat => 'ভ্যাট প্রয়োগ করুন';
+
+  @override
+  String get orderVatIncluded => 'ভ্যাট সহ';
+
+  @override
+  String get orderVatExcluded => 'ভ্যাট ছাড়া';
+
+  @override
+  String get orderVatRateLabel => 'ভ্যাট %';
+
+  @override
+  String get orderSavedAsDraft => 'খসড়া হিসেবে সংরক্ষিত হয়েছে';
+
+  @override
+  String get orderKeepAsDraft => 'খসড়া হিসেবে রাখুন';
+
+  @override
+  String get orderConnectToConfirm =>
+      'অর্ডার পৃষ্ঠা থেকে নিশ্চিত করতে ইন্টারনেটে সংযুক্ত হোন';
 
   @override
   String get purchaseSavePost => 'সংরক্ষণ ও পোস্ট';

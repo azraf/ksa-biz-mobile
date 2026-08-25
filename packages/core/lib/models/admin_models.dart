@@ -7,56 +7,8 @@ import 'media.dart';
 import 'customer.dart';
 import 'customer_assignment_models.dart';
 import 'customer_metrics.dart';
-import 'order.dart';
 import 'product.dart';
 import 'user.dart';
-
-class InvoiceModel extends Equatable {
-  const InvoiceModel({
-    required this.id,
-    this.orderId,
-    this.shopId,
-    this.shopContactId,
-    this.order,
-    this.shop,
-    this.shopContact,
-  });
-
-  final int id;
-  final int? orderId;
-  final int? shopId;
-  final int? shopContactId;
-  final OrderModel? order;
-  final CustomerShopModel? shop;
-  final CustomerShopContactModel? shopContact;
-
-  factory InvoiceModel.fromJson(Map<String, dynamic> json) => InvoiceModel(
-        id: json['id'] as int,
-        orderId: json['order_id'] as int?,
-        shopId: json['shop_id'] as int?,
-        shopContactId: json['shop_contact_id'] as int?,
-        order: json['order'] is Map
-            ? OrderModel.fromJson(json['order'] as Map<String, dynamic>)
-            : null,
-        shop: json['shop'] is Map
-            ? CustomerShopModel.fromJson(json['shop'] as Map<String, dynamic>)
-            : null,
-        shopContact: json['shop_contact'] is Map
-            ? CustomerShopContactModel.fromJson(
-                json['shop_contact'] as Map<String, dynamic>,
-              )
-            : null,
-      );
-
-  Map<String, dynamic> toJson() => {
-        if (orderId != null) 'order_id': orderId,
-        if (shopId != null) 'shop_id': shopId,
-        if (shopContactId != null) 'shop_contact_id': shopContactId,
-      };
-
-  @override
-  List<Object?> get props => [id, orderId];
-}
 
 class CustomerShopModel extends Equatable {
   const CustomerShopModel({

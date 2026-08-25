@@ -42,11 +42,24 @@ class _OrderEditScreenState extends ConsumerState<OrderEditScreen> {
     }
   }
 
+  /// VAT settings persisted on the loaded order — new items must carry the
+  /// same order-level VAT treatment.
+  OrderVatSettings get _vat {
+    final order = _order;
+    if (order == null) return const OrderVatSettings();
+    return OrderVatSettings(
+      enabled: order.includeVat,
+      inclusive: order.vatInclusive,
+      rate: order.vatRate ?? 15,
+    );
+  }
+
   Future<void> _addItem() async {
     final product = await pickProduct(context, ref);
     if (product == null || _order == null) return;
     try {
-      final order = await ref.read(orderRepositoryProvider).addItem(widget.id, LineItemDraft(product: product).toJson());
+      final draft = LineItemDraft(product: product)..applyVat(_vat);
+      final order = await ref.read(orderRepositoryProvider).addItem(widget.id, draft.toJson());
       setState(() => _order = order);
     } catch (e) {
       if (mounted) showAppErrorSnackBar(context, e);

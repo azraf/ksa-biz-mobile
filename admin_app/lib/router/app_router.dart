@@ -118,10 +118,6 @@ final routerProvider = Provider<GoRouter>((ref) {
                     ],
                   ),
                   GoRoute(
-                    path: 'invoices',
-                    builder: (_, _) => const InvoicesScreen(),
-                  ),
-                  GoRoute(
                     path: 'persons',
                     builder: (_, _) => const SalesPersonsScreen(),
                   ),

@@ -8,6 +8,7 @@ import 'package:l10n/l10n.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/connectivity_provider.dart';
+import '../../providers/order_vat_config_provider.dart';
 import '../../providers/repositories.dart';
 import '../../widgets/customer_diary_sheet.dart';
 import '../../widgets/customer_picker_sheet.dart';
@@ -27,6 +28,9 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
   dynamic _selectedCustomer;
   final _items = <LineItemDraft>[];
   final _walkInNoteController = TextEditingController();
+  final _vatRateController = TextEditingController(text: '15');
+  OrderVatSettings _vat = const OrderVatSettings();
+  bool _vatTouched = false;
   bool _walkInMode = false;
   int? _walkInShopId;
   bool _loadingTypes = true;
@@ -36,6 +40,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
   @override
   void dispose() {
     _walkInNoteController.dispose();
+    _vatRateController.dispose();
     super.dispose();
   }
 
@@ -75,6 +80,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
         _loadingTypes = false;
         _catalogError = types.isEmpty ? AppLocalizations.of(context).salesOrderNoCustomerTypes : null;
       });
+      unawaited(_resolveVatDefault());
     } catch (e) {
       setState(() {
         _catalogError = e.toString();
@@ -88,6 +94,44 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     return type == 'customer_shop' || type == 'customer_van' || type == 'customer_importer';
   }
 
+  void _applyVatToItems() {
+    for (final item in _items) {
+      item.applyVat(_vat);
+    }
+  }
+
+  void _setVat(OrderVatSettings vat, {bool touched = true}) {
+    setState(() {
+      if (touched) _vatTouched = true;
+      _vat = vat;
+      _applyVatToItems();
+    });
+  }
+
+  /// Resolves the VAT default from the server policy for the currently
+  /// selected customer. Stops as soon as the user touches the VAT controls;
+  /// leaves VAT off when the config is unavailable.
+  Future<void> _resolveVatDefault() async {
+    if (_vatTouched) return;
+    try {
+      final config = await ref.read(orderVatConfigProvider.future);
+      final customer = _selectedCustomer;
+      final enabled = OrderVatPolicy.resolve(
+        config: config,
+        shopId: customer is CustomerShopModel ? customer.id : null,
+        vanId: customer is CustomerVanModel ? customer.id : null,
+        importerId: customer is CustomerImporterModel ? customer.id : null,
+      );
+      if (!mounted || _vatTouched || enabled == _vat.enabled) return;
+      _setVat(
+        OrderVatSettings(enabled: enabled, inclusive: _vat.inclusive, rate: _vat.rate),
+        touched: false,
+      );
+    } catch (_) {
+      // Config unavailable → keep VAT off.
+    }
+  }
+
   Future<void> _pickCustomer() async {
     if (_selectedType == null) return;
     final result = await showCustomerPickerSheet(
@@ -98,6 +142,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     );
     if (result != null) {
       setState(() => _selectedCustomer = result.customer);
+      unawaited(_resolveVatDefault());
     }
   }
 
@@ -109,7 +154,10 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
       customerType: _selectedType!.typeName,
       salesPersonId: requireSalesPersonId(ref.read(authProvider)),
     );
-    if (created != null) setState(() => _selectedCustomer = created);
+    if (created != null) {
+      setState(() => _selectedCustomer = created);
+      unawaited(_resolveVatDefault());
+    }
   }
 
   Future<void> _startWalkInOrder() async {
@@ -134,21 +182,29 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
         isSystem: true,
       );
     });
+    unawaited(_resolveVatDefault());
   }
 
   Future<void> _submit({bool asDraft = false}) async {
+    final l10n = AppLocalizations.of(context);
     final salesPersonId = requireSalesPersonId(ref.read(authProvider));
     if (salesPersonId == null || _selectedType == null || _selectedCustomer == null || _items.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).salesOrderSelectCustomerItems)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.salesOrderSelectCustomerItems)));
       return;
     }
+
+    _applyVatToItems();
 
     final body = <String, dynamic>{
       'sales_person_id': salesPersonId,
       'customer_type_id': _selectedType!.id,
       'payment_status': 'pending',
-      // Drafts reserve no stock and stay editable until confirmed.
-      if (asDraft) 'as_draft': true,
+      // Always create as a draft — no stock moves until confirmed. The
+      // "Create order" flow previews the invoice, then confirms the draft.
+      'as_draft': true,
+      'include_vat': _vat.enabled,
+      if (_vat.enabled) 'vat_inclusive': _vat.inclusive,
+      if (_vat.enabled) 'vat_rate': _vat.rate,
       'items': _items.map((e) => e.toJson()).toList(),
     };
 
@@ -165,47 +221,100 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     try {
       final order = await ref.read(offlineOrderRepositoryProvider).create(body);
       ref.invalidate(pendingSyncCountProvider);
-      if (mounted) {
-        if (!online) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context).salesOrderSavedLocally)),
-          );
-          AppHaptics.light();
-        }
-        final type = _selectedType!.typeName;
-        final customer = _selectedCustomer!;
-        final customerId = switch (type) {
-          'customer_shop' => (customer as CustomerShopModel).id,
-          'customer_van' => (customer as CustomerVanModel).id,
-          _ => (customer as CustomerImporterModel).id,
-        };
-        final customerName = _customerLabel(AppLocalizations.of(context));
-        setState(() => _submitting = false);
-        if (online) {
-          final customerType = type;
-          final customerIdForDiary = customerId;
-          final customerNameForDiary = customerName;
-          if (mounted) context.go('/orders/${order.id}');
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            unawaited(
-              promptPostOrderDiaryNote(
-                context,
-                ref,
-                customerType: customerType,
-                customerId: customerIdForDiary,
-                customerName: customerNameForDiary,
-              ),
-            );
-          });
-        } else if (mounted) {
-          context.go('/orders/${order.id}');
-        }
+      if (!mounted) return;
+      if (!online) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.salesOrderSavedLocally)),
+        );
+        AppHaptics.light();
       }
+
+      if (asDraft) {
+        setState(() => _submitting = false);
+        context.go('/orders/${order.id}');
+        return;
+      }
+
+      await _previewAndConfirm(order, l10n);
     } catch (e) {
-      setState(() => _submitting = false);
-      if (mounted) showAppErrorSnackBar(context, e);
+      if (mounted) {
+        setState(() => _submitting = false);
+        showAppErrorSnackBar(context, e);
+      }
     }
+  }
+
+  /// "Create order" flow: preview the just-created draft as the printed
+  /// invoice, then confirm it (server or local queue) or keep it as a draft.
+  Future<void> _previewAndConfirm(OrderModel order, AppLocalizations l10n) async {
+    final walkInNote = _walkInNoteController.text.trim();
+    final customerName = _walkInMode && walkInNote.isNotEmpty ? walkInNote : _customerLabel(l10n);
+    final auth = ref.read(authProvider);
+    final salesPersonName = auth.activeSalesPerson?.name ?? auth.salesPerson?.name;
+    final zatcaConfig = await loadZatcaConfig(
+      ref.read(sharedPreferencesProvider),
+      ref.read(apiClientProvider),
+    );
+    if (!mounted) return;
+
+    final previewOrder = buildPreviewOrder(
+      items: _items,
+      vat: _vat,
+      customerName: customerName,
+      salesPersonName: salesPersonName,
+    );
+    final result = await showOrderPreviewConfirmSheet(
+      context,
+      previewOrder: previewOrder,
+      config: zatcaConfig,
+      confirmLabel: l10n.commonConfirm,
+      keepDraftLabel: l10n.orderKeepAsDraft,
+    );
+    if (!mounted) return;
+
+    if (result == true) {
+      try {
+        if (order.id > 0) {
+          await ref.read(orderRepositoryProvider).confirmOrder(order.id);
+        } else {
+          await ref.read(offlineOrderRepositoryProvider).confirmLocalDraft(order.id);
+          ref.invalidate(pendingSyncCountProvider);
+        }
+      } on StateError {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.orderConnectToConfirm)),
+          );
+        }
+      } catch (e) {
+        if (mounted) showAppErrorSnackBar(context, e);
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.orderSavedAsDraft)),
+      );
+    }
+    if (!mounted) return;
+    setState(() => _submitting = false);
+    context.go('/orders/${order.id}');
+  }
+
+  Future<void> _openCustomerNote() async {
+    final type = _selectedType?.typeName;
+    final customer = _selectedCustomer;
+    if (type == null || customer == null) return;
+    final customerId = switch (type) {
+      'customer_shop' => (customer as CustomerShopModel).id,
+      'customer_van' => (customer as CustomerVanModel).id,
+      _ => (customer as CustomerImporterModel).id,
+    };
+    await showCustomerDiarySheet(
+      context: context,
+      ref: ref,
+      customerType: type,
+      customerId: customerId,
+      customerName: _customerLabel(AppLocalizations.of(context)),
+    );
   }
 
   String _customerLabel(AppLocalizations l10n) {
@@ -278,6 +387,46 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
           ),
           const SizedBox(height: 16),
         ],
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.orderApplyVat),
+          value: _vat.enabled,
+          onChanged: (v) => _setVat(
+            OrderVatSettings(enabled: v, inclusive: _vat.inclusive, rate: _vat.rate),
+          ),
+        ),
+        if (_vat.enabled) ...[
+          Row(
+            children: [
+              SegmentedButton<bool>(
+                segments: [
+                  ButtonSegment(value: true, label: Text(l10n.orderVatIncluded)),
+                  ButtonSegment(value: false, label: Text(l10n.orderVatExcluded)),
+                ],
+                selected: {_vat.inclusive},
+                onSelectionChanged: (selection) => _setVat(
+                  OrderVatSettings(enabled: true, inclusive: selection.first, rate: _vat.rate),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: _vatRateController,
+                  decoration: InputDecoration(labelText: l10n.orderVatRateLabel),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  onChanged: (value) {
+                    final rate = double.tryParse(value.trim());
+                    if (rate == null || rate < 0 || rate > 100) return;
+                    _setVat(
+                      OrderVatSettings(enabled: true, inclusive: _vat.inclusive, rate: rate),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+        ],
         Row(
           children: [
             Text(l10n.commonItems, style: Theme.of(context).textTheme.titleMedium),
@@ -285,7 +434,9 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
             TextButton.icon(
               onPressed: () async {
                 final product = await pickProduct(context, ref);
-                if (product != null) setState(() => _items.add(LineItemDraft(product: product)));
+                if (product != null) {
+                  setState(() => _items.add(LineItemDraft(product: product)..applyVat(_vat)));
+                }
               },
               icon: const Icon(Icons.add),
               label: Text(l10n.commonAdd),
@@ -296,6 +447,13 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
           items: _items,
           onChanged: () => setState(() {}),
           onRemove: (i) => setState(() => _items.removeAt(i)),
+          vat: _vat,
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: _selectedCustomer == null ? null : _openCustomerNote,
+          icon: const Icon(Icons.note_add),
+          label: Text(l10n.commonAddNote),
         ),
         const SizedBox(height: 16),
         FilledButton(

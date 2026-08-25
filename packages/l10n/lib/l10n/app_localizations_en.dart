@@ -139,6 +139,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonVat => 'VAT';
 
   @override
+  String get commonExclVat => 'Excl. VAT';
+
+  @override
+  String lineItemVatSubtitle(
+    String qtyLabel,
+    String excl,
+    String vat,
+    String total,
+  ) {
+    return '$qtyLabel · excl $excl · VAT $vat · $total';
+  }
+
+  @override
   String get commonSearchProducts => 'Search products';
 
   @override
@@ -1917,6 +1930,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get orderSaveAsDraft => 'Save as draft';
+
+  @override
+  String get orderApplyVat => 'Apply VAT';
+
+  @override
+  String get orderVatIncluded => 'Included';
+
+  @override
+  String get orderVatExcluded => 'Excluded';
+
+  @override
+  String get orderVatRateLabel => 'VAT %';
+
+  @override
+  String get orderSavedAsDraft => 'Saved as draft';
+
+  @override
+  String get orderKeepAsDraft => 'Keep as draft';
+
+  @override
+  String get orderConnectToConfirm => 'Connect to confirm from the order page';
 
   @override
   String get purchaseSavePost => 'Save & post';

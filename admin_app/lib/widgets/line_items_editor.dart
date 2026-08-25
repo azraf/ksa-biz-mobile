@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -44,6 +46,7 @@ class _ProductPickerSheetState extends State<_ProductPickerSheet> {
   final _searchController = TextEditingController();
   List<ProductModel> _products = [];
   String? _error;
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -53,16 +56,24 @@ class _ProductPickerSheetState extends State<_ProductPickerSheet> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged() {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), _search);
   }
 
   Future<void> _search() async {
     setState(() => _error = null);
     try {
       final result = await widget.repo.list(search: _searchController.text);
+      if (!mounted) return;
       setState(() => _products = result.items);
     } catch (e) {
+      if (!mounted) return;
       setState(() => _error = e.toString());
     }
   }
@@ -82,7 +93,9 @@ class _ProductPickerSheetState extends State<_ProductPickerSheet> {
                   Expanded(
                     child: TextField(
                       controller: _searchController,
+                      autofocus: true,
                       decoration: const InputDecoration(labelText: 'Search products'),
+                      onChanged: (_) => _onSearchChanged(),
                       onSubmitted: (_) => _search(),
                     ),
                   ),

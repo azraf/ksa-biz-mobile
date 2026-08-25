@@ -67,33 +67,3 @@ class _CustomerDiarySheet extends ConsumerWidget {
     );
   }
 }
-
-Future<void> promptPostOrderDiaryNote(
-  BuildContext context,
-  WidgetRef ref, {
-  required String customerType,
-  required int customerId,
-  required String customerName,
-}) async {
-  final l10n = AppLocalizations.of(context);
-  final add = await showDialog<bool>(
-    context: context,
-    builder: (_) => AlertDialog(
-      title: Text(l10n.commonAddVisitNoteTitle),
-      content: Text(l10n.commonAddVisitNoteBody(customerName)),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.commonSkip)),
-        FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.commonAddNote)),
-      ],
-    ),
-  );
-  if (add == true && context.mounted) {
-    await showCustomerDiarySheet(
-      context: context,
-      ref: ref,
-      customerType: customerType,
-      customerId: customerId,
-      customerName: customerName,
-    );
-  }
-}

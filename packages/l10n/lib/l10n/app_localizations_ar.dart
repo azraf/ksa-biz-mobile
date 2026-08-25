@@ -139,6 +139,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commonVat => 'ضريبة القيمة المضافة';
 
   @override
+  String get commonExclVat => 'غير شامل الضريبة';
+
+  @override
+  String lineItemVatSubtitle(
+    String qtyLabel,
+    String excl,
+    String vat,
+    String total,
+  ) {
+    return '$qtyLabel · بدون الضريبة $excl · الضريبة $vat · $total';
+  }
+
+  @override
   String get commonSearchProducts => 'البحث عن المنتجات';
 
   @override
@@ -1910,6 +1923,27 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get orderSaveAsDraft => 'حفظ كمسودة';
+
+  @override
+  String get orderApplyVat => 'تطبيق ضريبة القيمة المضافة';
+
+  @override
+  String get orderVatIncluded => 'شامل الضريبة';
+
+  @override
+  String get orderVatExcluded => 'غير شامل الضريبة';
+
+  @override
+  String get orderVatRateLabel => 'نسبة الضريبة %';
+
+  @override
+  String get orderSavedAsDraft => 'تم الحفظ كمسودة';
+
+  @override
+  String get orderKeepAsDraft => 'الإبقاء كمسودة';
+
+  @override
+  String get orderConnectToConfirm => 'اتصل بالإنترنت للتأكيد من صفحة الطلب';
 
   @override
   String get purchaseSavePost => 'حفظ وترحيل';

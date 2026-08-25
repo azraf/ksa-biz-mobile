@@ -62,6 +62,24 @@
   "commonPrice": "মূল্য",
   "commonDiscount": "ছাড়",
   "commonVat": "ভ্যাট",
+  "commonExclVat": "ভ্যাট ব্যতীত",
+  "lineItemVatSubtitle": "{qtyLabel} · ভ্যাট ছাড়া {excl} · ভ্যাট {vat} · {total}",
+  "@lineItemVatSubtitle": {
+    "placeholders": {
+      "qtyLabel": {
+        "type": "String"
+      },
+      "excl": {
+        "type": "String"
+      },
+      "vat": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "commonSearchProducts": "পণ্য খুঁজুন",
   "commonProductPriceCtn": "SAR {price} / CTN · {pieces} পিস",
   "@commonProductPriceCtn": {
@@ -806,6 +824,13 @@
   "planReminderBody": "আপনার {count}টি ভিজিট পরিকল্পিত আছে",
   "orderDiaryTitle": "অর্ডার ডায়েরি",
   "orderSaveAsDraft": "খসড়া হিসেবে সংরক্ষণ",
+  "orderApplyVat": "ভ্যাট প্রয়োগ করুন",
+  "orderVatIncluded": "ভ্যাট সহ",
+  "orderVatExcluded": "ভ্যাট ছাড়া",
+  "orderVatRateLabel": "ভ্যাট %",
+  "orderSavedAsDraft": "খসড়া হিসেবে সংরক্ষিত হয়েছে",
+  "orderKeepAsDraft": "খসড়া হিসেবে রাখুন",
+  "orderConnectToConfirm": "অর্ডার পৃষ্ঠা থেকে নিশ্চিত করতে ইন্টারনেটে সংযুক্ত হোন",
   "purchaseSavePost": "সংরক্ষণ ও পোস্ট",
   "customerMoneyTitle": "আর্থিক সারসংক্ষেপ",
   "customerMoneyOrders": "অর্ডার",

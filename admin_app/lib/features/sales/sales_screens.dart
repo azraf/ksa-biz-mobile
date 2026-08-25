@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:l10n/l10n.dart';
 
 import '../../providers/connectivity_provider.dart';
+import '../../providers/order_vat_config_provider.dart';
 import '../../providers/repositories.dart';
 import '../customers/customer_diary_section.dart';
 import '../../widgets/crud_screens.dart';
@@ -407,6 +408,22 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
 
     if (confirmed != true) return;
 
+    // Preview the draft as the printed invoice before shipping it.
+    final order = _order;
+    if (order != null) {
+      final config = await loadZatcaConfig(
+        ref.read(sharedPreferencesProvider),
+        ref.read(apiClientProvider),
+      );
+      if (!mounted) return;
+      final proceed = await showOrderPreviewConfirmSheet(
+        context,
+        previewOrder: order,
+        config: config,
+      );
+      if (proceed != true) return;
+    }
+
     try {
       await ref.read(orderRepositoryProvider).confirmOrder(
             widget.orderId,
@@ -695,6 +712,9 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
   CustomerImporterModel? _selectedImporter;
   final _items = <LineItemDraft>[];
   final _walkInNoteController = TextEditingController();
+  final _vatRateController = TextEditingController(text: '15');
+  OrderVatSettings _vat = const OrderVatSettings();
+  bool _vatTouched = false;
   bool _walkInMode = false;
   int? _walkInShopId;
   int? _salesPersonId;
@@ -717,7 +737,59 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
   @override
   void dispose() {
     _walkInNoteController.dispose();
+    _vatRateController.dispose();
     super.dispose();
+  }
+
+  void _applyVatToItems() {
+    for (final item in _items) {
+      item.applyVat(_vat);
+    }
+  }
+
+  void _setVat(OrderVatSettings vat, {bool touched = true}) {
+    setState(() {
+      if (touched) _vatTouched = true;
+      _vat = vat;
+      _applyVatToItems();
+    });
+  }
+
+  /// Resolves the VAT default from the server policy for the currently
+  /// selected customer; stops once the admin touches the VAT controls.
+  Future<void> _resolveVatDefault() async {
+    if (_vatTouched) return;
+    try {
+      final config = await ref.read(orderVatConfigProvider.future);
+      int? shopId;
+      int? vanId;
+      int? importerId;
+      if (_walkInMode) {
+        shopId = _walkInShopId;
+      } else {
+        switch (_selectedType?.typeName) {
+          case 'customer_van':
+            vanId = _selectedVan?.id;
+          case 'customer_importer':
+            importerId = _selectedImporter?.id;
+          default:
+            shopId = _selectedShop?.id;
+        }
+      }
+      final enabled = OrderVatPolicy.resolve(
+        config: config,
+        shopId: shopId,
+        vanId: vanId,
+        importerId: importerId,
+      );
+      if (!mounted || _vatTouched || enabled == _vat.enabled) return;
+      _setVat(
+        OrderVatSettings(enabled: enabled, inclusive: _vat.inclusive, rate: _vat.rate),
+        touched: false,
+      );
+    } catch (_) {
+      // Config unavailable → keep VAT off.
+    }
   }
 
   Future<void> _load() async {
@@ -750,6 +822,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
         }
         _loading = false;
       });
+      unawaited(_resolveVatDefault());
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -774,6 +847,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
       _selectedType = shopType;
       _selectedShop = CustomerShopModel(id: _walkInShopId!, name: 'Walk-in Shop', isSystem: true);
     });
+    unawaited(_resolveVatDefault());
   }
 
   Future<void> _pickOrderDate() async {
@@ -807,13 +881,19 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
         return;
       }
     }
+    _applyVatToItems();
     setState(() => _submitting = true);
     try {
       final body = <String, dynamic>{
         if (_salesPersonId != null) 'sales_person_id': _salesPersonId,
         'customer_type_id': _selectedType!.id,
         'created_at': _orderDate.toIso8601String(),
-        'as_draft': _asDraft,
+        // Always create as a draft — the non-draft flow previews the invoice,
+        // then confirms the draft.
+        'as_draft': true,
+        'include_vat': _vat.enabled,
+        if (_vat.enabled) 'vat_inclusive': _vat.inclusive,
+        if (_vat.enabled) 'vat_rate': _vat.rate,
         'items': _items.map((e) => e.toJson()).toList(),
       };
       if (_walkInMode) {
@@ -831,14 +911,130 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
       if (_walkInMode && _walkInNoteController.text.trim().isNotEmpty) {
         body['walk_in_note'] = _walkInNoteController.text.trim();
       }
-      await ref.read(offlineOrderRepositoryProvider).create(body);
+      final order = await ref.read(offlineOrderRepositoryProvider).create(body);
       ref.invalidate(pendingSyncCountProvider);
-      if (mounted) context.pop();
+      if (!mounted) return;
+      if (_asDraft) {
+        context.pop();
+        return;
+      }
+      await _previewAndConfirm(order);
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
+  }
+
+  /// Non-draft flow: preview the just-created draft as the printed invoice,
+  /// then confirm it (server or local queue) or keep it as a draft.
+  Future<void> _previewAndConfirm(OrderModel order) async {
+    final walkInNote = _walkInNoteController.text.trim();
+    final String? customerName;
+    if (_walkInMode) {
+      customerName = walkInNote.isNotEmpty ? walkInNote : 'Walk-in Shop';
+    } else {
+      customerName = switch (_selectedType?.typeName) {
+        'customer_van' => _selectedVan?.name,
+        'customer_importer' => _selectedImporter?.name,
+        _ => _selectedShop?.name,
+      };
+    }
+    final salesPersonName = _salesPersons
+        .cast<SalesPersonModel?>()
+        .firstWhere((sp) => sp?.id == _salesPersonId, orElse: () => null)
+        ?.name;
+    final config = await loadZatcaConfig(
+      ref.read(sharedPreferencesProvider),
+      ref.read(apiClientProvider),
+    );
+    if (!mounted) return;
+
+    final previewOrder = buildPreviewOrder(
+      items: _items,
+      vat: _vat,
+      customerName: customerName,
+      salesPersonName: salesPersonName,
+      createdAt: _orderDate,
+    );
+    final result = await showOrderPreviewConfirmSheet(
+      context,
+      previewOrder: previewOrder,
+      config: config,
+    );
+    if (!mounted) return;
+
+    if (result == true) {
+      try {
+        if (order.id > 0) {
+          // The draft's own lines carry fulfillment — no overrides needed.
+          await ref.read(orderRepositoryProvider).confirmOrder(order.id);
+        } else {
+          await ref.read(offlineOrderRepositoryProvider).confirmLocalDraft(order.id);
+          ref.invalidate(pendingSyncCountProvider);
+        }
+      } on StateError {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Connect to confirm from the order page')),
+          );
+        }
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Saved as draft')),
+      );
+    }
+    if (!mounted) return;
+    context.pushReplacement('/sales/orders/${order.id}');
+  }
+
+  ({String type, int id, String name})? _noteTarget() {
+    if (_walkInMode) {
+      final id = _walkInShopId;
+      return id == null ? null : (type: 'customer_shop', id: id, name: 'Walk-in Shop');
+    }
+    switch (_selectedType?.typeName) {
+      case 'customer_van':
+        final van = _selectedVan;
+        return van == null ? null : (type: 'customer_van', id: van.id, name: van.name);
+      case 'customer_importer':
+        final importer = _selectedImporter;
+        return importer == null
+            ? null
+            : (type: 'customer_importer', id: importer.id, name: importer.name);
+      default:
+        final shop = _selectedShop;
+        return shop == null ? null : (type: 'customer_shop', id: shop.id, name: shop.name);
+    }
+  }
+
+  Future<void> _openCustomerNote() async {
+    final target = _noteTarget();
+    if (target == null) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.7,
+        minChildSize: 0.4,
+        maxChildSize: 0.95,
+        builder: (_, controller) => Material(
+          child: ListView(
+            controller: controller,
+            padding: const EdgeInsets.all(16),
+            children: [
+              Text('Notes — ${target.name}', style: Theme.of(ctx).textTheme.titleLarge),
+              const SizedBox(height: 8),
+              CustomerDiarySection(customerType: target.type, customerId: target.id),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -913,13 +1109,19 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                 initialValue: _selectedVan,
                 decoration: const InputDecoration(labelText: 'Van customer'),
                 items: _vans.map((v) => DropdownMenuItem(value: v, child: Text(v.name))).toList(),
-                onChanged: (v) => setState(() => _selectedVan = v),
+                onChanged: (v) {
+                  setState(() => _selectedVan = v);
+                  unawaited(_resolveVatDefault());
+                },
               ),
             'customer_importer' => DropdownButtonFormField<CustomerImporterModel>(
                 initialValue: _selectedImporter,
                 decoration: const InputDecoration(labelText: 'Importer customer'),
                 items: _importers.map((i) => DropdownMenuItem(value: i, child: Text(i.name))).toList(),
-                onChanged: (v) => setState(() => _selectedImporter = v),
+                onChanged: (v) {
+                  setState(() => _selectedImporter = v);
+                  unawaited(_resolveVatDefault());
+                },
               ),
             _ => DropdownButtonFormField<CustomerShopModel>(
                 initialValue: _selectedShop,
@@ -927,7 +1129,10 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                 items: _shops
                     .map((s) => DropdownMenuItem(value: s, child: Text(s.name)))
                     .toList(),
-                onChanged: (v) => setState(() => _selectedShop = v),
+                onChanged: (v) {
+                  setState(() => _selectedShop = v);
+                  unawaited(_resolveVatDefault());
+                },
               ),
           },
           const SizedBox(height: 12),
@@ -939,6 +1144,45 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
           value: _asDraft,
           onChanged: (v) => setState(() => _asDraft = v),
         ),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Apply VAT'),
+          value: _vat.enabled,
+          onChanged: (v) => _setVat(
+            OrderVatSettings(enabled: v, inclusive: _vat.inclusive, rate: _vat.rate),
+          ),
+        ),
+        if (_vat.enabled) ...[
+          Row(
+            children: [
+              SegmentedButton<bool>(
+                segments: const [
+                  ButtonSegment(value: true, label: Text('Included')),
+                  ButtonSegment(value: false, label: Text('Excluded')),
+                ],
+                selected: {_vat.inclusive},
+                onSelectionChanged: (selection) => _setVat(
+                  OrderVatSettings(enabled: true, inclusive: selection.first, rate: _vat.rate),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: _vatRateController,
+                  decoration: const InputDecoration(labelText: 'VAT %'),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  onChanged: (value) {
+                    final rate = double.tryParse(value.trim());
+                    if (rate == null || rate < 0 || rate > 100) return;
+                    _setVat(
+                      OrderVatSettings(enabled: true, inclusive: _vat.inclusive, rate: rate),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
         const SizedBox(height: 12),
         Row(
           children: [
@@ -947,7 +1191,9 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
             TextButton.icon(
               onPressed: () async {
                 final product = await pickProduct(context, ref);
-                if (product != null) setState(() => _items.add(LineItemDraft(product: product)));
+                if (product != null) {
+                  setState(() => _items.add(LineItemDraft(product: product)..applyVat(_vat)));
+                }
               },
               icon: const Icon(Icons.add),
               label: const Text('Add'),
@@ -958,6 +1204,13 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
           items: _items,
           onChanged: () => setState(() {}),
           onRemove: (i) => setState(() => _items.removeAt(i)),
+          vat: _vat,
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: _noteTarget() == null ? null : _openCustomerNote,
+          icon: const Icon(Icons.note_add),
+          label: const Text('Add note'),
         ),
         const SizedBox(height: 16),
         FilledButton(
@@ -982,44 +1235,6 @@ class ManualOrdersScreen extends ConsumerWidget {
       itemTitle: (m) => '#${m.id} — ${m.status} (${m.source})',
       onTap: (m) => context.push('/sales/manual-orders/${m.id}'),
     );
-  }
-}
-
-class InvoicesScreen extends ConsumerWidget {
-  const InvoicesScreen({super.key});
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return FutureBuilder<List<InvoiceModel>>(
-      future: _load(ref),
-      builder: (context, snap) {
-        if (!snap.hasData) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Invoices')),
-            body: const Center(child: CircularProgressIndicator()),
-          );
-        }
-        return Scaffold(
-          appBar: AppBar(title: const Text('Invoices')),
-          body: ListView.builder(
-            itemCount: snap.data!.length,
-            itemBuilder: (_, i) {
-              final inv = snap.data![i];
-              return ListTile(
-                title: Text('Invoice #${inv.id}'),
-                subtitle: Text('Order: ${inv.orderId ?? '-'}'),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Future<List<InvoiceModel>> _load(WidgetRef ref) async {
-    final response = await ref.read(apiClientProvider).get('/invoices');
-    return (response['data'] as List<dynamic>)
-        .map((e) => InvoiceModel.fromJson(e as Map<String, dynamic>))
-        .toList();
   }
 }
 

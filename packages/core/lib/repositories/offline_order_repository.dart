@@ -118,10 +118,17 @@ class OfflineOrderRepository {
     }
 
     final localId = await _db.nextLocalId();
-    final normalizedItems = _normalizeCreateItems(payload['items'] as List<dynamic>? ?? []);
+    final normalizedItems = _normalizeCreateItems(
+      payload['items'] as List<dynamic>? ?? [],
+      vatInclusive: payload['vat_inclusive'] == true,
+    );
     final totalBill = normalizedItems.fold<double>(
       0,
       (sum, item) => sum + (item['bill'] as num).toDouble(),
+    );
+    final vatTotal = normalizedItems.fold<double>(
+      0,
+      (sum, item) => sum + (item['product_vat'] as num).toDouble(),
     );
     final pending = {
       ...payload,
@@ -129,6 +136,7 @@ class OfflineOrderRepository {
       'status': payload['as_draft'] == true ? 'draft' : 'confirmed',
       'payment_status': payload['payment_status'] ?? 'pending',
       'total_bill': totalBill,
+      'vat_total': vatTotal,
       'items': normalizedItems,
       '_pending_sync': true,
       'created_at': DateTime.now().toIso8601String(),
@@ -177,6 +185,36 @@ class OfflineOrderRepository {
       return OrderModel.fromJson(updated);
     }
     throw Exception('Order not found');
+  }
+
+  /// Confirms a still-unsynced offline draft (negative [localId]) created
+  /// with `as_draft: true`: rewrites the queued create payload to drop
+  /// `as_draft` and flips the cached row's status to 'confirmed', so the
+  /// eventual sync creates a confirmed order.
+  ///
+  /// Throws [StateError] when no pending create exists for [localId] (the
+  /// draft already synced) — the caller should tell the user to connect and
+  /// confirm on the server instead.
+  Future<void> confirmLocalDraft(int localId) async {
+    final pending = await _db.pendingQueueByLocalId(localId);
+    final creates = pending
+        .where((q) => q.entityType == 'order' && q.operation == 'create')
+        .toList();
+    if (creates.isEmpty) {
+      throw StateError('No pending offline create for order $localId — connect to confirm');
+    }
+    for (final item in creates) {
+      final payload = Map<String, dynamic>.from(item.payload)..remove('as_draft');
+      await _db.updateQueuePayload(item.id, payload);
+    }
+    final cached = await _db.getCachedEntity('order', localId);
+    if (cached != null) {
+      await _db.cacheEntity(
+        entityType: 'order',
+        entityId: localId,
+        data: {...cached, 'status': 'confirmed'},
+      );
+    }
   }
 
   Future<OrderModel> recordPayment(
@@ -242,18 +280,27 @@ class OfflineOrderRepository {
         'amount_due': order.amountDue,
         'payment_status': order.paymentStatus,
         'status': order.status,
+        'include_vat': order.includeVat,
+        'vat_inclusive': order.vatInclusive,
+        'vat_rate': order.vatRate,
+        'vat_total': order.vatTotal,
         'items': order.items
             .map((i) => {
                   'product_id': i.productId,
                   'quantity': i.quantity,
                   'product_price': i.productPrice,
+                  'product_vat': i.productVat,
+                  'vat_rate': i.vatRate,
                 })
             .toList(),
         'created_at': order.createdAt,
         '_pending_sync': order.id < 0,
       };
 
-  List<Map<String, dynamic>> _normalizeCreateItems(List<dynamic> rawItems) {
+  List<Map<String, dynamic>> _normalizeCreateItems(
+    List<dynamic> rawItems, {
+    bool vatInclusive = false,
+  }) {
     return rawItems.asMap().entries.map((entry) {
       final item = Map<String, dynamic>.from(entry.value as Map);
       final quantity = item['quantity'] as int? ?? 0;
@@ -267,7 +314,12 @@ class OfflineOrderRepository {
         'product_price': price,
         'product_discount': discount,
         'product_vat': vat,
-        'bill': (price * quantity) - discount + vat,
+        if (item['vat_rate'] != null) 'vat_rate': _toDouble(item['vat_rate']),
+        // Inclusive: the entered price is already gross, so VAT is not added
+        // on top of the line bill.
+        'bill': vatInclusive
+            ? (price * quantity) - discount
+            : (price * quantity) - discount + vat,
         'is_preorder': item['is_preorder'] as bool? ?? false,
       };
     }).toList();

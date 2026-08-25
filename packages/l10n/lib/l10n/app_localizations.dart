@@ -346,6 +346,23 @@ abstract class AppLocalizations {
   /// **'VAT'**
   String get commonVat;
 
+  /// No description provided for @commonExclVat.
+  ///
+  /// In en, this message translates to:
+  /// **'Excl. VAT'**
+  String get commonExclVat;
+
+  /// No description provided for @lineItemVatSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{qtyLabel} · excl {excl} · VAT {vat} · {total}'**
+  String lineItemVatSubtitle(
+    String qtyLabel,
+    String excl,
+    String vat,
+    String total,
+  );
+
   /// No description provided for @commonSearchProducts.
   ///
   /// In en, this message translates to:
@@ -3579,6 +3596,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save as draft'**
   String get orderSaveAsDraft;
+
+  /// No description provided for @orderApplyVat.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply VAT'**
+  String get orderApplyVat;
+
+  /// No description provided for @orderVatIncluded.
+  ///
+  /// In en, this message translates to:
+  /// **'Included'**
+  String get orderVatIncluded;
+
+  /// No description provided for @orderVatExcluded.
+  ///
+  /// In en, this message translates to:
+  /// **'Excluded'**
+  String get orderVatExcluded;
+
+  /// No description provided for @orderVatRateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'VAT %'**
+  String get orderVatRateLabel;
+
+  /// No description provided for @orderSavedAsDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved as draft'**
+  String get orderSavedAsDraft;
+
+  /// No description provided for @orderKeepAsDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep as draft'**
+  String get orderKeepAsDraft;
+
+  /// No description provided for @orderConnectToConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to confirm from the order page'**
+  String get orderConnectToConfirm;
 
   /// No description provided for @purchaseSavePost.
   ///

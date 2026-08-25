@@ -62,6 +62,24 @@
   "commonPrice": "Price",
   "commonDiscount": "Discount",
   "commonVat": "VAT",
+  "commonExclVat": "Excl. VAT",
+  "lineItemVatSubtitle": "{qtyLabel} · excl {excl} · VAT {vat} · {total}",
+  "@lineItemVatSubtitle": {
+    "placeholders": {
+      "qtyLabel": {
+        "type": "String"
+      },
+      "excl": {
+        "type": "String"
+      },
+      "vat": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "commonSearchProducts": "Search products",
   "commonProductPriceCtn": "SAR {price} / CTN · {pieces} pcs",
   "@commonProductPriceCtn": {
@@ -892,6 +910,13 @@
   "planReminderBody": "You have {count} visit(s) planned",
   "orderDiaryTitle": "Order diary",
   "orderSaveAsDraft": "Save as draft",
+  "orderApplyVat": "Apply VAT",
+  "orderVatIncluded": "Included",
+  "orderVatExcluded": "Excluded",
+  "orderVatRateLabel": "VAT %",
+  "orderSavedAsDraft": "Saved as draft",
+  "orderKeepAsDraft": "Keep as draft",
+  "orderConnectToConfirm": "Connect to confirm from the order page",
   "purchaseSavePost": "Save & post",
   "customerMoneyTitle": "Money summary",
   "customerMoneyOrders": "Orders",

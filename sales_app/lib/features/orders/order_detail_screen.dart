@@ -57,16 +57,19 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
 
   Future<void> _confirmOrder() async {
     final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.statusPending),
-        content: const Text('Confirm this order and deduct stock from your van?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Confirm order')),
-        ],
-      ),
+    final order = _order;
+    if (order == null) return;
+    final config = await loadZatcaConfig(
+      ref.read(sharedPreferencesProvider),
+      ref.read(apiClientProvider),
+    );
+    if (!mounted) return;
+    final confirmed = await showOrderPreviewConfirmSheet(
+      context,
+      previewOrder: order,
+      config: config,
+      confirmLabel: l10n.commonConfirm,
+      keepDraftLabel: l10n.orderKeepAsDraft,
     );
     if (confirmed != true) return;
 
@@ -219,7 +222,12 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     final awaitingApproval = order.isDraft;
     // Drafts are editable now — edits move no stock until confirmation.
     final canEdit = order.isEditable && !pending;
-    final canCancel = order.isEditable && !pending;
+    // Salesperson cancel: server rejects ZATCA-invoiced orders and orders not
+    // created today — hide the button for both instead of failing late.
+    final canCancel = order.isEditable &&
+        !pending &&
+        order.zatca?.invoiceGenerated != true &&
+        _isCreatedToday(order);
     final due = order.outstandingDue;
 
     return ListView(
@@ -437,6 +445,13 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       customerId: target.$2,
       customerName: order.customerShopName ?? AppLocalizations.of(context).commonCustomer,
     );
+  }
+
+  bool _isCreatedToday(OrderModel order) {
+    final createdAt = DateTime.tryParse(order.createdAt ?? '')?.toLocal();
+    if (createdAt == null) return false;
+    final now = DateTime.now();
+    return createdAt.year == now.year && createdAt.month == now.month && createdAt.day == now.day;
   }
 
   (String, int)? _customerDiaryTarget(OrderModel order) {

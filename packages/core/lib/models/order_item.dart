@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../support/json_parse.dart';
 import 'product.dart';
 
 class OrderItemModel extends Equatable {
@@ -12,6 +13,7 @@ class OrderItemModel extends Equatable {
     this.baseQuantity = 0,
     this.productDiscount = 0,
     this.productVat = 0,
+    this.vatRate,
     this.bill = 0,
     this.isPreorder = false,
     this.product,
@@ -26,6 +28,9 @@ class OrderItemModel extends Equatable {
   final double productPrice;
   final double productDiscount;
   final double productVat;
+
+  /// VAT rate applied to this line (absent on legacy rows).
+  final double? vatRate;
   final double bill;
   final bool isPreorder;
   final ProductModel? product;
@@ -41,6 +46,7 @@ class OrderItemModel extends Equatable {
       productPrice: _toDouble(json['product_price']),
       productDiscount: _toDouble(json['product_discount']),
       productVat: _toDouble(json['product_vat']),
+      vatRate: parseJsonDoubleOrNull(json['vat_rate']),
       bill: _toDouble(json['bill']),
       isPreorder: json['is_preorder'] as bool? ?? false,
       product: json['product'] is Map

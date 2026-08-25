@@ -62,6 +62,24 @@
   "commonPrice": "السعر",
   "commonDiscount": "الخصم",
   "commonVat": "ضريبة القيمة المضافة",
+  "commonExclVat": "غير شامل الضريبة",
+  "lineItemVatSubtitle": "{qtyLabel} · بدون الضريبة {excl} · الضريبة {vat} · {total}",
+  "@lineItemVatSubtitle": {
+    "placeholders": {
+      "qtyLabel": {
+        "type": "String"
+      },
+      "excl": {
+        "type": "String"
+      },
+      "vat": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "commonSearchProducts": "البحث عن المنتجات",
   "commonProductPriceCtn": "ر.س {price} / كرتون · {pieces} قطعة",
   "@commonProductPriceCtn": {
@@ -806,6 +824,13 @@
   "planReminderBody": "لديك {count} زيارة مخططة",
   "orderDiaryTitle": "يوميات الطلب",
   "orderSaveAsDraft": "حفظ كمسودة",
+  "orderApplyVat": "تطبيق ضريبة القيمة المضافة",
+  "orderVatIncluded": "شامل الضريبة",
+  "orderVatExcluded": "غير شامل الضريبة",
+  "orderVatRateLabel": "نسبة الضريبة %",
+  "orderSavedAsDraft": "تم الحفظ كمسودة",
+  "orderKeepAsDraft": "الإبقاء كمسودة",
+  "orderConnectToConfirm": "اتصل بالإنترنت للتأكيد من صفحة الطلب",
   "purchaseSavePost": "حفظ وترحيل",
   "customerMoneyTitle": "الملخص المالي",
   "customerMoneyOrders": "الطلبات",

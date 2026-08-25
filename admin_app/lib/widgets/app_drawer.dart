@@ -109,7 +109,6 @@ class AppDrawer extends ConsumerWidget {
             Icons.calendar_month,
             '/sales/team-calendar',
           ),
-          _tile(context, 'Invoices', Icons.description, '/sales/invoices'),
           _section(context, 'Shipping'),
           _tile(context, 'Countries', Icons.public, '/shipping/countries'),
           _tile(context, 'Suppliers', Icons.factory, '/shipping/suppliers'),

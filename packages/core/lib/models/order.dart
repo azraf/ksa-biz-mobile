@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../support/json_parse.dart';
 import 'discount_approval_request.dart';
 import 'manual_order_request.dart';
 import 'order_item.dart';
@@ -18,6 +19,9 @@ class OrderModel extends Equatable {
     this.manualOrderRequestId,
     this.subtotal = 0,
     this.vatTotal = 0,
+    this.includeVat = false,
+    this.vatInclusive = false,
+    this.vatRate,
     this.totalBill = 0,
     this.grandDiscount = 0,
     this.promotionDiscount = 0,
@@ -55,6 +59,11 @@ class OrderModel extends Equatable {
   final int? manualOrderRequestId;
   final double subtotal;
   final double vatTotal;
+
+  /// Order-level VAT flags (absent on legacy rows → false/false/null).
+  final bool includeVat;
+  final bool vatInclusive;
+  final double? vatRate;
   final double totalBill;
   final double grandDiscount;
   final double promotionDiscount;
@@ -106,6 +115,9 @@ class OrderModel extends Equatable {
       manualOrderRequestId: json['manual_order_request_id'] as int?,
       subtotal: _toDouble(json['subtotal']),
       vatTotal: _toDouble(json['vat_total']),
+      includeVat: parseJsonBool(json['include_vat']),
+      vatInclusive: parseJsonBool(json['vat_inclusive']),
+      vatRate: parseJsonDoubleOrNull(json['vat_rate']),
       totalBill: _toDouble(json['total_bill']),
       grandDiscount: _toDouble(json['grand_discount']),
       promotionDiscount: _toDouble(json['promotion_discount']),

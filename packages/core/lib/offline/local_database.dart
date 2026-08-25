@@ -272,6 +272,30 @@ class LocalDatabase {
     );
   }
 
+  /// Not-yet-synced queue rows for one local (negative) id.
+  Future<List<SyncQueueItem>> pendingQueueByLocalId(int localId) async {
+    final db = await database;
+    final rows = await db.query(
+      'sync_queue',
+      where: "local_id = ? AND status IN ('pending', 'failed')",
+      whereArgs: [localId],
+      orderBy: 'id ASC',
+    );
+    return rows.map(_rowToQueueItem).toList();
+  }
+
+  /// Rewrites a queued item's payload in place (e.g. confirming an offline
+  /// draft before it syncs).
+  Future<void> updateQueuePayload(int id, Map<String, dynamic> payload) async {
+    final db = await database;
+    await db.update(
+      'sync_queue',
+      {'payload': jsonEncode(payload)},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   Future<int> enqueue(SyncQueueItem item) async {
     final db = await database;
     final id = await db.insert('sync_queue', {
