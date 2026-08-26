@@ -14,6 +14,7 @@ class CustomerShopModel extends Equatable {
   const CustomerShopModel({
     required this.id,
     required this.name,
+    this.nameAr,
     this.mobile,
     this.email,
     this.vatNumber,
@@ -37,6 +38,9 @@ class CustomerShopModel extends Equatable {
 
   final int id;
   final String name;
+
+  /// Arabic name — printed on the Fatoora invoice when set.
+  final String? nameAr;
   /// The shop's own number (customer_shops.mobile); see [primaryPhone].
   final String? mobile;
   final String? email;
@@ -66,6 +70,7 @@ class CustomerShopModel extends Equatable {
       CustomerShopModel(
         id: json['id'] as int,
         name: json['name'] as String? ?? '',
+        nameAr: json['name_ar'] as String?,
         mobile: json['mobile'] as String?,
         email: json['email'] as String?,
         vatNumber: json['vat_number'] as String?,
@@ -104,6 +109,7 @@ class CustomerShopModel extends Equatable {
 
   Map<String, dynamic> toJson() => {
         'name': name,
+        if (nameAr != null) 'name_ar': nameAr,
         if (mobile != null) 'mobile': mobile,
         if (email != null) 'email': email,
         if (vatNumber != null) 'vat_number': vatNumber,
@@ -112,7 +118,7 @@ class CustomerShopModel extends Equatable {
       };
 
   @override
-  List<Object?> get props => [id, name, mobile, isSystem, user, allowUserAccountCreation];
+  List<Object?> get props => [id, name, nameAr, mobile, isSystem, user, allowUserAccountCreation];
 }
 
 class CustomerShopContactModel extends Equatable {

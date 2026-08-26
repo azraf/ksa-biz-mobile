@@ -121,6 +121,7 @@ class CustomerRepository {
 
   Future<CustomerShopModel> createShop({
     required String name,
+    String? nameAr,
     String? mobile,
     String? email,
     String? gps,
@@ -133,6 +134,7 @@ class CustomerRepository {
     String? userPasswordConfirmation,
   }) async {
     final body = <String, dynamic>{'name': name};
+    if (nameAr != null && nameAr.isNotEmpty) body['name_ar'] = nameAr;
     if (mobile != null && mobile.isNotEmpty) body['mobile'] = mobile;
     if (email != null && email.isNotEmpty) body['email'] = email;
     if (gps != null) body['gps'] = gps;
@@ -166,6 +168,7 @@ class CustomerRepository {
 
   Future<CustomerVanModel> createVan({
     required String name,
+    String? nameAr,
     String? mobile,
     String? iqamaNumber,
     String? email,
@@ -180,6 +183,7 @@ class CustomerRepository {
     String? userPasswordConfirmation,
   }) async {
     final body = <String, dynamic>{'name': name};
+    if (nameAr != null && nameAr.isNotEmpty) body['name_ar'] = nameAr;
     if (mobile != null) body['mobile'] = mobile;
     if (iqamaNumber != null) body['iqama_number'] = iqamaNumber;
     if (email != null) body['email'] = email;
@@ -201,6 +205,7 @@ class CustomerRepository {
 
   Future<CustomerImporterModel> createImporter({
     required String name,
+    String? nameAr,
     String? mobile,
     String? email,
     String? address,
@@ -214,6 +219,7 @@ class CustomerRepository {
     String? userPasswordConfirmation,
   }) async {
     final body = <String, dynamic>{'name': name};
+    if (nameAr != null && nameAr.isNotEmpty) body['name_ar'] = nameAr;
     if (mobile != null) body['mobile'] = mobile;
     if (email != null) body['email'] = email;
     if (address != null) body['address'] = address;

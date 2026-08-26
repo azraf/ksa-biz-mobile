@@ -85,6 +85,13 @@ class InvoiceReceiptWidget extends StatelessWidget {
             if (order.zatca?.icv != null) _kv('ICV', '${order.zatca!.icv}', base),
             _kv('Date', (order.createdAt ?? '').replaceFirst('T', ' ').split('.').first, base),
             if (order.customerShopName != null) _kv('Customer', order.customerShopName!, base),
+            if (order.customerShopNameAr != null && order.customerShopNameAr!.isNotEmpty)
+              Text(
+                order.customerShopNameAr!,
+                textDirection: TextDirection.rtl,
+                textAlign: TextAlign.right,
+                style: _style(size: base),
+              ),
             if (order.salesPerson?.name != null) _kv('Salesperson', order.salesPerson!.name, base),
             _rule(),
             // Line items

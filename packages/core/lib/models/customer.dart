@@ -27,6 +27,7 @@ class CustomerVanModel extends Equatable {
   const CustomerVanModel({
     required this.id,
     required this.name,
+    this.nameAr,
     this.mobile,
     this.email,
     this.areaId,
@@ -44,6 +45,9 @@ class CustomerVanModel extends Equatable {
 
   final int id;
   final String name;
+
+  /// Arabic name — printed on the Fatoora invoice when set.
+  final String? nameAr;
   final String? mobile;
   final String? email;
   final int? areaId;
@@ -62,6 +66,7 @@ class CustomerVanModel extends Equatable {
     return CustomerVanModel(
       id: json['id'] as int,
       name: json['name'] as String? ?? '',
+      nameAr: json['name_ar'] as String?,
       mobile: json['mobile'] as String?,
       email: json['email'] as String?,
       areaId: json['area_id'] as int?,
@@ -86,13 +91,14 @@ class CustomerVanModel extends Equatable {
 
   @override
   List<Object?> get props =>
-      [id, name, mobile, email, user, allowUserAccountCreation];
+      [id, name, nameAr, mobile, email, user, allowUserAccountCreation];
 }
 
 class CustomerImporterModel extends Equatable {
   const CustomerImporterModel({
     required this.id,
     required this.name,
+    this.nameAr,
     this.mobile,
     this.email,
     this.areaId,
@@ -109,6 +115,9 @@ class CustomerImporterModel extends Equatable {
 
   final int id;
   final String name;
+
+  /// Arabic name — printed on the Fatoora invoice when set.
+  final String? nameAr;
   final String? mobile;
   final String? email;
   final int? areaId;
@@ -126,6 +135,7 @@ class CustomerImporterModel extends Equatable {
     return CustomerImporterModel(
       id: json['id'] as int,
       name: json['name'] as String? ?? '',
+      nameAr: json['name_ar'] as String?,
       mobile: json['mobile'] as String?,
       email: json['email'] as String?,
       areaId: json['area_id'] as int?,
@@ -149,7 +159,7 @@ class CustomerImporterModel extends Equatable {
 
   @override
   List<Object?> get props =>
-      [id, name, mobile, email, user, allowUserAccountCreation];
+      [id, name, nameAr, mobile, email, user, allowUserAccountCreation];
 }
 
 class OrderModificationModel extends Equatable {

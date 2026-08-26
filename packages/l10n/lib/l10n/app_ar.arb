@@ -33,6 +33,7 @@
   "commonPhone": "الهاتف",
   "commonMobile": "الجوال",
   "commonNameRequired": "الاسم *",
+  "commonNameArabic": "الاسم بالعربية",
   "commonAddress": "العنوان",
   "commonCity": "المدينة",
   "commonReason": "السبب",

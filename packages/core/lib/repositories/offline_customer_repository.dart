@@ -391,6 +391,7 @@ class OfflineCustomerRepository {
   Map<String, dynamic> _shopData(CustomerShopModel shop) => {
         'id': shop.id,
         'name': shop.name,
+        if (shop.nameAr != null) 'name_ar': shop.nameAr,
         if (shop.mobile != null) 'mobile': shop.mobile,
         if (shop.email != null) 'email': shop.email,
         if (shop.gps != null) 'gps': shop.gps,
@@ -416,6 +417,7 @@ class OfflineCustomerRepository {
   Map<String, dynamic> _vanData(CustomerVanModel van) => {
         'id': van.id,
         'name': van.name,
+        if (van.nameAr != null) 'name_ar': van.nameAr,
         if (van.mobile != null) 'mobile': van.mobile,
         if (van.areaId != null) 'area_id': van.areaId,
         if (van.isInactive) 'is_inactive': true,
@@ -432,6 +434,7 @@ class OfflineCustomerRepository {
   Map<String, dynamic> _importerData(CustomerImporterModel importer) => {
         'id': importer.id,
         'name': importer.name,
+        if (importer.nameAr != null) 'name_ar': importer.nameAr,
         if (importer.mobile != null) 'mobile': importer.mobile,
       };
 

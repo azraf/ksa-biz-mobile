@@ -96,6 +96,7 @@ class QuickShopCreateSheet extends StatefulWidget {
 
 class _QuickShopCreateSheetState extends State<QuickShopCreateSheet> {
   final _nameController = TextEditingController();
+  final _nameArController = TextEditingController();
   final _phoneController = TextEditingController();
   final _contactNameController = TextEditingController();
   final _noteController = TextEditingController();
@@ -130,6 +131,7 @@ class _QuickShopCreateSheetState extends State<QuickShopCreateSheet> {
   @override
   void dispose() {
     _nameController.dispose();
+    _nameArController.dispose();
     _phoneController.dispose();
     _contactNameController.dispose();
     _noteController.dispose();
@@ -265,6 +267,7 @@ class _QuickShopCreateSheetState extends State<QuickShopCreateSheet> {
       final contactName = _contactNameController.text.trim();
       final shop = await repo.createShop(
         name: name,
+        nameAr: _nameArController.text.trim().isEmpty ? null : _nameArController.text.trim(),
         mobile: phone.isEmpty ? null : phone,
         gps: _gps,
         salesPersonId: widget.salesPersonId ?? _selectedSalesPersonId,
@@ -331,6 +334,12 @@ class _QuickShopCreateSheetState extends State<QuickShopCreateSheet> {
           Text(l10n.salesQuickNewShop, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
           TextField(controller: _nameController, decoration: InputDecoration(labelText: l10n.salesQuickShopName)),
+          if (!widget.offlineProspect)
+            TextField(
+              controller: _nameArController,
+              textDirection: TextDirection.rtl,
+              decoration: InputDecoration(labelText: l10n.commonNameArabic),
+            ),
           TextField(
             controller: _phoneController,
             decoration: InputDecoration(labelText: l10n.commonPhone),
@@ -433,6 +442,7 @@ class QuickVanCreateSheet extends StatefulWidget {
 
 class _QuickVanCreateSheetState extends State<QuickVanCreateSheet> {
   final _nameController = TextEditingController();
+  final _nameArController = TextEditingController();
   final _mobileController = TextEditingController();
   final _iqamaController = TextEditingController();
   final _emailController = TextEditingController();
@@ -451,6 +461,7 @@ class _QuickVanCreateSheetState extends State<QuickVanCreateSheet> {
   @override
   void dispose() {
     _nameController.dispose();
+    _nameArController.dispose();
     _mobileController.dispose();
     _iqamaController.dispose();
     _emailController.dispose();
@@ -489,6 +500,7 @@ class _QuickVanCreateSheetState extends State<QuickVanCreateSheet> {
       final account = _accountFieldsKey.currentState?.accountValues();
       final van = await repo.createVan(
         name: name,
+        nameAr: _nameArController.text.trim().isEmpty ? null : _nameArController.text.trim(),
         mobile: _mobileController.text.trim().isEmpty ? null : _mobileController.text.trim(),
         iqamaNumber: _iqamaController.text.trim().isEmpty ? null : _iqamaController.text.trim(),
         email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
@@ -526,6 +538,11 @@ class _QuickVanCreateSheetState extends State<QuickVanCreateSheet> {
           Text(l10n.salesQuickNewVan, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
           TextField(controller: _nameController, decoration: InputDecoration(labelText: l10n.commonNameRequired)),
+          TextField(
+            controller: _nameArController,
+            textDirection: TextDirection.rtl,
+            decoration: InputDecoration(labelText: l10n.commonNameArabic),
+          ),
           TextField(
             controller: _mobileController,
             decoration: InputDecoration(labelText: l10n.commonMobile),
@@ -583,6 +600,7 @@ class QuickImporterCreateSheet extends StatefulWidget {
 
 class _QuickImporterCreateSheetState extends State<QuickImporterCreateSheet> {
   final _nameController = TextEditingController();
+  final _nameArController = TextEditingController();
   final _mobileController = TextEditingController();
   final _emailController = TextEditingController();
   final _addressController = TextEditingController();
@@ -598,6 +616,7 @@ class _QuickImporterCreateSheetState extends State<QuickImporterCreateSheet> {
   @override
   void dispose() {
     _nameController.dispose();
+    _nameArController.dispose();
     _mobileController.dispose();
     _emailController.dispose();
     _addressController.dispose();
@@ -634,6 +653,7 @@ class _QuickImporterCreateSheetState extends State<QuickImporterCreateSheet> {
       final account = _accountFieldsKey.currentState?.accountValues();
       final importer = await widget.host.customerRepository.createImporter(
         name: name,
+        nameAr: _nameArController.text.trim().isEmpty ? null : _nameArController.text.trim(),
         mobile: _mobileController.text.trim().isEmpty ? null : _mobileController.text.trim(),
         email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
         address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
@@ -666,6 +686,11 @@ class _QuickImporterCreateSheetState extends State<QuickImporterCreateSheet> {
           Text(l10n.salesQuickNewImporter, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
           TextField(controller: _nameController, decoration: InputDecoration(labelText: l10n.commonNameRequired)),
+          TextField(
+            controller: _nameArController,
+            textDirection: TextDirection.rtl,
+            decoration: InputDecoration(labelText: l10n.commonNameArabic),
+          ),
           TextField(
             controller: _mobileController,
             decoration: InputDecoration(labelText: l10n.commonMobile),

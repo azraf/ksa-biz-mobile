@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -90,6 +89,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonNameRequired => 'Name *';
 
   @override
+  String get commonNameArabic => 'Name (Arabic)';
+
+  @override
   String get commonAddress => 'Address';
 
   @override
@@ -146,11 +148,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String lineItemVatSubtitle(
-    String qtyLabel,
-    String excl,
-    String vat,
-    String total,
-  ) {
+      String qtyLabel, String excl, String vat, String total) {
     return '$qtyLabel · excl $excl · VAT $vat · $total';
   }
 

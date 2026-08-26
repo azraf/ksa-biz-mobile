@@ -22,6 +22,7 @@ class ShopEditScreen extends ConsumerStatefulWidget {
 
 class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
   final _nameController = TextEditingController();
+  final _nameArController = TextEditingController();
   final _phoneController = TextEditingController();
   final _vatNumberController = TextEditingController();
   final _picker = ImagePicker();
@@ -45,6 +46,7 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
     final shop = _shop;
     if (shop != null) {
       _nameController.text = shop.name;
+      _nameArController.text = shop.nameAr ?? '';
       _phoneController.text = shop.primaryPhone ?? '';
       _vatNumberController.text = shop.vatNumber ?? '';
       _gps = shop.gps;
@@ -60,6 +62,7 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _nameArController.dispose();
     _vatNumberController.dispose();
     _phoneController.dispose();
     super.dispose();
@@ -116,6 +119,7 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
       if (_shop == null) {
         shop = await repo.createShop(
           name: name,
+          nameAr: _nameArController.text.trim().isEmpty ? null : _nameArController.text.trim(),
           mobile: phone.isEmpty ? null : phone,
           gps: _gps,
           salesPersonId: _salesPersonId,
@@ -127,6 +131,7 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
       } else {
         await ref.read(apiClientProvider).put('/customer-shops/${_shop!.id}', body: {
           'name': name,
+          'name_ar': _nameArController.text.trim(), // empty string clears it
           'mobile': phone, // empty string clears it
           'vat_number': _vatNumberController.text.trim(),
           'gps': _gps,
@@ -193,6 +198,15 @@ class _ShopEditScreenState extends ConsumerState<ShopEditScreen> {
           TextField(
             controller: _nameController,
             decoration: const InputDecoration(labelText: 'Name'),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _nameArController,
+            textDirection: TextDirection.rtl,
+            decoration: const InputDecoration(
+              labelText: 'Name (Arabic)',
+              helperText: 'Printed on the Fatoora invoice when set',
+            ),
           ),
           const SizedBox(height: 16),
           TextField(

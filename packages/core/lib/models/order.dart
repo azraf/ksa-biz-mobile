@@ -42,6 +42,7 @@ class OrderModel extends Equatable {
     this.manualOrderRequests = const [],
     this.salesPerson,
     this.customerShopName,
+    this.customerShopNameAr,
     this.customerShopAreaName,
     this.createdAt,
     this.zatca,
@@ -86,6 +87,9 @@ class OrderModel extends Equatable {
   final List<ManualOrderRequestModel> manualOrderRequests;
   final SalesPersonModel? salesPerson;
   final String? customerShopName;
+
+  /// Customer Arabic name — printed on the Fatoora receipt when set.
+  final String? customerShopNameAr;
   final String? customerShopAreaName;
   final String? createdAt;
 
@@ -149,6 +153,9 @@ class OrderModel extends Equatable {
           : null,
       customerShopName: json['customer_shop'] is Map
           ? (json['customer_shop'] as Map)['name'] as String?
+          : null,
+      customerShopNameAr: json['customer_shop'] is Map
+          ? (json['customer_shop'] as Map)['name_ar'] as String?
           : null,
       customerShopAreaName: _customerShopAreaName(json['customer_shop']),
       createdAt: json['created_at']?.toString(),

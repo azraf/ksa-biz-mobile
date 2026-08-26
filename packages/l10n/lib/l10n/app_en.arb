@@ -33,6 +33,7 @@
   "commonPhone": "Phone",
   "commonMobile": "Mobile",
   "commonNameRequired": "Name *",
+  "commonNameArabic": "Name (Arabic)",
   "commonAddress": "Address",
   "commonCity": "City",
   "commonReason": "Reason",

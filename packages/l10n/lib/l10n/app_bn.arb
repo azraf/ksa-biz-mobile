@@ -33,6 +33,7 @@
   "commonPhone": "ফোন",
   "commonMobile": "মোবাইল",
   "commonNameRequired": "নাম *",
+  "commonNameArabic": "নাম (আরবি)",
   "commonAddress": "ঠিকানা",
   "commonCity": "শহর",
   "commonReason": "কারণ",
