@@ -31,6 +31,22 @@ void main() {
     expect(pending.any((e) => e.id == id), isTrue);
   });
 
+  test('nextLocalId skips negative ids still held by entity_cache', () async {
+    final db = LocalDatabase.instance;
+    // Orphan cache row whose queue entry was purged — its id must not be
+    // handed out again.
+    await db.cacheEntity(
+      entityType: 'order',
+      entityId: -97,
+      data: const {'id': -97},
+    );
+
+    final next = await db.nextLocalId();
+    expect(next, lessThan(-97));
+
+    await db.removeCachedEntity('order', -97);
+  });
+
   test('pendingQueue skips exhausted retries', () async {
     final db = LocalDatabase.instance;
     final database = await db.database;

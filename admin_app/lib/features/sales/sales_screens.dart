@@ -425,14 +425,16 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     }
 
     try {
-      await ref.read(orderRepositoryProvider).confirmOrder(
+      // Confirm deletes the draft and creates a NEW order with a new id —
+      // rebuild the screen on that id, never reload the dead draft id.
+      final confirmed = await ref.read(offlineOrderRepositoryProvider).confirmDraft(
             widget.orderId,
             salesPersonId: inventorySource == 'warehouse' ? null : selectedSp?.id,
             inventorySource: inventorySource,
           );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order confirmed')));
-        await _load();
+        context.pushReplacement('/sales/orders/${confirmed.id}');
       }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
@@ -964,11 +966,15 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     );
     if (!mounted) return;
 
+    // Confirming a server draft deletes it and creates a NEW order with a new
+    // id — navigate with that id, never the dead draft id.
+    var targetId = order.id;
     if (result == true) {
       try {
         if (order.id > 0) {
           // The draft's own lines carry fulfillment — no overrides needed.
-          await ref.read(orderRepositoryProvider).confirmOrder(order.id);
+          targetId =
+              (await ref.read(offlineOrderRepositoryProvider).confirmDraft(order.id)).id;
         } else {
           await ref.read(offlineOrderRepositoryProvider).confirmLocalDraft(order.id);
           ref.invalidate(pendingSyncCountProvider);
@@ -988,7 +994,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
       );
     }
     if (!mounted) return;
-    context.pushReplacement('/sales/orders/${order.id}');
+    context.pushReplacement('/sales/orders/$targetId');
   }
 
   ({String type, int id, String name})? _noteTarget() {

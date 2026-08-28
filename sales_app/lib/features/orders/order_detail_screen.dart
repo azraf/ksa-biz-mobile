@@ -90,7 +90,17 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         await ref.read(offlineOrderRepositoryProvider).confirmLocalDraft(widget.id);
         ref.invalidate(pendingSyncCountProvider);
       } else {
-        await ref.read(orderRepositoryProvider).confirmOrder(widget.id);
+        // Confirm deletes the draft and creates a NEW order — rebuild the
+        // screen on the new id so payments/discounts/modifications never
+        // target the dead draft id.
+        final confirmed =
+            await ref.read(offlineOrderRepositoryProvider).confirmDraft(widget.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(l10n.statusConfirmed)));
+          context.pushReplacement('/orders/${confirmed.id}');
+        }
+        return;
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.statusConfirmed)));

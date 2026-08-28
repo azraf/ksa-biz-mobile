@@ -178,6 +178,24 @@ class OfflineOrderRepository {
     return OrderModel.fromJson(pending);
   }
 
+  /// Confirms a server-side draft. The server deletes the draft and creates a
+  /// NEW order with a NEW id — callers must navigate/reload with the returned
+  /// order's id, never the draft id.
+  Future<OrderModel> confirmDraft(
+    int draftId, {
+    int? salesPersonId,
+    String? inventorySource,
+  }) async {
+    final order = await _remote.confirmOrder(
+      draftId,
+      salesPersonId: salesPersonId,
+      inventorySource: inventorySource,
+    );
+    await _db.removeCachedEntity('order', draftId);
+    await _db.cacheEntity(entityType: 'order', entityId: order.id, data: _toCache(order));
+    return order;
+  }
+
   Future<OrderModel> cancel(int orderId, String reason) async {
     if (_isOnline()) {
       final order = await _remote.cancel(orderId, reason);
@@ -321,6 +339,17 @@ class OfflineOrderRepository {
         'vat_inclusive': order.vatInclusive,
         'vat_rate': order.vatRate,
         'vat_total': order.vatTotal,
+        // Receipt-critical fields: the invoice widget reads these, so a
+        // cache-served order must not print Subtotal 0.00 or lose its QR.
+        'subtotal': order.subtotal,
+        if (order.zatca != null) 'zatca': order.zatca!.toJson(),
+        if (order.customerShopName != null || order.customerShopNameAr != null)
+          'customer_shop': {
+            'name': order.customerShopName,
+            'name_ar': order.customerShopNameAr,
+          },
+        if (order.salesPerson != null)
+          'sales_person': {'id': order.salesPerson!.id, 'name': order.salesPerson!.name},
         'items': order.items
             .map((i) => {
                   if (i.id > 0) 'id': i.id,
@@ -331,6 +360,15 @@ class OfflineOrderRepository {
                   'product_vat': i.productVat,
                   'vat_rate': i.vatRate,
                   'bill': i.bill,
+                  if (i.product != null)
+                    'product': {
+                      'id': i.product!.id,
+                      'name': i.product!.name,
+                      if (i.product!.nameAr != null) 'name_ar': i.product!.nameAr,
+                      if (i.product!.pcsUnitId != null) 'pcs_unit_id': i.product!.pcsUnitId,
+                      if (i.product!.cartonUnitId != null) 'carton_unit_id': i.product!.cartonUnitId,
+                    },
+                  if (i.unit != null) 'unit': i.unit,
                 })
             .toList(),
         'created_at': order.createdAt,

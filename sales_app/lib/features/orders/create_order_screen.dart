@@ -295,10 +295,15 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     );
     if (!mounted) return;
 
+    // Confirming a server draft deletes it and creates a NEW order with a new
+    // id — navigate with that id, never the dead draft id (it can resolve to
+    // an unrelated order).
+    var targetId = order.id;
     if (result == true) {
       try {
         if (order.id > 0) {
-          await ref.read(orderRepositoryProvider).confirmOrder(order.id);
+          targetId =
+              (await ref.read(offlineOrderRepositoryProvider).confirmDraft(order.id)).id;
         } else {
           await ref.read(offlineOrderRepositoryProvider).confirmLocalDraft(order.id);
           ref.invalidate(pendingSyncCountProvider);
@@ -319,7 +324,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     }
     if (!mounted) return;
     setState(() => _submitting = false);
-    context.go('/orders/${order.id}');
+    context.go('/orders/$targetId');
   }
 
   Future<void> _openCustomerNote() async {

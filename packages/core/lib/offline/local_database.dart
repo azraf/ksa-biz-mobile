@@ -649,8 +649,14 @@ class LocalDatabase {
 
   Future<int> nextLocalId() async {
     final db = await database;
+    // Also scan entity_cache: a purged queue must not re-issue an id that a
+    // surviving cache row (e.g. order_-1) still holds.
     final result = await db.rawQuery(
-      'SELECT MIN(local_id) as min_id FROM sync_queue WHERE local_id < 0',
+      'SELECT MIN(min_id) as min_id FROM ('
+      'SELECT MIN(local_id) as min_id FROM sync_queue WHERE local_id < 0 '
+      'UNION ALL '
+      'SELECT MIN(entity_id) FROM entity_cache WHERE entity_id < 0'
+      ')',
     );
     final minId = Sqflite.firstIntValue(result);
     return (minId ?? 0) - 1;

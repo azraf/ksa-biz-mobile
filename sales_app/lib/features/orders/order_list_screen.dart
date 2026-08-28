@@ -202,6 +202,13 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
     }
   }
 
+  /// Refresh after returning from a pushed route: confirming a draft replaces
+  /// it with a new order (new id), so the list on return is always stale.
+  Future<void> _pushThenRefresh(String location) async {
+    await context.push(location);
+    if (mounted) _load(page: 1, reset: true);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -210,7 +217,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
 
     return Scaffold(
       floatingActionButton: TranslucentFab(
-        onOpen: () => context.push('/orders/create'),
+        onOpen: () => _pushThenRefresh('/orders/create'),
         icon: const Icon(Icons.add),
         label: l10n.commonNewOrder,
       ),
@@ -274,7 +281,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
                         ? EmptyView(
                             message: l10n.commonNoOrdersYet,
                             actionLabel: l10n.commonCreateOrder,
-                            onAction: () => context.push('/orders/create'),
+                            onAction: () => _pushThenRefresh('/orders/create'),
                           )
                         : RefreshIndicator(
                             onRefresh: () => _load(page: 1, reset: true),
@@ -295,7 +302,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
                                   currency: currency,
                                   subtitle: orderListSubtitle(order, showSalesPerson: true),
                                   showDue: true,
-                                  onTap: () => context.push('/orders/${order.id}'),
+                                  onTap: () => _pushThenRefresh('/orders/${order.id}'),
                                 );
                               },
                             ),
