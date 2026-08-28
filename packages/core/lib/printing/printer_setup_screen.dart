@@ -63,7 +63,6 @@ class _PrinterSetupScreenState extends ConsumerState<PrinterSetupScreen> {
       final png = await printer.renderWidget(
         _TestReceipt(widthDots: settings.dotsWidth.toDouble()),
         widthDots: settings.dotsWidth.toDouble(),
-        context: context,
       );
       await printer.printImage(png, settings);
       _toast('Test print sent.');

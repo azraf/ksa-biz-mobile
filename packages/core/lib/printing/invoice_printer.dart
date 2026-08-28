@@ -16,18 +16,24 @@ class InvoicePrinter {
   const InvoicePrinter();
 
   /// Widget → PNG bytes at the printer's dot width (also used for sharing).
+  ///
+  /// captureFromLongWidget measures the receipt with unbounded height first,
+  /// so tall receipts are never clipped to the phone screen (captureFromWidget
+  /// with targetSize: null clamps the offscreen layout to the screen size —
+  /// that clipped header/footer/QR off long invoices). No [BuildContext] on
+  /// purpose: with one, the capture pass gains MediaQuery text scaling and
+  /// theme fonts the measurement pass lacks, so the capture could lay out
+  /// taller than measured and reclip; the receipt pins its own fonts instead.
   Future<Uint8List> renderWidget(
     Widget receipt, {
     required double widthDots,
-    BuildContext? context,
     double pixelRatio = 1.0,
   }) {
-    return ScreenshotController().captureFromWidget(
+    return ScreenshotController().captureFromLongWidget(
       receipt,
       delay: const Duration(milliseconds: 150),
       pixelRatio: pixelRatio,
-      context: context,
-      targetSize: null,
+      constraints: BoxConstraints.tightFor(width: widthDots),
     );
   }
 
@@ -66,7 +72,12 @@ class InvoicePrinter {
     final resized = decoded.width == settings.dotsWidth
         ? decoded
         : img.copyResize(decoded, width: settings.dotsWidth);
-    final grayscale = img.grayscale(resized);
+    // Flatten alpha onto white first: the ESC/POS raster ignores alpha, so a
+    // transparent pixel would print as a black dot.
+    final flattened = img.Image(width: resized.width, height: resized.height, numChannels: 3);
+    img.fill(flattened, color: img.ColorRgb8(255, 255, 255));
+    img.compositeImage(flattened, resized);
+    final grayscale = img.grayscale(flattened);
 
     final profile = await CapabilityProfile.load();
     final generator = Generator(

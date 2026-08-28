@@ -219,6 +219,17 @@ class OrderZatcaModel extends Equatable {
     );
   }
 
+  /// Mirror of the server `zatca` block, so offline-cached orders keep the
+  /// QR/ICV/COPY state through a cache round-trip.
+  Map<String, dynamic> toJson() => {
+        'invoice_generated': invoiceGenerated,
+        'icv': icv,
+        'uuid': uuid,
+        'qr': qr,
+        'status': status,
+        'print_count': printCount,
+      };
+
   @override
   List<Object?> get props => [invoiceGenerated, icv, status, printCount];
 }

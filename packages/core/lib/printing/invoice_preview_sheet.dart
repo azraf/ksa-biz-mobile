@@ -66,10 +66,9 @@ class _InvoicePreviewSheetState extends State<_InvoicePreviewSheet> {
         isCopy: (widget.order.zatca?.printCount ?? 0) > 0,
       );
 
-  Future<Uint8List> _render(BuildContext context) => _printer.renderWidget(
+  Future<Uint8List> _render() => _printer.renderWidget(
         _receipt(),
         widthDots: widget.settings.dotsWidth.toDouble(),
-        context: context,
         // Share looks better at 2x; the printer resizes back down anyway.
         pixelRatio: 2.0,
       );
@@ -98,14 +97,14 @@ class _InvoicePreviewSheetState extends State<_InvoicePreviewSheet> {
           widget.onOpenPrinterSettings?.call();
           return;
         }
-        final png = await _render(context);
+        final png = await _render();
         await _printer.printImage(png, widget.settings);
         await widget.onPrinted?.call();
         _toast('Invoice sent to printer.');
       });
 
   Future<void> _share() => _run(() async {
-        final png = await _render(context);
+        final png = await _render();
         final name = widget.order.invoiceNumber ?? 'order-${widget.order.id}';
         await Share.shareXFiles(
           [XFile.fromData(png, name: 'invoice-$name.png', mimeType: 'image/png')],

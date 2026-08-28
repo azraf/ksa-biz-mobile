@@ -3,6 +3,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 import '../models/order.dart';
 import '../models/zatca_config.dart';
+import '../theme/app_theme.dart';
 
 /// The invoice as a widget, rendered offscreen to an image for both thermal
 /// printing and sharing. Deliberately fixed black-on-white — this is ink on
@@ -30,8 +31,17 @@ class InvoiceReceiptWidget extends StatelessWidget {
 
   String _money(double v) => v.toStringAsFixed(2);
 
-  TextStyle _style({double size = 20, FontWeight weight = FontWeight.w500}) =>
-      TextStyle(color: _black, fontSize: size, fontWeight: weight, height: 1.3);
+  // Fonts pinned explicitly: the offscreen capture runs without the app's
+  // Theme/Material wrapper, so inherited fonts would fall back to the
+  // platform default there (and reflow differently than the measured layout).
+  TextStyle _style({double size = 20, FontWeight weight = FontWeight.w500}) => TextStyle(
+        color: _black,
+        fontSize: size,
+        fontWeight: weight,
+        height: 1.3,
+        fontFamily: kFontFamily,
+        fontFamilyFallback: kFontFallback,
+      );
 
   @override
   Widget build(BuildContext context) {
